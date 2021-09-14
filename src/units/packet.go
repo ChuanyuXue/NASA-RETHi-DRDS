@@ -1,4 +1,4 @@
-package main
+package units
 
 type packet struct{
 	Src		 uint8
@@ -14,5 +14,5 @@ type packet struct{
 }
 
 func (p *package) initFromBuf(buf []byte){
-
+	pass
 }

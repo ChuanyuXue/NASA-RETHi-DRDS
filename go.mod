@@ -1,4 +1,4 @@
-module test
+module sqlHandler
 
 go 1.17
 

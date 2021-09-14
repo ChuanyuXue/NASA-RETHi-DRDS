@@ -1,4 +1,4 @@
-package main
+package communication
 
 import (
 	"net"
@@ -7,7 +7,8 @@ import (
 
 type Server struct{
 	IP		 string,
-	Conn	 net.
+	Conn	 net,
+	
 
 
 }
