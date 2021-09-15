@@ -1,14 +1,13 @@
-package communication
+package communicator
 
 import (
-	"net"
-	"os"
+	// "datarepo/src/units"
+	// "net"
 )
 
-type Server struct{
-	IP		 string,
-	Conn	 net,
-	
-
-
-}
+// type Server interface{
+// 	BuildConnection()
+// 	Listen() 
+// 	Handle() units.Packet
+// 	CloseConnection()
+// }

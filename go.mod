@@ -1,4 +1,4 @@
-module sqlHandler
+module datarepo
 
 go 1.17
 
