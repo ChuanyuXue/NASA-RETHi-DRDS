@@ -1,5 +1,10 @@
 package units
 
+import (
+	"os"
+	"encoder	"
+)
+
 type Subsys struct {
 	ID         int    `json:"id"`
 	Name       string `json:"name"`
@@ -7,22 +12,16 @@ type Subsys struct {
 	RemoteAddr string `json:"remote_addr"`
 }
 
-var (
-	SUBSYS_LIST   []Subsys
-	SUBSYS_TABLE  = map[string]Subsys{}
-	ROUTING_TABLE = map[int]string{
-		0: "SW1",
-		1: "SW2",
-		2: "SW3",
-		3: "SW4",
-		4: "SW5",
-		5: "SW6",
-		6: "SW7",
-	}
-	fwdCntTotal = 0
-)
+//All configures are flattend in Config struct
 
-type MetaData struct {
-	Index uint8
-	Data  []float64
+type Config struct{
+	//communicator
+
+	//database
+
+	//subsystems
+}
+
+func LoadFromJson(path string) *Config{
+	string
 }
