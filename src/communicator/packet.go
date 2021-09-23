@@ -1,12 +1,13 @@
-package units
+package communicator
 
 import (
+	"datarepo/src/utils"
 	"encoding/binary"
 	"fmt"
 )
 
 type Packet struct {
-	Src      uint8
+	Src      uint8	
 	Dst      uint8
 	Type     uint8
 	Priority uint8
@@ -29,10 +30,10 @@ func (pkt *Packet) FromBuf(buf []byte) error {
 	pkt.Payload = buf[8:]
 
 	// check
-	if int(pkt.Src) >= len(SUBSYS_LIST) ||
-		int(pkt.Dst) >= len(SUBSYS_LIST) ||
-		int(pkt.Type) >= 8 ||
-		int(pkt.Priority) >= 8 ||
+	if int(pkt.Src) >= utils.SUBSNUMS ||
+		int(pkt.Dst) >= utils.SUBSNUMS ||
+		int(pkt.Type) >= utils.SUBSNUMS ||
+		int(pkt.Priority) >= utils.SUBSNUMS ||
 		int(pkt.Length) != (int(pkt.Row)*int(pkt.Col)) {
 		return fmt.Errorf("[!] invalid header format: [%d, %d, %d, %d, %d, %d, %d]",
 			pkt.Src, pkt.Dst, pkt.Type, pkt.Priority, pkt.Row, pkt.Col, pkt.Length)
