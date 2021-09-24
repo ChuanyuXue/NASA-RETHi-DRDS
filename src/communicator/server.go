@@ -53,11 +53,6 @@ func (udpServer *UDPServer) Run() {
 			}
 		default:
 		}
-		// sig = <-udpServer.InChanel
-		// if sig == utils.CLOSE {
-		// 	udpServer.Close()
-		// 	break mainloop
-		// }
 
 		packet = udpServer.Listen()
 		udpServer.OutChanel <- packet
