@@ -8,6 +8,7 @@ import (
 
 type Server struct {
 	utils.JsonStandard
+	utils.ServerStandard
 
 	Local  string `json:"local"`
 	Public string `json:"public"`
@@ -64,6 +65,8 @@ func (udpServer *UDPServer) Terminate() {
 	fmt.Println("Close signal is sending")
 }
 
+// Private functions following
+
 func (udpServer *UDPServer) Build() {
 	// Server standard
 	var (
@@ -114,14 +117,14 @@ func (udpServer *UDPServer) Listen() Packet {
 	if err != nil {
 		panic(err)
 	}
-	packet := Packet{}
-	packet.FromBuf(buf[:])
+	packet := FromBuf(buf[:])
 	fmt.Println("Server is listenning from port")
 	return packet
 }
 
 func (udpServer *UDPServer) Send() error {
 	// Server standard
+	// In the future use Message replace Packet to comminicate between Database and Server
 	var e error
 	return e
 }

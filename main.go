@@ -4,8 +4,9 @@ import (
 	// "datarepo/src/databasemanager"
 	// "datarepo/src/utils"
 	"datarepo/src/communicator"
-	"datarepo/src/utils"
-	"time"
+	// "datarepo/src/utils"
+	"fmt"
+	// "time"
 	// "net"
 )
 
@@ -17,6 +18,7 @@ import (
 // )
 
 func main() {
+	// ------------------- Test for first demo --------------------
 	// addr := net.UDPAddr{
 	// 	Port: 3333,
 	// 	IP:   net.ParseIP("127.0.0.1"),
@@ -43,14 +45,22 @@ func main() {
 
 	// }
 
-	var udpServer = communicator.UDPServer{}
-	utils.LoadFromJson("config/client_configs.json", &udpServer)
-	// var udpServer = communicator.UDPServer{Server: *server}
-	signalChan := make(chan utils.CtrlSig, utils.CHANELLEN)
-	packetChan := make(chan communicator.Packet, utils.CHANELLEN)
+	// ---------------- Test for server ----------------------
+	// var udpServer = communicator.UDPServer{}
+	// utils.LoadFromJson("config/client_configs.json", &udpServer)
+	// // var udpServer = communicator.UDPServer{Server: *server}
+	// signalChan := make(chan utils.CtrlSig, utils.CHANELLEN)
+	// packetChan := make(chan communicator.Packet, utils.CHANELLEN)
 
-	udpServer.Init(signalChan, packetChan)
-	go udpServer.Run()
-	time.Sleep(10 * time.Second)
-	udpServer.Terminate()
+	// udpServer.Init(signalChan, packetChan)
+	// go udpServer.Run()
+	// time.Sleep(10 * time.Second)
+	// udpServer.Terminate()
+
+	// -------------------- Test for Packet ----------------
+	// payload := []float64{1, 2, 3, 4, 5}
+	// pct := communicator.Packet{1, 2, 3, 4, 5, 6, 30, payload}
+	// buf := pct.ToBuf()
+	// pct2 := communicator.FromBuf(buf)
+	// fmt.Println(pct2)
 }
