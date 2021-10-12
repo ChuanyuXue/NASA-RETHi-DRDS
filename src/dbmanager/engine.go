@@ -1,4 +1,4 @@
-package databasemanager
+package dbmanager
 
 import (
 	// "database/sql"

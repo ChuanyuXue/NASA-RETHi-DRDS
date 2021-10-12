@@ -1,6 +1,7 @@
 package communicator
 
 import (
+	"datarepo/src/dbmanager"
 	"datarepo/src/utils"
 	"fmt"
 	"net"
@@ -31,13 +32,26 @@ type Client struct {
 	OutConn *net.UDPConn
 
 	InChanel  chan utils.CtrlSig
-	OutChanel chan Packet
+	OutChanel chan dbmanager.Message
 }
 
-func (userClient *Client) Init(inchan chan utils.CtrlSig, outchan chan Packet) {
+func (userClient *Client) Init(inchan chan utils.CtrlSig, outchan chan dbmanager.Message) {
 	userClient.InChanel = inchan
 	userClient.OutChanel = outchan
 	fmt.Println("User client is build up, chanels are settled.")
+	userClient.Build()
+}
+
+func (userClient *Client) Run() {
+
+	defer userClient.Close()
+	for {
+
+	}
+}
+
+func (userClient *Client) Terminate() {
+
 }
 
 func (userClient *Client) Build() {
@@ -63,8 +77,17 @@ func (userClient *Client) Build() {
 	fmt.Println("Connection has been built")
 }
 
-func (userClient Client) Send(packet Packet){
+func (userClient *Client) Send(packet Packet) {
 	userClient.OutConn.Write(packet.ToBuf())
 }
 
-
+func (userClient *Client) Close() {
+	// Server standard
+	if userClient.OutConn != nil {
+		err := userClient.OutConn.Close()
+		if err != nil {
+			panic(err)
+		}
+	}
+	fmt.Println("Connection has been closed")
+}

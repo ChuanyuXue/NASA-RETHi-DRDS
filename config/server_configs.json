@@ -2,6 +2,6 @@
     "local" : "127.0.0.1",
     "public": "NA",
     "port" : "3333",
-    "type" : "UDP",
+    "type" : "UDP"
 }
 

@@ -1,4 +1,4 @@
-package databasemanager
+package dbmanager
 
 import (
 	// "datarepo/src/utils"
