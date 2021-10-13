@@ -14,6 +14,4 @@ This project aims to develop the Resilient Extra-Terrestrial Habitats for future
 
 
 ---
-<img src="unnamed.jpg" width="100" height="100">
-
-This project is supported by NASA under grant or cooperative agreement award number 80NSSC19K1076.
+<img src="unnamed.jpg" width="50" height="50"> This project is supported by NASA under grant or cooperative agreement award number 80NSSC19K1076.
