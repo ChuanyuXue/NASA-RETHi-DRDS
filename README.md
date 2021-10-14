@@ -1,4 +1,4 @@
-# Distributed Data Service for NASA RETHi Project
+# Data Distribution Service for NASA RETHi Project
 
 This repository contains the source code of Data Repository System of NASA-RETHi project. The whole RETHi project aims to develop the Resilient Extra-Terrestrial Habitats for future Moon/Mars expedition, which is divided into three related research thrusts:
 
