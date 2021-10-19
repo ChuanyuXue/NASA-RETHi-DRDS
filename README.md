@@ -21,11 +21,4 @@ The primary concern of any outer space activity is ensuring safety, which usuall
 
 <img src="./img/DDS_SCHEMA.drawio.png" style="zoom:33%;"  >
 
-
-## Plan & Deliverables
-
-A key issue in the current code is using "Run" with GoLang instead of directly using "go" keyword to start a new process. This bad idea is from the design of Java and Python style which generally implement the "Run" function of parent class. Another drawback is only "Listen" needs to run in the backend, it makes the system complicated to add "Run" function.(When multi-function doing in backend Run interface is necessary.)
-
-
-
 <img src="./img/nasa_logo.jpg" width="50" height="50"> *This project is supported by the National Aeronautics and Space Administration*
