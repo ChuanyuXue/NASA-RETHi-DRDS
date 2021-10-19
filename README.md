@@ -19,7 +19,7 @@ The primary concern of any outer space activity is ensuring safety, which usuall
 
 <img src="./img/DDS_UML.drawio.png">
 
-<img src="./img/DDS_SCHEMA.drawio.png" style="zoom:60%;"  >
+<img src="./img/DDS_SCHEMA.drawio.png" style="zoom:33%;"  >
 
 
 ## Plan & Deliverables
