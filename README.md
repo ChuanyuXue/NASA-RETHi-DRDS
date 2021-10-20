@@ -22,3 +22,9 @@ The primary concern of any outer space activity is ensuring safety, which usuall
 <img src="./img/DDS_SCHEMA.drawio.png" style="zoom:33%;"  >
 
 <img src="./img/nasa_logo.jpg" width="50" height="50"> *This project is supported by the National Aeronautics and Space Administration*
+
+## Current Plan
+
+The current [plan](https://docs.google.com/document/d/1GJCyouMTSlMumpTqZ8Hr3953wPf2M3Aw3xg-r41WJaQ/edit#heading=h.ppyfpgqg4oc5) for the DMG group.
+
+
