@@ -1,6 +1,9 @@
 {
     "local" : "127.0.0.1",
     "public" : "NA",
-    "port" : "3333",
-    "type" : "mysql"
+    "port" : "3306",
+    "db_type" : "mysql",
+    "db_name" : "nasa",
+    "user_name" : "root",
+    "password" : "12345678"
 }

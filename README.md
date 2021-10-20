@@ -14,7 +14,7 @@ Data distribution service is an important component in the extra-terrestrial hab
 
 The primary concern of any outer space activity is ensuring safety, which usually involves tons of sensor data from several different subsystems, i.e. power system, interior environment system, and intervention agents to monitoring and controlling. How to ensure the real-time guarantee and 
 
-## Project Design
+## Current design
 <img src="./img/DDS_FLOW.drawio.png">
 
 <img src="./img/DDS_UML.drawio.png">

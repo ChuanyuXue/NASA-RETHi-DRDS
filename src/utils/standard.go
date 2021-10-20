@@ -1,57 +1,40 @@
 package utils
 //---------- Constant ----------
 const (
-	BUFFLEN int = 65536
-	CHANELLEN int = 128
-	FRENQUENCE int = 10000
-	SUBSNUMS int = 8
+	BUFFLEN uint = 65536
+	CHANELLEN uint = 128
+	FRENQUENCE uint = 10000
+	SUBSNUMS uint = 10
+	TABLENUMS uint = 65536
 )
 
-//---------- Interface Standard ---------
 type JsonStandard interface{
 
 }
 
-type ComponentStandard interface{
-	Init()
-	Run()
-	Terminate()
+type PacketStandard interface{
+	FromBuff() (PacketStandard, error)
+	ToBuff() ([]byte, error)
 }
 
-type CtrlSig int
-const (
-	START CtrlSig = iota
-	CLOSE
-)
+type ServiceStandard interface {
 
-//---------- Communicator Standard ----------
-type ServerStandard interface {
-
-	Build()
-	Listen()
-	Send()
-	Close()
+	Init() error
+	Send() error
+	Publish() error
+	Request() ([]float64, error)
+	Subscribe() (chan float64, error)
+	Close() error
 }
 
-type ClientStandard interface {
-
-	Build()
-	Listen()
-	Send()
-	Close()
-}
-
-//---------- Database Standard ----------
-type ManagerStandard interface {
-
-	AccessDatabase()
-	CreateTable()
-	InsertData()
-	DeleteTable()
-}
 
 type HandlerStandard interface {
-	Handle()
-
+	Init() error
+	Write() error
+	Read() ([]float64, error)
 }
 
+type ClientStandard interface{
+	Send() error
+	Listen() (PacketStandard, error)
+}

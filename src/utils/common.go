@@ -7,36 +7,31 @@ import (
 	"strconv"
 )
 
-type Subsys struct {
-	ID         int    `json:"id"`
-	Name       string `json:"name"`
-	LocalAddr  string `json:"local_addr"`
-	RemoteAddr string `json:"remote_addr"`
-}
-
 // ----------- Common static functions ----------
-func LoadFromJson(path string, server JsonStandard) {
+func LoadFromJson(path string, server JsonStandard) error {
 	file, err := os.Open(path)
 	if err != nil {
-		panic("Fail to load configuration file.")
+		return err
 	}
 	defer file.Close()
 
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
-		panic("Fail to read content.")
+		return err
 	}
 
-	if json.Unmarshal([]byte(byteValue), &server) != nil {
-		panic("Fail to decode json content")
+	err = json.Unmarshal([]byte(byteValue), &server)
+	if err != nil {
+		return err
 	}
+
+	return nil
 }
 
-
-func StringToInt(s string) int{
+func StringToInt(s string) (int, error) {
 	i, err := strconv.Atoi(s)
-    if err != nil {
-        panic(err)
-    }
-	return i
+	if err != nil {
+		return -1, err
+	}
+	return i, nil
 }
