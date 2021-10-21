@@ -1,12 +1,7 @@
-#!/usr/bin/env conda run -n rethi python
-'''Command and Control (C2) Client
-By - Murali Krishnan R
-'''
+
 import socket
 import time
-import sqlite3
 import numpy as np
-from sqlite3 import Error
 from utils.packet import Packet
 from utils.tableHandler import SimFDDTableHandler, AgentTableHandler, NPGTableHandler
 from policy.reflexivePolicy import SolarPVPolicy, ECLSSPolicy, StructurePolicy, NPGPolicy
@@ -26,7 +21,7 @@ class Client:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.valid_handler_types = ["sim_fdd", "agent", "npg"]
 
-        self.tunnel = Tunnel("localhost", 60002)
+        #self.tunnel = Tunnel("localhost", 60002)
 
     def create_table_handlers(self):
         ''' Create table handlers for the C2 Client

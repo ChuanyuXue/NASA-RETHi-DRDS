@@ -35,3 +35,30 @@ func StringToInt(s string) (int, error) {
 	}
 	return i, nil
 }
+
+func Uint8Contains(s []uint8, i uint8) bool {
+	for _, v := range s {
+		if v == i {
+			return true
+		}
+	}
+	return false
+}
+
+func Uint32Contains(s []uint32, i uint32) bool {
+	for _, v := range s {
+		if v == i {
+			return true
+		}
+	}
+	return false
+}
+
+func DoubleContains(s []float64, i float64) bool {
+	for _, v := range s {
+		if v == i {
+			return true
+		}
+	}
+	return false
+}
