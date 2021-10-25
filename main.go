@@ -30,8 +30,9 @@ func main() {
 	// 	fmt.Println(err)
 	// }
 
-	// // write in FDD0 table, time=2, index = 0, value = 1, loc = 2
-	// err = handler.Write(0, 0, 0, 2, 2)
+	// // write in 5 table, time=0, value = xxxx
+	// tempData := []float64{1.12312312, 123, 32, 1}
+	// err = handler.Write(5, 0, tempData)
 	// if err != nil {
 	// 	fmt.Println(err)
 	// }
@@ -46,26 +47,8 @@ func main() {
 	// if err != nil {
 	// 	fmt.Println(err)
 	// }
-
-	// data, err := handler.ReadIndex(0, 0)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println(data)
-
-	// --------------Test for Handler time read--------------------
-	// handler := handler.Handler{}
-	// err := utils.LoadFromJson("config/database_configs.json", &handler)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-
-	// err = handler.Init()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-
-	// data, err := handler.ReadTime(0, 0, "value")
+	// // READ from record5 table, time=0
+	// data, err := handler.ReadSynt(5, 0)
 	// if err != nil {
 	// 	fmt.Println(err)
 	// }
