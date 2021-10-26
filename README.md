@@ -8,22 +8,28 @@ This repository contains the source code of Data Repository System of NASA-RETHi
 
 Please visit https://www.purdue.edu/rethi for more information.
 
-## Project motivation 
+## 1. Project motivation 
 
 Data distribution service is an important component in the extra-terrestrial habitat system and plays a key role in sensor monitoring, data remaining, communication, and decision making.  
 
 The primary concern of any outer space activity is ensuring safety, which usually involves tons of sensor data from several different subsystems, i.e. power system, interior environment system, and intervention agents to monitoring and controlling. How to ensure the real-time guarantee and 
 
-## Current design
+## 2. Current design
+
+### 2.1 DDS - Data flow
 <img src="./img/DDS_FLOW.drawio.png">
 
+### 2.2 DDS - System design
 <img src="./img/DDS_UML.drawio.png">
 
+### 2.3 DDS - Database schema
 <img src="./img/DDS_SCHEMA.drawio.png" style="zoom:33%;"  >
 
-## Current Plan
+## 3. Service API
 
-The current [plan](https://docs.google.com/document/d/1GJCyouMTSlMumpTqZ8Hr3953wPf2M3Aw3xg-r41WJaQ/edit#heading=h.ppyfpgqg4oc5) for the DMG group.
+## 4. Current Plan
+
+This is the current [plan](https://docs.google.com/document/d/1GJCyouMTSlMumpTqZ8Hr3953wPf2M3Aw3xg-r41WJaQ/edit#heading=h.ppyfpgqg4oc5) for the DMG group.
 
 
 <img src="./img/nasa_logo.jpg" width="50" height="50"> *This project is supported by the National Aeronautics and Space Administration*
