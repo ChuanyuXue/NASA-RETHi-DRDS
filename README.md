@@ -17,13 +17,17 @@ The primary concern of any outer space activity is ensuring safety, which usuall
 ## 2. Current design
 
 ### 2.1 DDS - Data flow
-<img src="./img/DDS_FLOW.drawio.png">
+<img src="./img/DDS_INTE.drawio.png">
 
-### 2.2 DDS - System design
-<img src="./img/DDS_UML.drawio.png">
+### 2.2 DDS - Data flow in Server
+<img src="./img/DDS_FLOW.drawio.png">
 
 ### 2.3 DDS - Database schema
 <img src="./img/DDS_SCHEMA.drawio.png" style="zoom:33%;"  >
+
+
+### 2.4 DDS - System design
+<img src="./img/DDS_UML.drawio.png">
 
 ## 3. Service API
 
