@@ -42,8 +42,9 @@ class Packet:
         double_arr = c_double * self.header.length
         self.payload = double_arr.from_buffer_copy(buffer[16:16 + 8*self.header.length])
         return self.header._fields_
-
-# API usage:
+        
+# ------------------------- API usage ----------------------------------
+# 
 ## !!! First make sure IP address and Port of client is registered in server_configuration.json
 
     # "clients" : ["127.0.0.1"],
@@ -80,6 +81,7 @@ for i, t in enumerate(synchrounous_time):
 ## First open bind with the server UDP channel
 in_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 in_sock.bind((IP_CLIENT, PORT_CLIENT))
+in_sock.setblocking(False)
 
 ### 2.1 Request by timestamp
 _opt = 1    ## _opt = 1 when request data
@@ -100,8 +102,14 @@ pkt = Packet()
 buf = pkt.pkt2Buf(_opt, _src, _dst, _type, _param, _priority,
                     _row, _col, _length, _time, _payload)
 out_sock.sendto(buf, (IP_SERVER, PORT_SERVER))
-time.sleep(1)
-message, _ = in_sock.recvfrom(65536 + 18)
+
+while True:
+    try:
+        message, _ = in_sock.recvfrom(65536 + 18)
+        break
+    except:
+        pass
+    
 pkt.buf2Pkt(message)
 print(list(pkt.payload))
 
