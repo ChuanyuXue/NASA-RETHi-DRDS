@@ -1,12 +1,14 @@
 import socket
+from struct import pack
 import time
 import random
 from ctypes import *
 
-IP = "127.0.0.1"    ## Destination IP, referring server_configuration.json
-PORT = 10001       ## Destination Port, referring server_configuration.json
+IP_SERVER = "127.0.0.1"    ## Destination IP, referring server_configuration.json
+PORT_SERVER = 10001       ## Destination Port, referring server_configuration.json
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+IP_CLIENT = "127.0.0.1" 
+PORT_CLIENT = 10002
 
 ## Packet format referring packet.go
 class Header(Structure):
@@ -49,7 +51,7 @@ class Packet:
     # "clients_src" : ["1"]
 
 ## 1. Send() API
-
+out_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 _opt = 0    ## _opt = 0 when send data
 _src = 1    ## _src defined by "clients_src" in configuration file
 _dst = 0    ## _dst defined by "src" in configuration file
@@ -72,10 +74,12 @@ for i, t in enumerate(synchrounous_time):
     pkt = Packet()
     buf = pkt.pkt2Buf(_opt, _src, _dst, _type, _param, _priority,
                       _row, _col, _length, _time, _payload)
-    sock.sendto(buf, (IP, PORT))
+    out_sock.sendto(buf, (IP_SERVER, PORT_SERVER))
 
 ## 2. Request() API
-## First open a 
+## First open bind with the server UDP channel
+in_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+in_sock.bind((IP_CLIENT, PORT_CLIENT))
 
 ### 2.1 Request by timestamp
 _opt = 1    ## _opt = 1 when request data
@@ -95,12 +99,11 @@ _time = 1
 pkt = Packet()
 buf = pkt.pkt2Buf(_opt, _src, _dst, _type, _param, _priority,
                     _row, _col, _length, _time, _payload)
-sock.sendto(buf, (IP, PORT))
-
-UDPServerSocket.bind((localIP, localPort))
-bytesAddressPair = sock.recvfrom(bufferSize)
-
-    message = bytesAddressPair[0]
+out_sock.sendto(buf, (IP_SERVER, PORT_SERVER))
+time.sleep(1)
+message, _ = in_sock.recvfrom(65536 + 18)
+pkt.buf2Pkt(message)
+print(list(pkt.payload))
 
 
 

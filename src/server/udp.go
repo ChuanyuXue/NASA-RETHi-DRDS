@@ -50,6 +50,9 @@ func (udpServer *UdpServer) Init() error {
 			fmt.Println("Failed to load clients configuration")
 			return err
 		}
+		if addr.IP == nil {
+			fmt.Println("Failed to load clients configuration")
+		}
 
 		clientSrc, _ := strconv.Atoi(udpServer.ClientsSrc[i])
 		udpServer.clientSrc[i] = uint8(clientSrc)
@@ -140,7 +143,7 @@ func (udpServer *UdpServer) send(dst uint8, dataMap [][]float64) error {
 
 	pkt.Payload = PayloadFloat2Buf(dataFlatten)
 	dstAddr := udpServer.clientSrcMap[dst]
-	conn, err := net.DialUDP("udp", &udpServer.addr, &dstAddr)
+	conn, err := net.DialUDP("udp", nil, &dstAddr)
 	if err != nil {
 		fmt.Println("Failed to build connection to clients")
 		return err
@@ -188,12 +191,12 @@ func (udpServer *UdpServer) handle(pkt Packet) error {
 		}
 	case 1:
 		if pkt.Length == 1 {
-			err := udpServer.Request(pkt.Param, pkt.Time, pkt.Dst)
+			err := udpServer.Request(pkt.Param, pkt.Time, pkt.Src)
 			if err != nil {
 				return err
 			}
 		} else if pkt.Length >= 1 {
-			err := udpServer.RequestRange(pkt.Param, pkt.Time, pkt.Time+uint32(pkt.Length), pkt.Dst)
+			err := udpServer.RequestRange(pkt.Param, pkt.Time, pkt.Time+uint32(pkt.Length), pkt.Src)
 			if err != nil {
 				return err
 			}
