@@ -1,7 +1,8 @@
 package main
 
 import (
-	"datarepo/src/handler"
+	// "datarepo/src/handler"
+	"datarepo/src/server"
 	"datarepo/src/utils"
 	"fmt"
 )
@@ -53,4 +54,24 @@ func main() {
 	// 	fmt.Println(err)
 	// }
 	// fmt.Println(data)
+	// --------------- Test for UDP server ---------------------
+	// udpServer := server.UdpServer{}
+	// err := utils.LoadFromJson("config/udpserver_configs.json", &udpServer)
+	// if err != nil {
+	// 	fmt.Println(nil)
+	// }
+	// err = udpServer.Init()
+	// if err != nil{
+	// 	fmt.Print(nil)
+	// }
+	// --------------- Test for Python API ------------------------
+	udpServer := server.UdpServer{}
+	err := utils.LoadFromJson("config/udpserver_configs.json", &udpServer)
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = udpServer.Init()
+	if err != nil {
+		fmt.Print(err)
+	}
 }

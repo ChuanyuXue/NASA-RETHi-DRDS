@@ -149,7 +149,6 @@ func (handler *Handler) Init() error {
 
 func (handler *Handler) WriteSynt(id uint8, synt uint32, value []float64) error {
 	//Security Check:
-
 	// // 1. ID == 0 is not allowed
 	// if handler.InteTable == id {
 	// 	return errors.New("attemping to change interaction table by atomic function, please try query function again.")
@@ -157,15 +156,13 @@ func (handler *Handler) WriteSynt(id uint8, synt uint32, value []float64) error 
 	// if handler.InfoTable == id {
 	// 	return errors.New("attemping to change information table by atomic function, please try query function again.")
 	// }
-
 	// tableName = "record" + strconv.Itoa(int(id))
-
 	// // 2. Length of value must equal to data_size in information table
 	// if int(handler.DataShapes[id]) != len(value){
 	// 	panic("insert data length not equal to data description table")
 	// }
-
 	// // 3. The new time stamp must bigger than the last one
+
 	tableName := "record" + strconv.Itoa(int(id))
 
 	// construct query sentence
@@ -174,7 +171,7 @@ func (handler *Handler) WriteSynt(id uint8, synt uint32, value []float64) error 
 	columnList = append(columnList, "synchronous_time")
 	columnList = append(columnList, "time")
 
-	for i := range value {
+	for i := 0; i != int(handler.DataShapes[id]); i++ {
 		columnList = append(columnList, "value"+strconv.Itoa(i))
 	}
 	columnPattern := strings.Join(columnList, ",")
@@ -182,8 +179,8 @@ func (handler *Handler) WriteSynt(id uint8, synt uint32, value []float64) error 
 	columnFillin = append(columnFillin, strconv.Itoa(int(synt)))
 	// Need to fix int64 -> unsigned int32?
 	columnFillin = append(columnFillin, strconv.Itoa(int(time.Now().Unix())))
-	for _, v := range value {
-		columnFillin = append(columnFillin, fmt.Sprintf("%f", v))
+	for i := 0; i != int(handler.DataShapes[id]); i++ {
+		columnFillin = append(columnFillin, fmt.Sprintf("%f", value[i]))
 	}
 	columnValue := strings.Join(columnFillin, ",")
 
@@ -192,8 +189,6 @@ func (handler *Handler) WriteSynt(id uint8, synt uint32, value []float64) error 
 		handler.DBName,
 		tableName,
 	)
-
-	fmt.Println(query)
 
 	_, err := handler.DBPointer.Exec(query)
 	if err != nil {
@@ -240,7 +235,7 @@ func (handler *Handler) ReadSynt(id uint8, synt uint32) ([]float64, error) {
 		return rawData, err
 	}
 
-	for _, v := range values { //每行数据是放在values里面，现在把它挪到row里
+	for _, v := range values {
 		data := string(v)
 		s, err := strconv.ParseFloat(data, 64)
 		if err != nil {

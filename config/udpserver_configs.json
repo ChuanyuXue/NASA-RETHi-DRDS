@@ -1,0 +1,11 @@
+{
+    "local" : "127.0.0.1",
+    "public": "NA",
+    "port" : "10001",
+    "type" : "UDP",
+    "src" : "0",
+    "clients" : ["127.0.0.1"],
+    "clients_port" : ["10002"],
+    "clients_src" : ["1"]
+}
+

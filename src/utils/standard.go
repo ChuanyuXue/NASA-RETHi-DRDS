@@ -1,11 +1,11 @@
 package utils
 //---------- Constant ----------
 const (
-	BUFFLEN uint = 65536
-	CHANELLEN uint = 128
-	FRENQUENCE uint = 10000
-	SUBSNUMS uint = 10
-	TABLENUMS uint = 65536
+	BUFFLEN uint32 = 65536
+	CHANELLEN uint32 = 128
+	FRENQUENCE uint32 = 10000
+	SUBSNUMS uint8 = 10
+	TABLENUMS uint32 = 65536
 )
 
 type JsonStandard interface{
@@ -26,7 +26,6 @@ type ServiceStandard interface {
 	Subscribe() (chan float64, error)
 	Close() error
 }
-
 
 type HandlerStandard interface {
 	Init() error
