@@ -33,8 +33,7 @@ The primary concern of any outer space activity is ensuring safety, which usuall
 ### 3.1 Packet
 
 Data packet is the basic form to send data and also to implement service API:
-
-![Packet.drawio](/Users/chuanyu/Downloads/Packet.drawio.png)
+<img src="./img/Packet.drawio.png">
 
 - Opt: Operation type in {0, 1, 2, 3, 4, 5} 
   - 0: Send operation
