@@ -16,6 +16,8 @@ class Header(Structure):
                 ("priority", c_uint8),
                 ("row", c_uint8),
                 ("col", c_uint8),
+                ("col2", c_uint8),
+                ("col3", c_uint8),
                 ("length", c_uint16)]
 
 class Packet:
@@ -31,9 +33,9 @@ class Packet:
         return buf
         
     def buf2Pkt(self, buffer):
-        self.header = Header.from_buffer_copy(buffer[:8])
+        self.header = Header.from_buffer_copy(buffer[:9])
         double_arr = c_double * self.header.length
-        self.payload = double_arr.from_buffer_copy(buffer[8:8+8*self.header.length])
+        self.payload = double_arr.from_buffer_copy(buffer[9:9+8*self.header.length])
 
 # usage:
 
@@ -62,6 +64,7 @@ while True:
     buf = pkt.pkt2Buf(_src, _dst, _type, _priority,
                       _row, _col, _length, _payload)
     sock.sendto(buf, (IP, PORT))
+    pkt.buf2Pkt(buf)
     print("[{}] sent {} bytes".format(cnt, len(buf)))
     time.sleep(0.1)
     # time.sleep(2)

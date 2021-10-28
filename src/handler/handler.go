@@ -27,8 +27,7 @@ type Handler struct {
 	InfoTable    uint8
 	RecordTables []uint8
 
-	DataShapes    map[uint8]uint8
-	LastWriteTime map[uint8]int
+	DataShapes map[uint8]uint8
 
 	UserName string `json:"user_name"`
 	PassWord string `json:"password"`
@@ -134,16 +133,6 @@ func (handler *Handler) Init() error {
 		}
 		handler.DataShapes[dataId] = dataSize
 	}
-
-	// fill the last insert time all 0
-	handler.LastWriteTime = make(map[uint8]int)
-	for i := range handler.Tables {
-		handler.LastWriteTime[uint8(i)] = 0
-	}
-
-	// Security check
-	// 1. .... Leave for future
-
 	return nil
 }
 
@@ -223,6 +212,7 @@ func (handler *Handler) ReadSynt(id uint8, synt uint32) ([]float64, error) {
 		tableName,
 		strconv.Itoa(int(synt)),
 	)
+
 	scans := make([]interface{}, dataSize)
 	values := make([][]byte, dataSize)
 	for i := range values {
@@ -247,6 +237,38 @@ func (handler *Handler) ReadSynt(id uint8, synt uint32) ([]float64, error) {
 	return rawData, nil
 }
 
-func (Handler *Handler) handle(id uint8, rawData []float64) []float64 {
-	return rawData
+func (handler *Handler) QueryInfo(id uint8, column string) (int, error) {
+	query := fmt.Sprintf(
+		"SELECT %s FROM "+
+			handler.DBName+"."+strconv.Itoa(int(handler.InfoTable))+
+			"WHERE DATA_ID = %d", column, int(id),
+	)
+	row := handler.DBPointer.QueryRow(query)
+	var result string
+	err := row.Scan(&result)
+	if err != nil {
+		return 0, err
+	}
+	para, err := utils.StringToInt(result)
+	if err != nil {
+		return 0, err
+	}
+	return int(para), nil
+}
+
+func (handler *Handler) QueryLastSynt(id uint8) uint32 {
+	var time string
+	tableName := "record" + strconv.Itoa(int(id))
+	query := fmt.Sprintf(
+		"SELECT synchronous_time FROM %s.%s ORDER BY synchronous_time DESC LIMIT 1;",
+		handler.DBName,
+		tableName,
+	)
+	row := handler.DBPointer.QueryRow(query)
+	err := row.Scan(&time)
+	if err != nil {
+		fmt.Println("Failed to retrieve last time stamp")
+	}
+	result, _ := utils.StringToInt(time)
+	return uint32(result)
 }

@@ -1,6 +1,5 @@
 import socket
 from struct import pack
-import time
 import random
 from ctypes import *
 
@@ -22,7 +21,7 @@ class Header(Structure):
         ("row", c_uint8),
         ("col", c_uint8),
         ("length", c_uint16),
-        ("time", c_uint32),
+        ("time", c_uint32)
     ]
 
 class Packet:
@@ -76,6 +75,7 @@ for i, t in enumerate(synchrounous_time):
     buf = pkt.pkt2Buf(_opt, _src, _dst, _type, _param, _priority,
                       _row, _col, _length, _time, _payload)
     out_sock.sendto(buf, (IP_SERVER, PORT_SERVER))
+    pkt.buf2Pkt(buf)
 
 ## 2. Request() API
 ## First open bind with the server UDP channel
