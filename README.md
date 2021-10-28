@@ -30,6 +30,167 @@ The primary concern of any outer space activity is ensuring safety, which usuall
 <img src="./img/DDS_UML.drawio.png">
 
 ## 3. Service API
+### 3.1 Packet
+
+Data packet is the basic form to send data and also to implement service API:
+
+![Packet.drawio](/Users/chuanyu/Downloads/Packet.drawio.png)
+
+- Opt: Operation type in {0, 1, 2, 3, 4, 5} 
+  - 0: Send operation
+  - 1: Request operation
+  - 2: Publish operation
+  - 3: Subscribe operation
+  - 4: Warning
+  - 5: Error
+- Src: Source of packet, associated with Subsystem ID
+- Des: Destination of packet, associated with Subsystem ID
+- Type: Types of data in {0, 1, 2, 3}
+  - 0: No data in payload
+  - 1: FDD data
+  - 2: Agent data
+  - 3: Sensor data
+- Param: Parameter for operation, representing Data ID now
+- Priority: Priority
+- Row / Param2: Length of data in payload
+- Col / Param3: Width of data in payload
+- Length: Length of payload (When Length = 0, Row and Col can be extral parameter)
+- Time: Synchronous time of each data/operation
+- Payload: Data in bytes, float64 for representing real data
+
+
+
+### 3.2 Send
+
+Before use the API, please make sure:
+
+- Understand IP and Port of server 
+- Understand IP, Port and ID of client: ID should unique in [1, 65536), ID 0 is left for server
+- Client information must be registered in server configuration files.
+
+To send asychronous data, first set up headers:
+
+- Opt = 0
+- Src = ID of client
+- Des = 0
+- Param = ID of data will be sent
+- Time = Synchronous time of data generated
+- Priority = Priority
+- [Type, Row, Col, Length] are depended on the data
+
+Then set payload as the bytes array of the data, each element of data for 8 bits.
+
+Finally send this packet by UDP channel to server.
+
+*⚠️ Note - Send data can be lost, and no response from server.*
+
+
+
+### 3.3 Request
+
+To require asychronous data, first set up headers:
+
+- Opt = 1
+- Src = ID of client
+- Dst = 0
+- Param = ID of data will be retrieved
+- Time = Synchronous time of data generated
+- Priority = Priority
+- Row = 1 for requesting by timestamp / Row > 1 for requesting by time range, where TimeStart = Time, TimeEnd = Time + Length
+- Length = 0
+- Type = 0
+- [Col, Payload] have no influence on Request operation, can left for future extension.
+
+Then send this packet by UDP channel to server.
+
+Next keep listening from server, a packet will be send back with following headers:
+
+- Opt = 1
+- Src = 0
+- Dst = ID of client
+- Param = ID of data is being retrieved
+- Time = Synchronous time of data generated
+- Priority = Priority
+- Row = Length of data in payload
+- Col = Width of data in payload
+- Length = Row * Col
+- Payload = The data you requested
+
+Finally decode payload by its shape [Row * Col]
+
+*⚠️ Note - Both request operation and response data can be lost*
+
+
+
+### 3.4 Publish
+
+To publish data synchronously, set up headers for registering publish first:
+
+- Opt = 3
+- Src = ID of client
+- Dst = 0
+- Param = ID of data being published
+- Priority = Priority
+- Length = 0
+- Payload = No data for publish request
+
+Then send this packet by UDP channel to server.
+
+Keep listening from server, a packet will be send back with following headers:
+
+- Opt = 3
+- Src = 0
+- Dst = ID of client
+- Param = ID of data being published
+- Priority = Priority
+- Row = Rate of data published
+- Length = 0
+- Payload = No data for publish request
+
+When receive the above packet, start continuously pushing streaming to server with following headers setting. Decide the shape[Row and Col] of data based on the estimated latency of network and data frequency:
+
+- Opt = 3
+- Src = ID. of client
+- Dst = 0
+- Param = ID of data being published
+- Priority = Priority
+- Time = Synchronous time
+- Payload = Data published to server
+- [Type, Row, Col, Length] are depended on the data
+
+~~Once server finds data missing or latency it will send warning or error packet back.~~
+
+
+
+### 3.5 Subscribe
+
+To subscribe data synchronously, set up headers for registering subscribe first:
+
+- Opt = 4
+- Src = ID of client
+- Dst = 0
+- Param = ID of data being subscribe
+- Priority = Priority
+- Time = Time start for subscription
+- Length = 0
+- Payload = No data for subscribe request
+
+Then keep listening from server, a stream will be continuously send back with following headers:
+
+- Opt = 4
+- Src = ID of client
+- Dst = 0
+- Param = ID of data being subscribe
+- Priority = Priority
+- Time = Synchronous time of data generated
+- Payload = Subscribed data
+- [Type, Row, Col, Length] are depended on the data
+
+~~Once client finds data missing it need to send a subscribe from the missing data again.~~
+
+ 
+
+
 
 ## 4. Current Plan
 
