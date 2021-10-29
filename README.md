@@ -30,8 +30,9 @@ The primary concern of any outer space activity is ensuring safety, which usuall
 <img src="./img/DDS_UML.drawio.png">
 
 ## 3. Service API
-- For Python, please reference [demo.py](./demo.py) and [api.py](./api.py).
-- For GoLang, please reference demo.go and api.go.
+**- For Python, please reference [demo.py](./demo.py) and [api.py](./api.py).**
+**- For GoLang, please reference demo.go and api.go.**
+**- For other language, please implement by following standards:**
 
 
 ### 3.1 Packet
