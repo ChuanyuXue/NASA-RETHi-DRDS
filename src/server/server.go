@@ -133,7 +133,6 @@ func (server *Server) RequestRange(id uint8, timeStart uint32, timeEnd uint32, d
 func (server *Server) Publish(id uint8, dst uint8, para1 uint8, para2 uint8, time uint32, rawData []float64) error {
 	if utils.Uint8Contains(server.publisherRigister[id], dst) { // if publisher registered
 		// if para2 is stop streaming
-
 		lastSynt := server.handler.QueryLastSynt(id)
 		if time != lastSynt+1 {
 			// Send error back to dst
@@ -153,17 +152,27 @@ func (server *Server) Publish(id uint8, dst uint8, para1 uint8, para2 uint8, tim
 			return err
 		}
 		server.publisherRigister[id] = append(server.publisherRigister[id], dst)
-		server.sendOpt(dst, 2, id, uint8(rate), 0, 7, 0)
+		server.sendOpt(dst, 2, id, uint8(rate), 0, 7, time)
 	}
 
 	return nil
 }
 
 func (server *Server) Subscribe(id uint8, dst uint8, para1 uint8, para2 uint8, time uint32) error {
-	if utils.Uint8Contains(server.publisherRigister[id], dst) { // if subscriber registered
+	if utils.Uint8Contains(server.subscriberRigister[id], dst) { // if subscriber registered
+		lastSynt := server.handler.QueryLastSynt(id)
+		if time <= lastSynt {
+			for i := time; i <= lastSynt; i++ {
+				row, _ := server.handler.ReadSynt(id, i)
+				dataMap := make([][]float64, 0)
+				dataMap = append(dataMap, row)
+				server.send(dst, 3, id, 0, 7, i, dataMap)
+			}
+		}
 
 	} else {
 		server.subscriberRigister[id] = append(server.subscriberRigister[id], dst)
+		server.sendOpt(dst, 3, id, 1, 0, 7, time)
 	}
 	return nil
 }
@@ -275,13 +284,13 @@ func (server *Server) handle(pkt Packet) error {
 		}
 
 	case 1: //Request (operation packet)
-		if pkt.Length == 1 {
+		if pkt.Row == 0 {
 			err := server.Request(pkt.Param, pkt.Time, pkt.Src)
 			if err != nil {
 				return err
 			}
-		} else if pkt.Length >= 1 {
-			err := server.RequestRange(pkt.Param, pkt.Time, pkt.Time+uint32(pkt.Length), pkt.Src)
+		} else if pkt.Row >= 1 {
+			err := server.RequestRange(pkt.Param, pkt.Time, pkt.Time+uint32(pkt.Row), pkt.Src)
 			if err != nil {
 				return err
 			}

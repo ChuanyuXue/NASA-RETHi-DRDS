@@ -65,7 +65,7 @@ func main() {
 	// 	fmt.Print(nil)
 	// }
 	// --------------- Test for Python API ------------------------
-	udpServer := server.UdpServer{}
+	udpServer := server.Server{}
 	err := utils.LoadFromJson("config/udpserver_configs.json", &udpServer)
 	if err != nil {
 		fmt.Println(err)

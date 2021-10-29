@@ -238,11 +238,14 @@ func (handler *Handler) ReadSynt(id uint8, synt uint32) ([]float64, error) {
 }
 
 func (handler *Handler) QueryInfo(id uint8, column string) (int, error) {
+
+	tableName := "info" + strconv.Itoa(int(handler.InfoTable))
 	query := fmt.Sprintf(
 		"SELECT %s FROM "+
-			handler.DBName+"."+strconv.Itoa(int(handler.InfoTable))+
-			"WHERE DATA_ID = %d", column, int(id),
+			handler.DBName+"."+tableName+
+			" WHERE DATA_ID = %d", column, int(id),
 	)
+
 	row := handler.DBPointer.QueryRow(query)
 	var result string
 	err := row.Scan(&result)
