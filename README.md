@@ -30,6 +30,10 @@ The primary concern of any outer space activity is ensuring safety, which usuall
 <img src="./img/DDS_UML.drawio.png">
 
 ## 3. Service API
+- For Python, please reference [demo.py](./demo.py) and [api.py](./api.py).
+- For GoLang, please reference demo.go and api.go.
+
+
 ### 3.1 Packet
 
 Data packet is the basic form to send data and also to implement service API:
