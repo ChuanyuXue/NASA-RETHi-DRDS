@@ -125,7 +125,7 @@ Finally decode payload by its shape [Row * Col]
 
 To publish data synchronously, set up headers for registering publish first:
 
-- Opt = 3
+- Opt = 2
 - Src = ID of client
 - Dst = 0
 - Param = ID of data being published
@@ -137,7 +137,7 @@ Then send this packet by UDP channel to server.
 
 Keep listening from server, a packet will be send back with following headers:
 
-- Opt = 3
+- Opt = 2
 - Src = 0
 - Dst = ID of client
 - Param = ID of data being published
@@ -148,7 +148,7 @@ Keep listening from server, a packet will be send back with following headers:
 
 When receive the above packet, start continuously pushing streaming to server with following headers setting. Decide the shape[Row and Col] of data based on the estimated latency of network and data frequency:
 
-- Opt = 3
+- Opt = 2
 - Src = ID. of client
 - Dst = 0
 - Param = ID of data being published
@@ -165,7 +165,7 @@ When receive the above packet, start continuously pushing streaming to server wi
 
 To subscribe data synchronously, set up headers for registering subscribe first:
 
-- Opt = 4
+- Opt = 3
 - Src = ID of client
 - Dst = 0
 - Param = ID of data being subscribe
@@ -176,7 +176,7 @@ To subscribe data synchronously, set up headers for registering subscribe first:
 
 Then keep listening from server, a stream will be continuously send back with following headers:
 
-- Opt = 4
+- Opt = 3
 - Src = ID of client
 - Dst = 0
 - Param = ID of data being subscribe
