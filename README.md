@@ -200,6 +200,10 @@ Then keep listening from server, a stream will be continuously send back with fo
 
 This is the current [plan](https://docs.google.com/document/d/1GJCyouMTSlMumpTqZ8Hr3953wPf2M3Aw3xg-r41WJaQ/edit#heading=h.ppyfpgqg4oc5) for the DMG group.
 
+1. Fill in the info table and link table with Ryan.
+2. Change the code of MCVT simulink and send to server.
+3. Can integrate MVCT simulink and server.
+
 
 <img src="./img/nasa_logo.jpg" width="50" height="50"> *This project is supported by the National Aeronautics and Space Administration*
 
