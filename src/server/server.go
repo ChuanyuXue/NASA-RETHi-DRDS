@@ -257,7 +257,7 @@ func (server *Server) listen(addr net.UDPAddr, wg *sync.WaitGroup) error {
 		if err != nil {
 			fmt.Println("Failed to listen packet from connection")
 		}
-		pkt := FromBuf(buf[:])
+		pkt := FromServiceBuf(buf[:])
 		err = server.handle(pkt)
 		if err != nil {
 			fmt.Println(err)
@@ -265,11 +265,11 @@ func (server *Server) listen(addr net.UDPAddr, wg *sync.WaitGroup) error {
 	}
 }
 
-func (server *Server) handle(pkt Packet) error {
+func (server *Server) handle(pkt ServicePacket) error {
 	switch pkt.Opt {
 	case 0: //Send (data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)
-		err := server.Send(pkt.Param, pkt.Time, rawData)
+		err := server.Send(pkt.Param, pkt.SimulinkTime, rawData)
 		if err != nil {
 			return err
 		}

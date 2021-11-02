@@ -3,63 +3,52 @@ package server
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"math"
 )
 
 type Packet struct {
-	Opt      uint8
-	Src      uint8
-	Dst      uint8
-	Type     uint8
-	Param    uint8
-	Priority uint8
-	Row      uint8
-	Col      uint8
-	Length   uint16
-	Time     uint32
-	Payload  []byte // don't parse payload here
+	Src          uint8
+	Dst          uint8
+	MessageType  uint8
+	DataType     uint8
+	Priority     uint8
+	PhysicalTime uint32
+	SimulinkTime uint32
+	Row          uint8
+	Col          uint8
+	Length       uint16
+	Payload      []byte // don't parse payload here
 }
 
 func FromBuf(buf []byte) Packet {
 	var pkt Packet
-	pkt.Opt = uint8(buf[0])
-	pkt.Src = uint8(buf[1])
-	pkt.Dst = uint8(buf[2])
-	pkt.Type = uint8(buf[3])
-	pkt.Param = uint8(buf[4])
-	pkt.Priority = uint8(buf[5])
-	pkt.Row = uint8(buf[6])
-	pkt.Col = uint8(buf[7])
-	pkt.Length = binary.LittleEndian.Uint16(buf[8:12])
-	pkt.Time = binary.LittleEndian.Uint32(buf[12:16])
+	pkt.Src = uint8(buf[0])
+	pkt.Dst = uint8(buf[1])
+	temp := binary.LittleEndian.Uint16(buf[2:4])
+	pkt.MessageType = uint8(temp >> 12 & 0x0f)
+	pkt.DataType = uint8(temp >> 4 & 0xff)
+	pkt.Priority = uint8(temp & 0x0f)
+	pkt.PhysicalTime = uint32(binary.LittleEndian.Uint16(buf[4:8]))
+	pkt.SimulinkTime = uint32(binary.LittleEndian.Uint16(buf[8:12]))
+	pkt.Row = uint8(buf[12])
+	pkt.Col = uint8(buf[13])
+	pkt.Length = binary.LittleEndian.Uint16(buf[14:16])
 	pkt.Payload = buf[16:]
-
-	// // check
-	// if pkt.Src >= utils.SUBSNUMS ||
-	// 	pkt.Dst >= utils.SUBSNUMS ||
-	// 	pkt.Type >= utils.SUBSNUMS ||
-	// 	pkt.Priority >= utils.SUBSNUMS ||
-	// 	int(pkt.Length) != (int(pkt.Row)*int(pkt.Col)) {
-	// 	fmt.Println("[!] invalid header format: [%d, %d, %d, %d, %d, %d, %d]",
-	// 		pkt.Src, pkt.Dst, pkt.Type, pkt.Priority, pkt.Row, pkt.Col, pkt.Length)
-	// }
 	return pkt
 }
 
 func (pkt Packet) ToBuf() []byte {
 	var buf [16]byte
-
-	buf[0] = byte(pkt.Opt)
-	buf[1] = byte(pkt.Src)
-	buf[2] = byte(pkt.Dst)
-	buf[3] = byte(pkt.Type)
-	buf[4] = byte(pkt.Param)
-	buf[5] = byte(pkt.Priority)
-	buf[6] = byte(pkt.Row)
-	buf[7] = byte(pkt.Col)
-
-	binary.LittleEndian.PutUint16(buf[8:12], pkt.Length)
-	binary.LittleEndian.PutUint32(buf[12:16], pkt.Time)
+	buf[0] = byte(pkt.Src)
+	buf[1] = byte(pkt.Dst)
+	temp := uint16(pkt.MessageType)<<12 + uint16(pkt.DataType)<<4 + uint16(pkt.Priority)
+	binary.LittleEndian.PutUint16(buf[2:4], uint16(temp))
+	binary.LittleEndian.PutUint16(buf[4:8], uint16(pkt.PhysicalTime))
+	binary.LittleEndian.PutUint16(buf[8:12], uint16(pkt.SimulinkTime))
+	buf[12] = byte(pkt.Row)
+	buf[13] = byte(pkt.Col)
+	binary.LittleEndian.PutUint16(buf[14:16], uint16(pkt.Length))
 	return append(buf[:], pkt.Payload...)
 }
 
@@ -68,7 +57,7 @@ func PayloadFloat2Buf(payload []float64) []byte {
 	for _, v := range payload {
 		err := binary.Write(&buft, binary.LittleEndian, v)
 		if err != nil {
-			panic("Failed to convert Payload to 64bytes")
+			fmt.Println("Failed to convert Payload to 64bytes")
 		}
 	}
 	return buft.Bytes()
@@ -90,4 +79,44 @@ func Float64frombytes(bytes []byte) float64 {
 	bits := binary.LittleEndian.Uint64(bytes)
 	float := math.Float64frombits(bits)
 	return float
+}
+
+type ServicePacket struct {
+	Packet
+	Opt      uint16
+	Flag     uint16
+	Param    uint16
+	Subparam uint16
+}
+
+func (pkt *ServicePacket) ToServiceBuf() []byte {
+	var buf [24]byte
+	buf[0] = byte(pkt.Src)
+	buf[1] = byte(pkt.Dst)
+	temp := uint16(pkt.MessageType)<<12 + uint16(pkt.DataType)<<4 + uint16(pkt.Priority)
+	binary.LittleEndian.PutUint16(buf[2:4], uint16(temp))
+	binary.LittleEndian.PutUint16(buf[4:8], uint16(pkt.PhysicalTime))
+	binary.LittleEndian.PutUint16(buf[8:12], uint16(pkt.SimulinkTime))
+	buf[12] = byte(pkt.Row)
+	buf[13] = byte(pkt.Col)
+	binary.LittleEndian.PutUint16(buf[14:16], uint16(pkt.Length))
+
+	binary.LittleEndian.PutUint16(buf[16:18], uint16(pkt.Opt))
+	binary.LittleEndian.PutUint16(buf[18:20], uint16(pkt.Flag))
+	binary.LittleEndian.PutUint16(buf[20:22], uint16(pkt.Param))
+	binary.LittleEndian.PutUint16(buf[22:24], uint16(pkt.Subparam))
+
+	return append(buf[:], pkt.Payload...)
+}
+
+func FromServiceBuf(buf []byte) ServicePacket {
+	pkt := FromBuf(buf)
+	servicePkt := ServicePacket{}
+	servicePkt.Opt = binary.LittleEndian.Uint16(pkt.Payload[:2])
+	servicePkt.Flag = binary.LittleEndian.Uint16(pkt.Payload[2:4])
+	servicePkt.Param = binary.LittleEndian.Uint16(pkt.Payload[4:6])
+	servicePkt.Subparam = binary.LittleEndian.Uint16(pkt.Payload[6:8])
+	pkt.Payload = pkt.Payload[8:]
+	servicePkt.Packet = pkt
+	return servicePkt
 }

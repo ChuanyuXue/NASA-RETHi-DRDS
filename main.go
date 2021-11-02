@@ -3,7 +3,6 @@ package main
 import (
 	// "datarepo/src/handler"
 	"datarepo/src/server"
-	"datarepo/src/utils"
 	"fmt"
 )
 
@@ -65,13 +64,25 @@ func main() {
 	// 	fmt.Print(nil)
 	// }
 	// --------------- Test for Python API ------------------------
-	udpServer := server.Server{}
-	err := utils.LoadFromJson("config/udpserver_configs.json", &udpServer)
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = udpServer.Init()
-	if err != nil {
-		fmt.Print(err)
-	}
+	// udpServer := server.Server{}
+	// err := utils.LoadFromJson("config/udpserver_configs.json", &udpServer)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// err = udpServer.Init()
+	// if err != nil {
+	// 	fmt.Print(err)
+	// }
+
+	// --------------------- Test 1102---------------------------------
+	// --------------------- Test for packet --------------------------
+	// b := [...]byte{0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04, 0x00, 0x00}
+	// pkt := server.Packet{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, b[:]}
+	// buf := pkt.ToBuf()
+	// fmt.Println(server.FromBuf(buf))
+
+	// pkt2 := server.ServicePacket{pkt, 11, 12, 13, 14}
+	// buf2 := pkt2.ToServiceBuf()
+	// fmt.Println(server.FromServiceBuf(buf2))
+	// -----------------------------------------------------------------
 }

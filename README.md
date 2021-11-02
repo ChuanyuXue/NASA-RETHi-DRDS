@@ -32,35 +32,44 @@ Please visit https://www.purdue.edu/rethi for more information.
 ## 3. Service API
 - **For Python, please reference [demo.py](./demo.py) and [api.py](./api.py).**
 - **For GoLang, please reference demo.go and api.go.**
-- **For other language, please implement by following standards:**
+- **For other Language, please implement by following standards:**
 
 
 ### 3.1 Packet
 
 Data packet is the basic form to send data and also to implement service API:
-<img src="./img/Packet.drawio.png">
 
-- Opt: Operation type in {0, 1, 2, 3, 4, 5} 
-  - 0: Send operation
-  - 1: Request operation
-  - 2: Publish operation
-  - 3: Subscribe operation
-  - 4: Warning
-  - 5: Error
-- Src: Source of packet, associated with Subsystem ID
-- Des: Destination of packet, associated with Subsystem ID
-- Type: Types of data in {0, 1, 2, 3}
-  - 0: No data in payload
-  - 1: FDD data
-  - 2: Agent data
-  - 3: Sensor data
-- Param: Parameter for operation, representing Data ID now
-- Priority: Priority
-- Row / Param2: Length of data in payload
-- Col / Param3: Width of data in payload
-- Length: Length of payload (When Length = 0, Row and Col can be extral parameter)
-- Time: Synchronous time of each data/operation
-- Payload: Data in bytes, float64 for representing real data
+![dds_packet](./img/packet.png)
+
+
+- Src: Source address
+- Dst: Destination address
+- Message_Type: Types of packet
+  - 0x00: Packet defined by Communication network
+  - 0x01: Packet defined Data Service
+- Data_Type: Types of data from 0 to 255
+  - 0x00: No data
+  - 0x01: FDD data
+  - 0x02: Sensor data
+  - 0x03: Agent data
+- Priority: Priority of frame
+- Opt: Options from 0 to 65535
+  - 0x000A: Send operation
+  - 0x000B: Request operation
+  - 0x000C: Publish operation
+  - 0x000D: Subscribe operation
+- Flag:
+  - 0x0000: Last frame
+  - 0x0001: More fragments
+  - 0xFFFE: Warning
+  - 0xFFFF: Error
+- Time: Physical Unix time from 0 to 4294967295
+- Row: Length of data
+- Col: Width of data
+- Length: Flatten length of data (Row * Col)
+- Param: Depends on Opt
+- SubParam: Depends on Opt
+- Payload: Data in bytes
 
 
 
@@ -69,18 +78,22 @@ Data packet is the basic form to send data and also to implement service API:
 Before use the API, please make sure:
 
 - Understand IP and Port of server 
-- Understand IP, Port and ID of client: ID should unique in [1, 65536), ID 0 is left for server
+- Understand IP, Port and ID of client: ID should be unique from 0 to 255, ID 0 is saved for habitat db, ID 1 is saved for ground db.
 - Client information must be registered in server configuration files.
 
-To send asychronous data, first set up headers:
+To send asynchronous data, first set up headers:
 
-- Opt = 0
 - Src = ID of client
 - Des = 0
-- Param = ID of data will be sent
-- Time = Synchronous time of data generated
+- Message_Type = 1
+- Data_Type = 0
+- Time = Physical time of sending send command
 - Priority = Priority
-- [Type, Row, Col, Length] are depended on the data
+- [Type, Row, Col, Length] depend on the data
+- Opt = 10
+- Param = ID of data will be sent
+- Simulink_Time = Simulink time of data generated (Primary key)
+- Data = No bytes here
 
 Then set payload as the bytes array of the data, each element of data for 8 bits.
 
@@ -92,30 +105,35 @@ Finally send this packet by UDP channel to server.
 
 ### 3.3 Request
 
-To require asychronous data, first set up headers:
+To require asynchronous data, first set up headers:
 
-- Opt = 1
+- Opt = 11
 - Src = ID of client
 - Dst = 0
-- Param = ID of data will be retrieved
-- Time = Synchronous time of data generated
-- Priority = Priority
-- Row = 1 for requesting by timestamp / Row > 1 for requesting by time range, where TimeStart = Time, TimeEnd = Time + Length
-- Length = 0
+- Param 1 = ID of data will be sent
+- Param 2 * $2^{16}$ + Param 3 = The start Simulink time of required data
+- Param 4 = The length of required data
+- Time = Physical time of sending request command
 - Type = 0
-- [Col, Payload] have no influence on Request operation, can left for future extension.
+- Priority = Priority
+- Col = 0
+- Row = 0
+- Length = 0
 
 Then send this packet by UDP channel to server.
 
 Next keep listening from server, a packet will be send back with following headers:
 
-- Opt = 1
+- Opt = 11
 - Src = 0
 - Dst = ID of client
-- Param = ID of data is being retrieved
-- Time = Synchronous time of data generated
+- Param 1 = ID of data sent from server
+- Param 2 * $2^{16}$ + Param 3 = The start simulink time of required data
+- Param 4 = The length of required data
+- Time = Physical time of data sending from sever
+- Type = Type of data send back
 - Priority = Priority
-- Row = Length of data in payload
+- Row = Length of data in payload (Should be equal to Param4)
 - Col = Width of data in payload
 - Length = Row * Col
 - Payload = The data you requested
@@ -130,10 +148,12 @@ Finally decode payload by its shape [Row * Col]
 
 To publish data synchronously, set up headers for registering publish first:
 
-- Opt = 2
+- Opt = 12
 - Src = ID of client
 - Dst = 0
-- Param = ID of data being published
+- Type = 0
+- Param 1 =  ID of data being published
+- Time = Physical time of sending publish command
 - Priority = Priority
 - Length = 0
 - Payload = No data for publish request
@@ -142,23 +162,27 @@ Then send this packet by UDP channel to server.
 
 Keep listening from server, a packet will be send back with following headers:
 
-- Opt = 2
+- Opt = 12
 - Src = 0
 - Dst = ID of client
-- Param = ID of data being published
+- Type = 0
+- Param 1 = ID of data being published
+- Param 2 = Simulink time intervals of published data
 - Priority = Priority
-- Row = Rate of data published
+- Row = 0
 - Length = 0
 - Payload = No data for publish request
 
 When receive the above packet, start continuously pushing streaming to server with following headers setting. Decide the shape[Row and Col] of data based on the estimated latency of network and data frequency:
 
-- Opt = 2
-- Src = ID. of client
+- Opt = 12
+- Src = ID of client
 - Dst = 0
-- Param = ID of data being published
+- Type = Type of data
+- Param 1 = ID of data being published
+- Param 2 * $2^{16}$ + Param 3 = The simulink time of publishing data
 - Priority = Priority
-- Time = Synchronous time
+- Time = Physical time of publishing data
 - Payload = Data published to server
 - [Type, Row, Col, Length] are depended on the data
 
@@ -170,25 +194,32 @@ When receive the above packet, start continuously pushing streaming to server wi
 
 To subscribe data synchronously, set up headers for registering subscribe first:
 
-- Opt = 3
+- Opt = 13
 - Src = ID of client
 - Dst = 0
-- Param = ID of data being subscribe
+- Param 1 = ID of data being published
+- Param 2 * $2^{16}$ + Param 3 = The start simulink time of subscribing
 - Priority = Priority
-- Time = Time start for subscription
+- Time =  Physical time of publishing data
+- Row = 0
+- Length = 0
 - Length = 0
 - Payload = No data for subscribe request
 
 Then keep listening from server, a stream will be continuously send back with following headers:
 
-- Opt = 3
+- Opt = 13
 - Src = ID of client
 - Dst = 0
-- Param = ID of data being subscribe
+- Param 1 = ID of data being subscribed
+- Param 2 * $2^{16}$ + Param 3 = The start simulink time of subscribing
+- Param 4 = Time intervals of published data
 - Priority = Priority
-- Time = Synchronous time of data generated
+- Time = Physical time of data sending from server
+- Row = Length of data in payload (Should be equal to Param4)
+- Col = Width of data in payload
+- Length = Row * Col
 - Payload = Subscribed data
-- [Type, Row, Col, Length] are depended on the data
 
 ~~Once client finds data missing it need to send a subscribe from the missing data again.~~
 
@@ -206,7 +237,6 @@ This is the current [plan](https://docs.google.com/document/d/1GJCyouMTSlMumpTqZ
 
 
 <img src="./img/nasa_logo.jpg" width="50" height="50"> *This project is supported by the National Aeronautics and Space Administration*
-
 
 
 
