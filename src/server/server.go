@@ -29,14 +29,15 @@ type Server struct {
 	handler *handler.Handler
 
 	addr         net.UDPAddr
-	clientSrc    []uint8
-	clientSrcMap map[uint8]net.UDPAddr
+	LocalSrc     uint8
+	ClientSrc    []uint8
+	ClientSrcMap map[uint8]net.UDPAddr
 
 	publisherRigister  map[uint16][]uint8 // publisherRigister[data_id] = [client_0, ....]
 	subscriberRigister map[uint16][]uint8 // subscriberRigister[data_id] = [client_0, ....]
 }
 
-func (server *Server) Init() error {
+func (server *Server) Init(databaseConfigPath string) error {
 	// Init data service server
 	var (
 		addr net.UDPAddr
@@ -55,8 +56,10 @@ func (server *Server) Init() error {
 		return err
 	}
 	server.addr = addr
-	server.clientSrc = make([]uint8, len(server.ClientsSrc))
-	server.clientSrcMap = make(map[uint8]net.UDPAddr)
+	temp, _ := strconv.Atoi(server.Src)
+	server.LocalSrc = uint8(temp)
+	server.ClientSrc = make([]uint8, len(server.ClientsSrc))
+	server.ClientSrcMap = make(map[uint8]net.UDPAddr)
 
 	for i := range server.Clients {
 		addr.Port, err = utils.StringToInt(server.ClientsPort[i])
@@ -70,13 +73,13 @@ func (server *Server) Init() error {
 		}
 
 		clientSrc, _ := strconv.Atoi(server.ClientsSrc[i])
-		server.clientSrc[i] = uint8(clientSrc)
-		server.clientSrcMap[uint8(clientSrc)] = addr
+		server.ClientSrc[i] = uint8(clientSrc)
+		server.ClientSrcMap[uint8(clientSrc)] = addr
 	}
 
 	// Init data service handler
 	server.handler = &handler.Handler{}
-	utils.LoadFromJson("config/database_configs.json", server.handler)
+	utils.LoadFromJson(databaseConfigPath, server.handler)
 	err = server.handler.Init()
 	if err != nil {
 		fmt.Println("Failed to init data handler")
@@ -146,9 +149,9 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 	if utils.Uint8Contains(server.publisherRigister[id], dst) { // if publisher registered
 		// if para2 is stop streaming
 		lastSynt := server.handler.QueryLastSynt(id)
-		if synt != lastSynt+1 {
+		if synt < lastSynt {
 			// Send error back to dst
-			server.sendOpt(dst, 7, synt, 2, 65535, id, 0)
+			server.sendOpt(dst, 7, synt, 10, 65535, id, 0)
 			return errors.New("published data not synchronous")
 		}
 
@@ -165,7 +168,7 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 			return err
 		}
 		server.publisherRigister[id] = append(server.publisherRigister[id], dst)
-		server.sendOpt(dst, 7, synt, 2, 0, id, uint16(rate))
+		server.sendOpt(dst, 7, synt, 10, 0, id, uint16(rate))
 	}
 
 	return nil
@@ -180,13 +183,13 @@ func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) 
 				row, _ := server.handler.ReadSynt(id, i)
 				dataMap := make([][]float64, 0)
 				dataMap = append(dataMap, row)
-				server.send(dst, uint8(dataType), 7, synt, 3, 1, id, 0, dataMap)
+				server.send(dst, uint8(dataType), 7, i, 0, 1, id, 0, dataMap)
 			}
 		}
 
 	} else {
 		server.subscriberRigister[id] = append(server.subscriberRigister[id], dst)
-		server.sendOpt(dst, 7, synt, 3, 0, id, rate)
+		server.sendOpt(dst, 7, synt, 10, 0, id, rate)
 	}
 	return nil
 }
@@ -217,7 +220,7 @@ func (server *Server) send(dst uint8, types uint8, priority uint8, synt uint32, 
 	}
 
 	pkt.Payload = PayloadFloat2Buf(dataFlatten)
-	dstAddr := server.clientSrcMap[dst]
+	dstAddr := server.ClientSrcMap[dst]
 	conn, err := net.DialUDP("udp", nil, &dstAddr)
 
 	if err != nil {
@@ -254,7 +257,7 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, opt uint16
 	pkt.Param = uint16(para)
 	pkt.Subparam = uint16(para2)
 
-	dstAddr := server.clientSrcMap[dst]
+	dstAddr := server.ClientSrcMap[dst]
 	conn, err := net.DialUDP("udp", nil, &dstAddr)
 	if err != nil {
 		fmt.Println("Failed to build connection to clients")
@@ -305,13 +308,13 @@ func (server *Server) handle(pkt ServicePacket) error {
 		}
 
 		// forward incoming data
-		if utils.Uint8Contains(server.subscriberRigister[pkt.Param], pkt.Src) {
+		for _, dst := range server.subscriberRigister[pkt.Param] {
 			var dataMat [][]float64
 			for i := 0; i < int(pkt.Row); i++ {
 				dataMat = append(dataMat, rawData[i*int(pkt.Col):(i+1)*int(pkt.Col)])
 			}
-			server.send(pkt.Src, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
-				3, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
+			server.send(dst, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
+				0, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
 		}
 
 	case 1: //Request (operation packet)
@@ -334,13 +337,18 @@ func (server *Server) handle(pkt ServicePacket) error {
 			return err
 		}
 
-		if utils.Uint8Contains(server.subscriberRigister[pkt.Param], pkt.Src) {
+		// forward if not publish regiester
+		if pkt.Length == 0 {
+			return nil
+		}
+
+		for _, dst := range server.subscriberRigister[pkt.Param] {
 			var dataMat [][]float64
 			for i := 0; i < int(pkt.Row); i++ {
 				dataMat = append(dataMat, rawData[i*int(pkt.Col):(i+1)*int(pkt.Col)])
 			}
-			server.send(pkt.Src, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
-				3, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
+			server.send(dst, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
+				0, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
 		}
 
 	case 3: // Subscribe (operation packet)

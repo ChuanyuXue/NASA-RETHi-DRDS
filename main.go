@@ -4,6 +4,7 @@ import (
 	"datarepo/src/server"
 	"datarepo/src/utils"
 	"fmt"
+	"time"
 )
 
 func main() {
@@ -63,15 +64,27 @@ func main() {
 	// if err != nil{
 	// 	fmt.Print(nil)
 	// }
-	// --------------- Test for Python API ------------------------
-	udpServer := server.Server{}
-	err := utils.LoadFromJson("config/udpserver_configs.json", &udpServer)
+	// --------------- Test for Ground <-- Habitat <--> Subsystem ------------------------
+
+	habitatServer := server.Server{}
+	err := utils.LoadFromJson("config/habitat_server_configs.json", &habitatServer)
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = udpServer.Init()
+	go habitatServer.Init("config/database_configs.json")
+
+	groundServer := server.Server{}
+	err = utils.LoadFromJson("config/ground_server_configs.json", &groundServer)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
+	}
+	go groundServer.Init("config/mirror_configs.json")
+
+	time.Sleep(2 * time.Second)
+	habitatServer.Subscribe(3, groundServer.LocalSrc, 0, 1000)
+
+	for {
+
 	}
 
 	// --------------------- Test 1102---------------------------------

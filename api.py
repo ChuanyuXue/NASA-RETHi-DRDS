@@ -261,7 +261,6 @@ def publish(id, synt,value, priority = 7, type=1):
         _length = _row * _col
 
     pkt = Packet()
-    print(_data_type)
     buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
     out_sock.sendto(buf, (ip_server, port_server))
 
@@ -304,8 +303,7 @@ def subscribe(id):
     while True:
         try:
             message, _ = in_sock.recvfrom(65536)
-            values = pkt.get_values(message)
-            return values
+            return pkt.get_values(message)
         except:
             continue
         

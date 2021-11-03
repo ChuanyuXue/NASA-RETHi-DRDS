@@ -54,10 +54,11 @@ Data packet is the basic form to send data and also to implement service API:
   - 0x03: Agent data
 - Priority: Priority of frame
 - Opt: Options from 0 to 65535
-  - 0x000A: Send operation
-  - 0x000B: Request operation
-  - 0x000C: Publish operation
-  - 0x000D: Subscribe operation
+  - 0x0001: Send operation
+  - 0x0002: Request operation
+  - 0x0003: Publish operation
+  - 0x0004: Subscribe operation
+  - 0x000A: Response
 - Flag:
   - 0x0000: Single message
   - 0x0001: Streaming message

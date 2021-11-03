@@ -1,4 +1,5 @@
 import api
+import time
 
 api.init(
     client_ip ="127.0.0.1",
@@ -9,47 +10,78 @@ api.init(
     server_id = 0
 )
 
-## -------------- Time 0 --------------------------
-time = 0
+## -------------- synt 0 --------------------------
+synt = 0
+print("--------------- Time %d ----------------"%synt)
 
 table = 3
 value = [0.1]
-api.send(synt=time, id=table, value = value)
-print("Time %d: Client send asynchronous data %s to table %d"%(time, str(value), table))
+api.send(synt=synt, id=table, value = value)
+print("Clident send data %s to table %d"%(str(value), table))
 
 table = 4
 value = [0.1,0.1,0.1,0.1]
-api.send(synt=time, id=table, value = value)
-print("Time %d: Client send asynchronous data %s to table %d"%(time, str(value), table))
+api.send(synt=synt, id=table, value = value)
+print("Clident send data %s to table %d"%(str(value), table))
+time.sleep(1)
 
-# ## -------------- Time 1 ---------------------------
-time = 1
+# ## -------------- synt 1 ---------------------------
+synt = 1
+print("--------------- Time %d ----------------"%synt)
 
 table = 3
 value = [0.2]
-api.send(synt=time, id=table, value = value)
-print("Time %d: Client send asynchronous data %s to table %d"%(time, str(value), table))
+api.send(synt=synt, id=table, value = value)
+print("Clident send data %s to table %d"%(str(value), table))
 
 table = 3
 re = api.request(synt=0, id=table)
-print("Time %d: Client request asynchronous data %s from table %d"%(time, str(re), table))
+print("Clident request data at %s to table %d"%(str(0), table))
+print("Clident receive data %s to table %d"%(str(re["data"]), table))
 
 table = 3
 re = api.request(synt=(0,2), id=table)
-print("Time %d: Client request asynchronous data %s from table %d"%(time, str(re), table))
+print("Clident request data at %s to table %d"%(str((0,2)), table))
+print("Clident receive data %s to table %d"%(str(re["data"]), table))
 
-# ## ----------------- Time 2 to Time 10 ----------------
 
-time = 2
-re = api.publish_register(3, 2)
-print("Time %d: Client apply for publishing to table %d, get reply %s"%(time, table, str(re)))
+time.sleep(1)
 
-re = api.subscribe_register(3, 2)
-print("Time %d: Client apply for subscribing to table %d from time %d, get reply %s"%(time, table, 0, str(re)))
+# ## ----------------- synt 2 to synt 10 ----------------
 
-for time in range(2, 11):
-    api.publish(3, time, value = [time/10])
-    print("Time %d: Client publishs to table %d"%(time, table))
-    re = api.subscribe(3)
-    print("Time %d: Client subscribe from table %d, get %s"%(time, table, str(re)))
+synt = 2
 
+
+re = api.publish_register(3, synt)
+print("Client apply for publishing to table %d"%table)
+print("Client get reply %s"%re)
+
+re = api.subscribe_register(3, synt)
+print("Client apply for subscribing table %d"%table)
+print("Client get reply %s"%re)
+
+re = api.publish_register(4, synt)
+print("Client apply for publishing to table %d"%table)
+print("Client get reply %s"%re)
+
+re = api.subscribe_register(4, synt)
+print("Client apply for subscribing table %d"%table)
+print("Client get reply %s"%re)
+
+for synt in range(2, 11):
+    print("--------------- Time %d ----------------"%synt)
+    value = [synt/10]
+    table = 3
+    api.publish(table, synt, value = value, type=1)
+    print("Client publishs %s to table %d"%(value, table))
+    re = api.subscribe(table)
+    print("Client subscribe from table %d, get %s"%(table, str(re["data"])))
+
+    value = [synt/10, synt/10,synt/10,synt/10]
+    table = 4
+    api.publish(table, synt, value = value, type=1)
+    print("Client publishs %s to table %d"%(value, table))
+    re = api.subscribe(table)
+    print("Client subscribe from table %d, get %s"%(table, str(re["data"])))
+
+    time.sleep(1)
