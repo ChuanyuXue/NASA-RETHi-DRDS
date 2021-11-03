@@ -4,7 +4,7 @@ import time
 from ctypes import *
 from typing import Tuple
 
-from numpy import uint, uint8
+from numpy import cdouble, uint, uint8
 
 ip_server = "127.0.0.1"    ## Destination IP, referring server_configuration.json
 port_server = 10001       ## Destination Port, referring server_configuration.json
@@ -71,6 +71,11 @@ class Packet:
         values["flag"] = c_uint16.from_buffer_copy(buffer[18:20]).value
         values["param"] = c_uint16.from_buffer_copy(buffer[20:22]).value
         values["subparam"] = c_uint16.from_buffer_copy(buffer[22:24]).value
+        
+        payload = []
+        for i in range(values["length"]):
+            payload.append(c_double.from_buffer_copy(buffer[24+i*8: 24+i*8+8]))
+        values["data"] = payload
         return values
 
         
@@ -138,7 +143,7 @@ def send(id, synt, value, priority=7, type=1):
 
 
 
-def request(id, time, priority = 7):
+def request(id, synt, priority = 7):
     global id_client
     global id_server
     global ip_client
@@ -146,39 +151,49 @@ def request(id, time, priority = 7):
     global port_client
     global port_server
 
-    if not isinstance(time, tuple):
-        _opt = 1 
-        _src = id_client 
+    if not isinstance(synt, tuple):
+        _src = id_client
         _dst = id_server
-        _type = 0
-        _param = id
+        _message_type = 1
+        _data_type = 0
         _priority = priority
+        _physical_time = int(time.time())
+        _simulink_time = synt
         _row = 0
         _col = 0
         _length = 0
-        _time = time
+
+        _opt = 1
+        _flag = 0
+        _param = id
+        _subparam = 1
+
         _payload = []
 
         pkt = Packet()
-        buf = pkt.pkt2Buf(_opt, _src, _dst, _type, _param, _priority,
-                            _row, _col, _length, _time, _payload)
+        buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
         out_sock.sendto(buf, (ip_server, port_server))
     else:
-        _opt = 1 
-        _src = id_client 
+        _src = id_client
         _dst = id_server
-        _type = 0
-        _param = id
+        _message_type = 1
+        _data_type = 0
         _priority = priority
-        _row = time[1]
+        _physical_time = int(time.time())
+        _simulink_time = synt[0]
+        _row = 0
         _col = 0
         _length = 0
-        _time = time[0]
+
+        _opt = 1
+        _flag = 0
+        _param = id
+        _subparam = synt[1]
+
         _payload = []
 
         pkt = Packet()
-        buf = pkt.pkt2Buf(_opt, _src, _dst, _type, _param, _priority,
-                            _row, _col, _length, _time, _payload)
+        buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
         out_sock.sendto(buf, (ip_server, port_server))
 
     while True:

@@ -253,7 +253,7 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) ([]float64, error) {
 	return rawData, nil
 }
 
-func (handler *Handler) QueryInfo(id uint8, column string) (int, error) {
+func (handler *Handler) QueryInfo(id uint16, column string) (int, error) {
 
 	tableName := "info" + strconv.Itoa(int(handler.InfoTable))
 	query := fmt.Sprintf(

@@ -88,7 +88,7 @@ To send asynchronous data, first set up headers:
 - Message_Type = 1
 - Data_Type = Depends on data
 - Priority_Type = 7
-- Physical_Time = Physical time of data
+- Physical_Time = Message sending time
 - Simulink_Time = Simulink time of data
 - [Row, Col, Length] depend on the data
 - Opt = 0
@@ -107,36 +107,37 @@ Finally send this packet by UDP channel to server.
 
 To require asynchronous data, first set up headers:
 
-- Opt = 11
 - Src = ID of client
-- Dst = 0
-- Param 1 = ID of data will be sent
-- Param 2 * $2^{16}$ + Param 3 = The start Simulink time of required data
-- Param 4 = The length of required data
-- Time = Physical time of sending request command
-- Type = 0
-- Priority = Priority
-- Col = 0
-- Row = 0
-- Length = 0
+- Des = 0
+- Message_Type = 1
+- Data_Type = 0
+- Priority_Type = 7
+- Physical_Time = Message sending time
+- Simulink_Time = Simulink time of data
+- [Row, Col, Length]  = [0, 0, 0]
+- Opt = 1
+- Flag = 0
+- Param = ID of data requested
+- Subparam = Number of rows of required data
+- Data = Empty
 
 Then send this packet by UDP channel to server.
 
 Next keep listening from server, a packet will be send back with following headers:
 
-- Opt = 11
 - Src = 0
-- Dst = ID of client
-- Param 1 = ID of data sent from server
-- Param 2 * $2^{16}$ + Param 3 = The start simulink time of required data
-- Param 4 = The length of required data
-- Time = Physical time of data sending from sever
-- Type = Type of data send back
-- Priority = Priority
-- Row = Length of data in payload (Should be equal to Param4)
-- Col = Width of data in payload
-- Length = Row * Col
-- Payload = The data you requested
+- Des = ID of Client
+- Message_Type = 1
+- Data_Type = Depend on data
+- Priority_Type = 7
+- Physical_Time = Message sending time
+- Simulink_Time = Simulink time of data
+- [Row, Col, Length]  = Depend on data
+- Opt = 1
+- Flag = 0
+- Param = ID of data requested
+- Subparam = Number of rows of required data
+- Data = Requested data
 
 Finally decode payload by its shape [Row * Col]
 

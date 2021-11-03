@@ -17,27 +17,26 @@ value = [0.1]
 api.send(synt=time, id=table, value = value)
 print("Time %d: Client send asynchronous data %s to table %d"%(time, str(value), table))
 
-# table = 5
-# value = [0.1,0.1,0.1,0.1]
-# api.send(time=time, id=table, value = value)
-# print("Time %d: Client send asynchronous data %s to table %d"%(time, str(value), table))
+table = 4
+value = [0.1,0.1,0.1,0.1]
+api.send(synt=time, id=table, value = value)
+print("Time %d: Client send asynchronous data %s to table %d"%(time, str(value), table))
 
 # ## -------------- Time 1 ---------------------------
-# time = 1
+time = 1
 
-# table = 4
-# value = [0.2]
-# api.send(time=time, id=table, value = value)
-# print("Time %d: Client send asynchronous data %s to table %d"%(time, str(value), table))
+table = 3
+value = [0.2]
+api.send(synt=time, id=table, value = value)
+print("Time %d: Client send asynchronous data %s to table %d"%(time, str(value), table))
 
+table = 3
+re = api.request(synt=0, id=table)
+print("Time %d: Client request asynchronous data %s from table %d"%(time, str(re), table))
 
-# table = 4
-# re = api.request(time=0, id=table)
-# print("Time %d: Client request asynchronous data %s from table %d"%(time, str(re), table))
-
-# table = 5
-# re = api.request(time=0, id=table)
-# print("Time %d: Client request asynchronous data %s from table %d"%(time, str(re), table))
+table = 3
+re = api.request(synt=(0,2), id=table)
+print("Time %d: Client request asynchronous data %s from table %d"%(time, str(re), table))
 
 # ## ----------------- Time 2 to Time 10 ----------------
 
