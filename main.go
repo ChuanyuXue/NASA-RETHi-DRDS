@@ -1,8 +1,8 @@
 package main
 
 import (
-	// "datarepo/src/handler"
 	"datarepo/src/server"
+	"datarepo/src/utils"
 	"fmt"
 )
 
@@ -32,7 +32,7 @@ func main() {
 
 	// // write in 5 table, time=0, value = xxxx
 	// tempData := []float64{1.12312312, 123, 32, 1}
-	// err = handler.Write(5, 0, tempData)
+	// err = handler.WriteSynt(4, 0, tempData)
 	// if err != nil {
 	// 	fmt.Println(err)
 	// }
@@ -48,13 +48,13 @@ func main() {
 	// 	fmt.Println(err)
 	// }
 	// // READ from record5 table, time=0
-	// data, err := handler.ReadSynt(5, 0)
+	// data, err := handler.ReadSynt(4, 0)
 	// if err != nil {
 	// 	fmt.Println(err)
 	// }
 	// fmt.Println(data)
 	// --------------- Test for UDP server ---------------------
-	// udpServer := server.UdpServer{}
+	// udpServer := server.Server{}
 	// err := utils.LoadFromJson("config/udpserver_configs.json", &udpServer)
 	// if err != nil {
 	// 	fmt.Println(nil)

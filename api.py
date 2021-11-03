@@ -16,17 +16,24 @@ id_client = 1
 
 class Header(Structure):
     _fields_ = [
-        ("opt", c_uint8),
         ("src", c_uint8),
         ("dst", c_uint8),
-        ("type", c_uint8),
-        ("param", c_uint8),
+        ("message_type", c_uint8)
+        ("data_type", c_uint8),
         ("priority", c_uint8),
+        ("physical_time", c_uint32),
+        ("simulink_time", c_uint32)
         ("row", c_uint8),
         ("col", c_uint8),
         ("length", c_uint16),
-        ("time", c_uint32)
+        ("Option", c_uint16),
+        ("Flag", c_uint16),
+        ("Param", c_uint16),
+        ("Subparam", c_uint16),
     ]
+
+_src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _time, _payload
+
 
 class Packet:
     def __init__(self):

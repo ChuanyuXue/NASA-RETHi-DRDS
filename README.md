@@ -86,16 +86,16 @@ To send asynchronous data, first set up headers:
 - Src = ID of client
 - Des = 0
 - Message_Type = 1
-- Data_Type = 0
-- Time = Physical time of sending send command
-- Priority = Priority
-- [Type, Row, Col, Length] depend on the data
-- Opt = 10
+- Data_Type = Depends on data
+- Priority_Type = 7
+- Physical_Time = Physical time of data
+- Simulink_Time = Simulink time of data
+- [Row, Col, Length] depend on the data
+- Opt = 0
+- Flag = 0
 - Param = ID of data will be sent
-- Simulink_Time = Simulink time of data generated (Primary key)
-- Data = No bytes here
-
-Then set payload as the bytes array of the data, each element of data for 8 bits.
+- Subparam = 0
+- Data = One row of sending data in C_Double
 
 Finally send this packet by UDP channel to server.
 
