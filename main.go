@@ -64,15 +64,15 @@ func main() {
 	// 	fmt.Print(nil)
 	// }
 	// --------------- Test for Python API ------------------------
-	// udpServer := server.Server{}
-	// err := utils.LoadFromJson("config/udpserver_configs.json", &udpServer)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// err = udpServer.Init()
-	// if err != nil {
-	// 	fmt.Print(err)
-	// }
+	udpServer := server.Server{}
+	err := utils.LoadFromJson("config/udpserver_configs.json", &udpServer)
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = udpServer.Init()
+	if err != nil {
+		fmt.Print(err)
+	}
 
 	// --------------------- Test 1102---------------------------------
 	// --------------------- Test for packet --------------------------
