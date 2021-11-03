@@ -59,8 +59,8 @@ Data packet is the basic form to send data and also to implement service API:
   - 0x000C: Publish operation
   - 0x000D: Subscribe operation
 - Flag:
-  - 0x0000: Last frame
-  - 0x0001: More fragments
+  - 0x0000: Single message
+  - 0x0001: Streaming message
   - 0xFFFE: Warning
   - 0xFFFF: Error
 - Time: Physical Unix time from 0 to 4294967295
@@ -149,43 +149,53 @@ Finally decode payload by its shape [Row * Col]
 
 To publish data synchronously, set up headers for registering publish first:
 
-- Opt = 12
 - Src = ID of client
-- Dst = 0
-- Type = 0
-- Param 1 =  ID of data being published
-- Time = Physical time of sending publish command
-- Priority = Priority
-- Length = 0
-- Payload = No data for publish request
+- Des = 0
+- Message_Type = 1
+- Data_Type = 0
+- Priority_Type = 7
+- Physical_Time = Message sending time
+- Simulink_Time = Start Simulink time of Publishing
+- [Row, Col, Length]  = [0, 0, 0]
+- Opt = 2
+- Flag = 0
+- Param = ID of data published
+- Subparam = 0
+- Data = Empty
 
 Then send this packet by UDP channel to server.
 
 Keep listening from server, a packet will be send back with following headers:
 
-- Opt = 12
 - Src = 0
-- Dst = ID of client
-- Type = 0
-- Param 1 = ID of data being published
-- Param 2 = Simulink time intervals of published data
-- Priority = Priority
-- Row = 0
-- Length = 0
-- Payload = No data for publish request
+- Des = ID of client
+- Message_Type = 1
+- Data_Type = Depend on data
+- Priority_Type = 7
+- Physical_Time = Message sending time
+- Simulink_Time = Start Simulink time of Publishing
+- [Row, Col, Length]  = [0, 0, 0]
+- Opt = 2
+- Flag = 0
+- Param = ID of data published
+- Subparam = Rate of data published
+- Data = Empty
 
 When receive the above packet, start continuously pushing streaming to server with following headers setting. Decide the shape[Row and Col] of data based on the estimated latency of network and data frequency:
 
-- Opt = 12
 - Src = ID of client
-- Dst = 0
-- Type = Type of data
-- Param 1 = ID of data being published
-- Param 2 * $2^{16}$ + Param 3 = The simulink time of publishing data
-- Priority = Priority
-- Time = Physical time of publishing data
-- Payload = Data published to server
-- [Type, Row, Col, Length] are depended on the data
+- Des = 0
+- Message_Type = 1
+- Data_Type = Depend on data
+- Priority_Type = 7
+- Physical_Time = Message sending time
+- Simulink_Time = Start Simulink time of Publishing
+- [Row, Col, Length]  = Depend on data
+- Opt = 2
+- Flag = 1
+- Param = ID of data published
+- Subparam = 0
+- Payload = Data publishing to server
 
 ~~Once server finds data missing or latency it will send warning or error packet back.~~
 
@@ -195,32 +205,35 @@ When receive the above packet, start continuously pushing streaming to server wi
 
 To subscribe data synchronously, set up headers for registering subscribe first:
 
-- Opt = 13
 - Src = ID of client
-- Dst = 0
-- Param 1 = ID of data being published
-- Param 2 * $2^{16}$ + Param 3 = The start simulink time of subscribing
-- Priority = Priority
-- Time =  Physical time of publishing data
-- Row = 0
-- Length = 0
-- Length = 0
-- Payload = No data for subscribe request
+- Des = 0
+- Message_Type = 1
+- Data_Type = 0
+- Priority_Type = 7
+- Physical_Time = Message sending time
+- Simulink_Time = Start Simulink time of Subscribe
+- [Row, Col, Length]  = [0, 0, 0]
+- Opt = 3
+- Flag = 0
+- Param = ID of data subscribed
+- Subparam = Rate of data subscribed
+- Data = Empty
 
 Then keep listening from server, a stream will be continuously send back with following headers:
 
-- Opt = 13
-- Src = ID of client
-- Dst = 0
-- Param 1 = ID of data being subscribed
-- Param 2 * $2^{16}$ + Param 3 = The start simulink time of subscribing
-- Param 4 = Time intervals of published data
-- Priority = Priority
-- Time = Physical time of data sending from server
-- Row = Length of data in payload (Should be equal to Param4)
-- Col = Width of data in payload
-- Length = Row * Col
-- Payload = Subscribed data
+- Src = 0
+- Des = ID of client
+- Message_Type = 1
+- Data_Type = Depend on data
+- Priority_Type = 7
+- Physical_Time = Message sending time
+- Simulink_Time = Start Simulink time of Subscribe
+- [Row, Col, Length]  = Depend on data
+- Opt = 3
+- Flag = 1
+- Param = ID of data subscribed
+- Subparam = 0
+- Data = Data subscribing from server
 
 ~~Once client finds data missing it need to send a subscribe from the missing data again.~~
 

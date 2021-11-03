@@ -204,41 +204,50 @@ def request(id, synt, priority = 7):
             continue
 
 
-def publish_register(id):
-    _opt = 2 
-    _src = id_client  
+def publish_register(id, synt, priority=7):
+    _src = id_client
     _dst = id_server
-    _type = 0
-    _param = id
-    _priority = 7 
-    _length = 0
+    _message_type = 1
+    _data_type = 0
+    _priority = priority
+    _physical_time = int(time.time())
+    _simulink_time = synt
     _row = 0
-    _col = 0 
-    _time = 0
+    _col = 0
+    _length = 0
+
+    _opt = 2
+    _flag = 0
+    _param = id
+    _subparam = 0
+
     _payload = []
 
     pkt = Packet()
-    buf = pkt.pkt2Buf(_opt, _src, _dst, _type, _param, _priority,
-                        _row, _col, _length, _time, _payload)
+    buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
     out_sock.sendto(buf, (ip_server, port_server))
 
     while True:
         try:
             message, _ = in_sock.recvfrom(65536)
-
             return pkt.get_values(message)
         except:
             pass
 
  
-def publish(id, time, value, priority = 7, type=1):
-    _opt = 2 
-    _src = id_client  
-    _dst = id_server  
-    _type = type
-    _param = 4  
+def publish(id, synt,value, priority = 7, type=1):
+    _src = id_client
+    _dst = id_server
+    _message_type = 1
+    _data_type = type
     _priority = priority
-    _time = time
+    _physical_time = int(time.time())
+    _simulink_time = synt
+
+    _opt = 2
+    _flag = 1
+    _param = id
+    _subparam = 0
 
     if not isinstance(value[0], list):
         _payload = value
@@ -252,27 +261,33 @@ def publish(id, time, value, priority = 7, type=1):
         _length = _row * _col
 
     pkt = Packet()
-    buf = pkt.pkt2Buf(_opt, _src, _dst, _type, _param, _priority,
-                    _row, _col, _length, _time, _payload)
+    print(_data_type)
+    buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
     out_sock.sendto(buf, (ip_server, port_server))
 
 
-def subscribe_register(id, time):
-    _opt = 3 
-    _src = id_client  
-    _dst = id_server  
-    _type = 0
-    _param = id
-    _priority = 7 
-    _length = 0
+
+def subscribe_register(id, synt, priority=7):
+    _src = id_client
+    _dst = id_server
+    _message_type = 1
+    _data_type = 0
+    _priority = priority
+    _physical_time = int(time.time())
+    _simulink_time = synt
     _row = 0
-    _col = 0 
-    _time = time
+    _col = 0
+    _length = 0
+
+    _opt = 3
+    _flag = 1
+    _param = id
+    _subparam = 0
     _payload = []
 
+
     pkt = Packet()
-    buf = pkt.pkt2Buf(_opt, _src, _dst, _type, _param, _priority,
-                        _row, _col, _length, _time, _payload)
+    buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
     out_sock.sendto(buf, (ip_server, port_server))
 
     while True:
@@ -285,15 +300,12 @@ def subscribe_register(id, time):
 
 def subscribe(id):
     pkt = Packet()
+
     while True:
         try:
             message, _ = in_sock.recvfrom(65536)
             values = pkt.get_values(message)
-            if values[0] == 3 and values[4] == id:
-                return values
-            else:
-                time.sleep(0.1)
-                out_sock.sendto(message, (ip_client, port_client))
+            return values
         except:
             continue
         

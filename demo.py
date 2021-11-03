@@ -40,16 +40,16 @@ print("Time %d: Client request asynchronous data %s from table %d"%(time, str(re
 
 # ## ----------------- Time 2 to Time 10 ----------------
 
-# time = 2
-# re = api.publish_register(4)
-# print("Time %d: Client apply for publishing to table %d, get reply %s"%(time, table, str(re)))
+time = 2
+re = api.publish_register(3, 2)
+print("Time %d: Client apply for publishing to table %d, get reply %s"%(time, table, str(re)))
 
-# re = api.subscribe_register(4, 0)
-# print("Time %d: Client apply for subscribing to table %d from time %d, get reply %s"%(time, table, 0, str(re)))
+re = api.subscribe_register(3, 2)
+print("Time %d: Client apply for subscribing to table %d from time %d, get reply %s"%(time, table, 0, str(re)))
 
-# for time in range(2, 11):
-#     api.publish(4, time, value= [time/10])
-#     print("Time %d: Client publishs to table %d"%(time, table))
-#     re = api.subscribe(4)
-#     print("Time %d: Client subscribe from table %d, get %s"%(time, table, str(re)))
+for time in range(2, 11):
+    api.publish(3, time, value = [time/10])
+    print("Time %d: Client publishs to table %d"%(time, table))
+    re = api.subscribe(3)
+    print("Time %d: Client subscribe from table %d, get %s"%(time, table, str(re)))
 

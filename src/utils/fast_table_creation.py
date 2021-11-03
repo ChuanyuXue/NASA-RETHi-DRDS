@@ -1,6 +1,6 @@
 import mysql.connector
 
-data_base = "nasa_mirror"
+data_base = "nasa"
 cnx = mysql.connector.connect(user='root', password='12345678',
                               host='127.0.0.1',
                               database=data_base)
@@ -147,6 +147,6 @@ for key, value in tables.items():
     if key in actions:
         for i in actions[key]:
             cursor.execute(i)
-        
+print("Data base has been initialized")
         
 cnx.close()

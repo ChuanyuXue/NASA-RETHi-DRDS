@@ -275,7 +275,7 @@ func (handler *Handler) QueryInfo(id uint16, column string) (int, error) {
 	return int(para), nil
 }
 
-func (handler *Handler) QueryLastSynt(id uint8) uint32 {
+func (handler *Handler) QueryLastSynt(id uint16) uint32 {
 	var time string
 	tableName := "record" + strconv.Itoa(int(id))
 	query := fmt.Sprintf(
