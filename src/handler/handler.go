@@ -24,10 +24,11 @@ type Handler struct {
 	DBPointer    *sql.DB
 	Tables       []string
 	InteTable    uint8
+	RelaTable    uint8
 	InfoTable    uint8
-	RecordTables []uint8
+	RecordTables []uint16
 
-	DataShapes map[uint8]uint8
+	DataShapes map[uint16]uint8
 
 	UserName string `json:"user_name"`
 	PassWord string `json:"password"`
@@ -61,7 +62,8 @@ func (handler *Handler) Init() error {
 		return err
 	}
 
-	regInteraction := regexp.MustCompile(`inte\d+`)
+	regInteraction := regexp.MustCompile(`link\d+`)
+	regRelationship := regexp.MustCompile(`rela\d+`)
 	regInfo := regexp.MustCompile(`info\d+`)
 	regRecord := regexp.MustCompile(`record\d+`)
 	for rows.Next() {
@@ -70,15 +72,29 @@ func (handler *Handler) Init() error {
 			fmt.Println("Failed to load data:", err)
 		} else {
 			// Sniff Interaction Table
-			matchInte := regInteraction.FindAllString(tableName, -1)
+			matchInte := regRelationship.FindAllString(tableName, -1)
 			if matchInte != nil {
 				temp, err := utils.StringToInt(matchInte[0][4:])
 				if err != nil {
-					fmt.Println("Sniff Interation table error:", err)
-					panic("sniff Interation table error")
+					fmt.Println("Sniff relationship table error:", err)
+					panic("sniff relationship table error")
 				}
-				if temp != 0 {
-					fmt.Println("Table ID of interaction table not equal to zero!", err)
+				if temp != 1 {
+					fmt.Println("Table ID of relationship table not equal to one!", err)
+				}
+				handler.RelaTable = uint8(temp)
+			}
+
+			// Sniff Interaction Table
+			matchLink := regInteraction.FindAllString(tableName, -1)
+			if matchLink != nil {
+				temp, err := utils.StringToInt(matchLink[0][4:])
+				if err != nil {
+					fmt.Println("Sniff Interaction table error:", err)
+					panic("sniff Interaction table error")
+				}
+				if temp != 2 {
+					fmt.Println("Table ID of Interaction table not equal to two!", err)
 				}
 				handler.InteTable = uint8(temp)
 			}
@@ -90,8 +106,8 @@ func (handler *Handler) Init() error {
 					fmt.Println("Sniff Data Information table error:", err)
 					panic("sniff data information table error")
 				}
-				if temp != 1 {
-					fmt.Println("Table ID of information table not equal to one!", err)
+				if temp != 0 {
+					fmt.Println("Table ID of information table not equal to zero!", err)
 				}
 				handler.InfoTable = uint8(temp)
 			}
@@ -102,7 +118,7 @@ func (handler *Handler) Init() error {
 				if err != nil {
 					fmt.Println("Sniff Data Record table error:", err)
 				}
-				handler.RecordTables = append(handler.RecordTables, uint8(temp))
+				handler.RecordTables = append(handler.RecordTables, uint16(temp))
 			}
 			// Sniff all Table
 			handler.Tables = append(handler.Tables, tableName)
@@ -123,9 +139,9 @@ func (handler *Handler) Init() error {
 		panic("failed to query information table")
 	}
 
-	handler.DataShapes = make(map[uint8]uint8)
+	handler.DataShapes = make(map[uint16]uint8)
 	for rows.Next() {
-		var dataId uint8
+		var dataId uint16
 		var dataSize uint8
 		err := rows.Scan(&dataId, &dataSize)
 		if err != nil {
@@ -136,7 +152,7 @@ func (handler *Handler) Init() error {
 	return nil
 }
 
-func (handler *Handler) WriteSynt(id uint8, synt uint32, value []float64) error {
+func (handler *Handler) WriteSynt(id uint16, synt uint32, value []float64) error {
 	//Security Check:
 	// // 1. ID == 0 is not allowed
 	// if handler.InteTable == id {
@@ -157,8 +173,8 @@ func (handler *Handler) WriteSynt(id uint8, synt uint32, value []float64) error 
 	// construct query sentence
 	var columnList []string
 	var columnFillin []string
-	columnList = append(columnList, "synchronous_time")
-	columnList = append(columnList, "time")
+	columnList = append(columnList, "simulink_time")
+	columnList = append(columnList, "physical_time")
 
 	for i := 0; i != int(handler.DataShapes[id]); i++ {
 		columnList = append(columnList, "value"+strconv.Itoa(i))
@@ -186,7 +202,7 @@ func (handler *Handler) WriteSynt(id uint8, synt uint32, value []float64) error 
 	return nil
 }
 
-func (handler *Handler) ReadSynt(id uint8, synt uint32) ([]float64, error) {
+func (handler *Handler) ReadSynt(id uint16, synt uint32) ([]float64, error) {
 	var tableName string
 	var dataSize uint8
 	var columnPattern string
@@ -206,7 +222,7 @@ func (handler *Handler) ReadSynt(id uint8, synt uint32) ([]float64, error) {
 	}
 
 	query := fmt.Sprintf(
-		"SELECT %s FROM %s.%s WHERE synchronous_time = %s;",
+		"SELECT %s FROM %s.%s WHERE simulink_time = %s;",
 		columnPattern,
 		handler.DBName,
 		tableName,
@@ -237,7 +253,7 @@ func (handler *Handler) ReadSynt(id uint8, synt uint32) ([]float64, error) {
 	return rawData, nil
 }
 
-func (handler *Handler) QueryInfo(id uint8, column string) (int, error) {
+func (handler *Handler) QueryInfo(id uint16, column string) (int, error) {
 
 	tableName := "info" + strconv.Itoa(int(handler.InfoTable))
 	query := fmt.Sprintf(
@@ -259,11 +275,11 @@ func (handler *Handler) QueryInfo(id uint8, column string) (int, error) {
 	return int(para), nil
 }
 
-func (handler *Handler) QueryLastSynt(id uint8) uint32 {
+func (handler *Handler) QueryLastSynt(id uint16) uint32 {
 	var time string
 	tableName := "record" + strconv.Itoa(int(id))
 	query := fmt.Sprintf(
-		"SELECT synchronous_time FROM %s.%s ORDER BY synchronous_time DESC LIMIT 1;",
+		"SELECT simulink_time FROM %s.%s ORDER BY simulink_time DESC LIMIT 1;",
 		handler.DBName,
 		tableName,
 	)
