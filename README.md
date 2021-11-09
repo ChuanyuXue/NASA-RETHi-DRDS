@@ -198,6 +198,24 @@ When receive the above packet, start continuously pushing streaming to server wi
 - Subparam = 0
 - Payload = Data publishing to server
 
+To terminate publishing, send
+
+- Src = ID of client
+- Des = 0
+- Message_Type = 1
+- Data_Type = 0
+- Priority_Type = 7
+- Physical_Time = Message sending time
+- Simulink_Time = Start Simulink time of 
+- [Row, Col, Length]  = [0, 0, 0]
+- Opt = 2
+- Flag = 0
+- Param = ID of data published
+- Subparam = 0
+- Data = Empty
+
+\[ Same as register\]
+
 ~~Once server finds data missing or latency it will send warning or error packet back.~~
 
 
@@ -229,7 +247,7 @@ Then keep listening from server, a stream will be continuously send back with fo
 - Priority_Type = 7
 - Physical_Time = Message sending time
 - Simulink_Time = Start Simulink time of Subscribe
-- [Row, Col, Length]  = Depend on data
+- [Row, Col, Length] = Depend on data
 - Opt = 3
 - Flag = 1
 - Param = ID of data subscribed
@@ -238,8 +256,23 @@ Then keep listening from server, a stream will be continuously send back with fo
 
 ~~Once client finds data missing it need to send a subscribe from the missing data again.~~
 
- 
+To terminate Subscribe function, send
 
+- Src = ID of client
+- Des = 0
+- Message_Type = 1
+- Data_Type = 0
+- Priority_Type = 7
+- Physical_Time = Message sending time
+- Simulink_Time = Start Simulink time of Subscribe
+- [Row, Col, Length]  = [0, 0, 0]
+- Opt = 3
+- Flag = 0
+- Param = ID of data subscribed
+- Subparam = 0
+- Data = Empty
+ 
+\[ Same as register\]
 
 
 ## 4. Current Plan
