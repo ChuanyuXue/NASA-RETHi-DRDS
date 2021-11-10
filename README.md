@@ -46,35 +46,35 @@ Data packet is the basic form to send data and also to implement service API:
 
 - Src: Source address
 - Dst: Destination address
-- Message_Type: Types of packet
+- MessageType(messaage_type): Types of packet
   - 0x00: Packet defined by Communication network
   - 0x01: Packet defined Data Service
-- Data_Type: Types of data from 0 to 255
+- DataType(data_type): Types of data from 0 to 255
   - 0x00: No data
   - 0x01: FDD data
   - 0x02: Sensor data
   - 0x03: Agent data
-- Priority: Priority of frame
-- Opt: Options from 0 to 65535
+- Priority(priority): Priority of frame
+- Opt(opt): Options from 0 to 65535
   - 0x0001: Send operation
   - 0x0002: Request operation
   - 0x0003: Publish operation
   - 0x0004: Subscribe operation
   - 0x000A: Response
-- Flag:
+- Flag(flag):
   - 0x0000: Single message
   - 0x0001: Streaming message
   - 0xFFFE: Warning
   - 0xFFFF: Error
-- Time: Physical Unix time from 0 to 4294967295
-- Row: Length of data
-- Col: Width of data
-- Length: Flatten length of data (Row * Col)
-- Param: Depends on Opt
-- SubParam: Depends on Opt
-- Payload: Data in bytes
+- Time(time): Physical Unix time from 0 to 4294967295
+- Row(raw): Length of data
+- Col(col): Width of data
+- Length(length): Flatten length of data (Row * Col)
+- Param(param): Depends on Opt
+- SubParam(subparam): Depends on Opt
+- Data(data): Data in bytes
 
-
+*Name in bracket is for JSON structure.*
 
 ### 3.2 Send
 
