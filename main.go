@@ -8,6 +8,16 @@ import (
 )
 
 func main() {
+	// --------------------- Test for packet --------------------------
+	// b := [...]byte{0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04, 0x00, 0x00}
+	// pkt := server.Packet{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, b[:]}
+	// buf := pkt.ToBuf()
+	// fmt.Println(server.FromBuf(buf))
+
+	// pkt2 := server.ServicePacket{pkt, 11, 12, 13, 14}
+	// buf2 := pkt2.ToServiceBuf()
+	// fmt.Println(server.FromServiceBuf(buf2))
+
 	// ----------------------- Test for Handler Init -----------------------------
 	// handler := handler.Handler{}
 	// err := utils.LoadFromJson("config/database_configs.json", &handler)
@@ -19,6 +29,7 @@ func main() {
 	// if err != nil {
 	// 	fmt.Println(err)
 	// }
+
 	// ----------------------- Test for Handler Write -----------------------------
 	// handler := handler.Handler{}
 	// err := utils.LoadFromJson("config/database_configs.json", &handler)
@@ -37,6 +48,7 @@ func main() {
 	// if err != nil {
 	// 	fmt.Println(err)
 	// }
+
 	//-------------- Test for Hanlder Index Read ---------------------
 	// handler := handler.Handler{}
 	// err := utils.LoadFromJson("config/database_configs.json", &handler)
@@ -54,7 +66,8 @@ func main() {
 	// 	fmt.Println(err)
 	// }
 	// fmt.Println(data)
-	// --------------- Test for UDP server ---------------------
+
+	// --------------- Test for Data service server ---------------------
 	// udpServer := server.Server{}
 	// err := utils.LoadFromJson("config/udpserver_configs.json", &udpServer)
 	// if err != nil {
@@ -66,36 +79,26 @@ func main() {
 	// }
 	// --------------- Test for Ground <-- Habitat <--> Subsystem ------------------------
 
+	// Start Habitat server
 	habitatServer := server.Server{}
-	err := utils.LoadFromJson("config/habitat_server_configs.json", &habitatServer)
-	if err != nil {
-		fmt.Println(err)
-	}
+	utils.LoadFromJson("config/habitat_server_configs.json", &habitatServer)
 	go habitatServer.Init("config/database_configs.json")
-
-	groundServer := server.Server{}
-	err = utils.LoadFromJson("config/ground_server_configs.json", &groundServer)
-	if err != nil {
-		fmt.Println(err)
-	}
-	go groundServer.Init("config/mirror_configs.json")
-
+	fmt.Println("Habitat Server Started")
 	time.Sleep(2 * time.Second)
+
+	// Start Ground server
+	groundServer := server.Server{}
+	utils.LoadFromJson("config/ground_server_configs.json", &groundServer)
+	go groundServer.Init("config/mirror_configs.json")
+	fmt.Println("Ground Server Started")
+	time.Sleep(2 * time.Second)
+
+	// Let Ground server subscribe Habitat server
 	habitatServer.Subscribe(3, groundServer.LocalSrc, 0, 1000)
+	fmt.Println("Ground Server subscribed Habitat server")
 
 	for {
 
 	}
 
-	// --------------------- Test 1102---------------------------------
-	// --------------------- Test for packet --------------------------
-	// b := [...]byte{0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04, 0x00, 0x00}
-	// pkt := server.Packet{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, b[:]}
-	// buf := pkt.ToBuf()
-	// fmt.Println(server.FromBuf(buf))
-
-	// pkt2 := server.ServicePacket{pkt, 11, 12, 13, 14}
-	// buf2 := pkt2.ToServiceBuf()
-	// fmt.Println(server.FromServiceBuf(buf2))
-	// -----------------------------------------------------------------
 }
