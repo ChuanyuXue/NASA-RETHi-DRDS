@@ -29,7 +29,7 @@ Please visit https://www.purdue.edu/rethi for more information.
 ### 2.4 DDS - System design
 <img src="./img/DDS_UML.drawio.png">
 
-## 3. Service API
+## 3. Service Protocol
 - **For Python, please reference [demo.py](./demo.py) and [api.py](./api.py).**
 - **For GoLang, please reference demo.go and api.go.**
 - **For JavaScript, please reference demo.html**
