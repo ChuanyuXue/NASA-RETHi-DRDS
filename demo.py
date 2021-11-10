@@ -51,7 +51,6 @@ time.sleep(1)
 
 synt = 2
 
-
 re = api.publish_register(3, synt)
 print("Client apply for publishing to table %d"%table)
 print("Client get reply %s"%re)
