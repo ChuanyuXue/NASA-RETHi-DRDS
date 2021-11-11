@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"math"
 )
@@ -10,6 +11,7 @@ import (
 type Packet struct {
 	Src          uint8  `json:"-"`
 	Dst          uint8  `json:"-"`
+	TransType    uint8  `json:"-"`
 	MessageType  uint8  `json:"-"`
 	DataType     uint8  `json:"data_type"`
 	Priority     uint8  `json:"priority"`
@@ -35,6 +37,7 @@ func FromBuf(buf []byte) Packet {
 	pkt.Col = uint8(buf[13])
 	pkt.Length = binary.LittleEndian.Uint16(buf[14:16])
 	pkt.Payload = buf[16:]
+	pkt.TransType = 0
 	return pkt
 }
 
@@ -105,7 +108,6 @@ func (pkt *ServicePacket) ToServiceBuf() []byte {
 	binary.LittleEndian.PutUint16(buf[18:20], uint16(pkt.Flag))
 	binary.LittleEndian.PutUint16(buf[20:22], uint16(pkt.Param))
 	binary.LittleEndian.PutUint16(buf[22:24], uint16(pkt.Subparam))
-
 	return append(buf[:], pkt.Payload...)
 }
 
@@ -119,4 +121,11 @@ func FromServiceBuf(buf []byte) ServicePacket {
 	pkt.Payload = pkt.Payload[8:]
 	servicePkt.Packet = pkt
 	return servicePkt
+}
+
+func FromJSON(buf []byte) ServicePacket {
+	var pkt ServicePacket
+	json.Unmarshal(buf, &pkt)
+	pkt.MessageType = 1
+	return pkt
 }

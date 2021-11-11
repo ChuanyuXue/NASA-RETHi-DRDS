@@ -6,6 +6,9 @@ import (
 	"errors"
 	"time"
 
+	"github.com/AmyangXYZ/sgo"
+	"github.com/gorilla/websocket"
+
 	// "errors"
 	"fmt"
 	"net"
@@ -28,12 +31,16 @@ type Server struct {
 	ClientsPortOut []string `json:"clients_port_out"`
 	ClientsSrc     []string `json:"clients_src"`
 
-	handler *handler.Handler
+	handler     *handler.Handler
+	handlerHttp *sgo.SGo
+	upGrader    websocket.Upgrader
+	pktChan     chan *Packet
 
-	addr         net.UDPAddr
-	LocalSrc     uint8
-	ClientSrc    []uint8
-	ClientSrcMap map[uint8]net.UDPAddr
+	addr             net.UDPAddr
+	LocalSrc         uint8
+	ClientSrc        []uint8
+	ClientSrcMapUdp  map[uint8]net.UDPAddr
+	ClientSrcMapConn map[uint8]*websocket.Conn
 
 	publisherRigister  map[uint16][]uint8 // publisherRigister[data_id] = [client_0, ....]
 	subscriberRigister map[uint16][]uint8 // subscriberRigister[data_id] = [client_0, ....]
@@ -61,9 +68,13 @@ func (server *Server) Init(databaseConfigPath string) error {
 	temp, _ := strconv.Atoi(server.Src)
 	server.LocalSrc = uint8(temp)
 	server.ClientSrc = make([]uint8, len(server.ClientsSrc))
-	server.ClientSrcMap = make(map[uint8]net.UDPAddr)
+	server.ClientSrcMapUdp = make(map[uint8]net.UDPAddr)
+	server.ClientSrcMapConn = make(map[uint8]*websocket.Conn)
+
+	//save information for clients
 
 	for i := range server.Clients {
+		// Build UDP connection
 		addr.Port, err = utils.StringToInt(server.ClientsPortInn[i])
 		addr.IP = net.ParseIP(server.Clients[i])
 		if err != nil {
@@ -74,10 +85,16 @@ func (server *Server) Init(databaseConfigPath string) error {
 			fmt.Println("Failed to load clients configuration")
 		}
 
+		//Assign
 		clientSrc, _ := strconv.Atoi(server.ClientsSrc[i])
 		server.ClientSrc[i] = uint8(clientSrc)
-		server.ClientSrcMap[uint8(clientSrc)] = addr
+		server.ClientSrcMapUdp[uint8(clientSrc)] = addr
 	}
+	server.upGrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
+	server.handlerHttp.GET("/ws", server.listenHttp)
 
 	// Init data service handler
 	server.handler = &handler.Handler{}
@@ -222,7 +239,7 @@ func (server *Server) send(dst uint8, types uint8, priority uint8, synt uint32, 
 	}
 
 	pkt.Payload = PayloadFloat2Buf(dataFlatten)
-	dstAddr := server.ClientSrcMap[dst]
+	dstAddr := server.ClientSrcMapUdp[dst]
 	conn, err := net.DialUDP("udp", nil, &dstAddr)
 
 	if err != nil {
@@ -259,7 +276,7 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, opt uint16
 	pkt.Param = uint16(para)
 	pkt.Subparam = uint16(para2)
 
-	dstAddr := server.ClientSrcMap[dst]
+	dstAddr := server.ClientSrcMapUdp[dst]
 	conn, err := net.DialUDP("udp", nil, &dstAddr)
 	if err != nil {
 		fmt.Println("Failed to build connection to clients")
@@ -297,6 +314,29 @@ func (server *Server) listen(addr net.UDPAddr, wg *sync.WaitGroup) error {
 		if err != nil {
 			fmt.Println(err)
 		}
+	}
+}
+
+func (server *Server) listenHttp(ctx *sgo.Context) error {
+	ws, err := server.upGrader.Upgrade(ctx.Resp, ctx.Req, nil)
+	if err != nil {
+		return err
+	}
+
+	_, buf, err := ws.ReadMessage()
+	packet := FromJSON(buf)
+	server.ClientSrcMapConn[packet.Src] = ws
+	if err != nil {
+		return err
+	}
+
+	for {
+		_, buf, err := ws.ReadMessage()
+		if err != nil {
+			return err
+		}
+		pkt := FromJSON(buf)
+		server.handle(pkt)
 	}
 }
 
