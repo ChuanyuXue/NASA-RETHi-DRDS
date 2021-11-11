@@ -255,7 +255,7 @@ func (server *Server) send(dst uint8, types uint8, priority uint8, synt uint32, 
 
 	return nil
 }
-
+//test
 func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, opt uint16, flag uint16, para uint16, para2 uint16) error {
 	var pkt ServicePacket
 	src, _ := utils.StringToInt(server.Src)
