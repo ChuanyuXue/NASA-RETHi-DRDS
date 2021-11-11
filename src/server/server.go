@@ -17,14 +17,16 @@ type Server struct {
 	utils.JsonStandard
 	utils.ServiceStandard
 
-	Local       string   `json:"local"`
-	Public      string   `json:"public"`
-	Port        string   `json:"port"`
-	Type        string   `json:"type"`
-	Src         string   `json:"src"`
-	Clients     []string `json:"clients"`
-	ClientsPort []string `json:"clients_port"`
-	ClientsSrc  []string `json:"clients_src"`
+	Local          string   `json:"local"`
+	Public         string   `json:"public"`
+	PortInn        string   `json:"port_inn"`
+	PortOut        string   `json:"port_out"`
+	Type           string   `json:"type"`
+	Src            string   `json:"src"`
+	Clients        []string `json:"clients"`
+	ClientsPortInn []string `json:"clients_port_inn"`
+	ClientsPortOut []string `json:"clients_port_out"`
+	ClientsSrc     []string `json:"clients_src"`
 
 	handler *handler.Handler
 
@@ -45,10 +47,10 @@ func (server *Server) Init(databaseConfigPath string) error {
 	)
 
 	if server.Public == "NA" {
-		addr.Port, err = utils.StringToInt(server.Port)
+		addr.Port, err = utils.StringToInt(server.PortInn)
 		addr.IP = net.ParseIP(server.Local)
 	} else {
-		addr.Port, err = utils.StringToInt(server.Port)
+		addr.Port, err = utils.StringToInt(server.PortInn)
 		addr.IP = net.ParseIP(server.Public)
 	}
 	if err != nil {
@@ -62,7 +64,7 @@ func (server *Server) Init(databaseConfigPath string) error {
 	server.ClientSrcMap = make(map[uint8]net.UDPAddr)
 
 	for i := range server.Clients {
-		addr.Port, err = utils.StringToInt(server.ClientsPort[i])
+		addr.Port, err = utils.StringToInt(server.ClientsPortInn[i])
 		addr.IP = net.ParseIP(server.Clients[i])
 		if err != nil {
 			fmt.Println("Failed to load clients configuration")
