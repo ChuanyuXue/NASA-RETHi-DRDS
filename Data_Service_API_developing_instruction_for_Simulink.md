@@ -46,14 +46,18 @@ If you don't know how to fill for some columns, please fill in N/A . (For exampl
 
 If you certainly know some columns should be empty, please fill in - . 
 
-Data_ID, Data_Size, Data_Type must be filled with Unsigned Integer Value [1, 65535]
+Data_ID, Data_Size, Data_Type must be filled with Unsigned Integer Value from 1 to 65535
+
+For Data_Size:
+
+- For a Data with shape [r, c], please fill c here(only column size)
 
 For Data ID
 
-- For FDD data, please select from [3, 127]
-- For Sensor data, please select from [128, 255]
-- For Agent data, please select from [256, 383]
-- For Other data, please select from [384, 511]
+- For FDD data, please select from 3 to 127
+- For Sensor data, please select from 128 to 255
+- For Agent data, please select from 256 to 383
+- For Other data, please select from 384 to 511
 
 For Data Type
 
@@ -61,7 +65,7 @@ For Data Type
   - 0x01: FDD data
   - 0x02: Sensor data
   - 0x03: Agent data
-  - 0x03: Other data
+  - 0x04: Other data
 
 ## Step 2:
 
@@ -87,7 +91,7 @@ Change the communication part in MCVT code, let all variables found in Step 3 se
 
 This is the current protocol
 
-Figure 2:
+Figure 2 (we will use the figure on right side):
 
 
 
@@ -96,7 +100,7 @@ Figure 2:
 Please set:
 
 - Src = 4
-- Des = 0 
+- Dst = 0 
 - Message_Type = 1
 - Data_Type = (Please refer the Data_Type in Table 1)
 - Priority_Type = 3
