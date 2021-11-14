@@ -54,6 +54,7 @@ Data packet is the basic form to send data and also to implement service API:
   - 0x01: FDD data
   - 0x02: Sensor data
   - 0x03: Agent data
+  - 0x03: Other data
 - Priority(priority): Priority of frame
 - Opt(opt): Options from 0 to 65535
   - 0x0001: Send operation
