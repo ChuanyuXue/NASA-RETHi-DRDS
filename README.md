@@ -280,6 +280,8 @@ To terminate Subscribe function, send
 
 ## 4. Current Plan
 
+This is the current [plan](https://docs.google.com/document/d/1x7Yfs2CWdzcWZeG3DvCrZ7T6m8J3jXQr/edit) for Communication and Data Repository subgroup.
+
 This is the current [plan](https://docs.google.com/document/d/1GJCyouMTSlMumpTqZ8Hr3953wPf2M3Aw3xg-r41WJaQ/edit#heading=h.ppyfpgqg4oc5) for the DMG group.
 
 1. Fill in the info table and link table with Ryan.
