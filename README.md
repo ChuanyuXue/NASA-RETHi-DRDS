@@ -54,6 +54,7 @@ Data packet is the basic form to send data and also to implement service API:
   - 0x01: FDD data
   - 0x02: Sensor data
   - 0x03: Agent data
+  - 0x03: Other data
 - Priority(priority): Priority of frame
 - Opt(opt): Options from 0 to 65535
   - 0x0001: Send operation
@@ -278,6 +279,8 @@ To terminate Subscribe function, send
 
 
 ## 4. Current Plan
+
+This is the current [plan](https://docs.google.com/document/d/1x7Yfs2CWdzcWZeG3DvCrZ7T6m8J3jXQr/edit) for Communication and Data Repository subgroup.
 
 This is the current [plan](https://docs.google.com/document/d/1GJCyouMTSlMumpTqZ8Hr3953wPf2M3Aw3xg-r41WJaQ/edit#heading=h.ppyfpgqg4oc5) for the DMG group.
 
