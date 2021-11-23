@@ -31,10 +31,10 @@ type Server struct {
 	ClientsPortOut []string `json:"clients_port_out"`
 	ClientsSrc     []string `json:"clients_src"`
 
-	handler     *handler.Handler
-	handlerHttp *sgo.SGo
-	upGrader    websocket.Upgrader
-	pktChan     chan *Packet
+	handler    *handler.Handler
+	httpServer *sgo.SGo
+	upgrader   websocket.Upgrader
+	pktChan    chan *Packet
 
 	addr             net.UDPAddr
 	LocalSrc         uint8
@@ -91,18 +91,22 @@ func (server *Server) Init(databaseConfigPath string) error {
 		server.ClientSrcMapUdp[uint8(clientSrc)] = addr
 	}
 
-	server.upGrader = websocket.Upgrader{
+	server.upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
 
 	// Register http listening function for html API
-	server.handlerHttp.GET("/ws", server.listenHttp)
+	server.httpServer = sgo.New()
+	server.httpServer.SetTemplates("../../", nil)
+	server.httpServer.GET("/", func(ctx *sgo.Context) error { return ctx.Render(200, "api") })
+	server.httpServer.GET("/ws", server.listenHttp)
 
 	// Init data service handler
 	server.handler = &handler.Handler{}
 	utils.LoadFromJson(databaseConfigPath, server.handler)
 	err = server.handler.Init()
+
 	if err != nil {
 		fmt.Println("Failed to init data handler")
 		panic(err)
@@ -110,9 +114,10 @@ func (server *Server) Init(databaseConfigPath string) error {
 
 	server.publisherRigister = make(map[uint16][]uint8)
 	server.subscriberRigister = make(map[uint16][]uint8)
-
-	// Start Service -- For single port
+	// Start UDP Server -- For single port
 	server.listen(server.addr, nil)
+	// Start Http Server
+	server.httpServer.Run(":8888")
 
 	return nil
 }
@@ -352,7 +357,7 @@ func (server *Server) listen(addr net.UDPAddr, wg *sync.WaitGroup) error {
 }
 
 func (server *Server) listenHttp(ctx *sgo.Context) error {
-	ws, err := server.upGrader.Upgrade(ctx.Resp, ctx.Req, nil)
+	ws, err := server.upgrader.Upgrade(ctx.Resp, ctx.Req, nil)
 	if err != nil {
 		return err
 	}
