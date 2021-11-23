@@ -90,10 +90,13 @@ func (server *Server) Init(databaseConfigPath string) error {
 		server.ClientSrc[i] = uint8(clientSrc)
 		server.ClientSrcMapUdp[uint8(clientSrc)] = addr
 	}
+
 	server.upGrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
+
+	// Register http listening function for html API
 	server.handlerHttp.GET("/ws", server.listenHttp)
 
 	// Init data service handler
@@ -134,7 +137,7 @@ func (server *Server) Request(id uint16, synt uint32, dst uint8) error {
 	var dataMat [][]float64
 	dataMat = append(dataMat, data)
 	// opt = 0, types = 0, priority = 7
-	err = server.send(dst, uint8(data_type), 7, synt, 1, 0, id, 0, dataMat)
+	err = server.send(1, dst, uint8(data_type), 7, synt, 1, 0, id, 0, dataMat)
 	if err != nil {
 		return err
 	}
@@ -157,7 +160,7 @@ func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16,
 		return err
 	}
 
-	err = server.send(dst, uint8(data_type), 7, timeStart, 1, 0, id, timeDiff, dataMat)
+	err = server.send(1, dst, uint8(data_type), 7, timeStart, 1, 0, id, timeDiff, dataMat)
 	if err != nil {
 		return err
 	}
@@ -170,7 +173,7 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 		lastSynt := server.handler.QueryLastSynt(id)
 		if synt < lastSynt {
 			// Send error back to dst
-			server.sendOpt(dst, 7, synt, 10, 65535, id, 0)
+			server.sendOpt(1, dst, 7, synt, 10, 65535, id, 0)
 			return errors.New("published data not synchronous")
 		}
 
@@ -187,7 +190,7 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 			return err
 		}
 		server.publisherRigister[id] = append(server.publisherRigister[id], dst)
-		server.sendOpt(dst, 7, synt, 10, 0, id, uint16(rate))
+		server.sendOpt(1, dst, 7, synt, 10, 0, id, uint16(rate))
 	}
 
 	return nil
@@ -202,18 +205,18 @@ func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) 
 				row, _ := server.handler.ReadSynt(id, i)
 				dataMap := make([][]float64, 0)
 				dataMap = append(dataMap, row)
-				server.send(dst, uint8(dataType), 7, i, 0, 1, id, 0, dataMap)
+				server.send(1, dst, uint8(dataType), 7, i, 0, 1, id, 0, dataMap)
 			}
 		}
 
 	} else {
 		server.subscriberRigister[id] = append(server.subscriberRigister[id], dst)
-		server.sendOpt(dst, 7, synt, 10, 0, id, rate)
+		server.sendOpt(1, dst, 7, synt, 10, 0, id, rate)
 	}
 	return nil
 }
 
-func (server *Server) send(dst uint8, types uint8, priority uint8, synt uint32, opt uint16, flag uint16, para uint16, para2 uint16, dataMap [][]float64) error {
+func (server *Server) send(messageTypes uint8, dst uint8, types uint8, priority uint8, synt uint32, opt uint16, flag uint16, para uint16, para2 uint16, dataMap [][]float64) error {
 	var pkt ServicePacket
 	src, _ := utils.StringToInt(server.Src)
 	pkt.Src = uint8(src)
@@ -239,24 +242,39 @@ func (server *Server) send(dst uint8, types uint8, priority uint8, synt uint32, 
 	}
 
 	pkt.Payload = PayloadFloat2Buf(dataFlatten)
-	dstAddr := server.ClientSrcMapUdp[dst]
-	conn, err := net.DialUDP("udp", nil, &dstAddr)
 
-	if err != nil {
-		fmt.Println("Failed to build connection to clients")
-		return err
-	}
-	defer conn.Close()
-	_, err = conn.Write(pkt.ToServiceBuf())
-	if err != nil {
-		fmt.Println("Failed to send data to clients")
-		return err
-	}
+	switch messageTypes {
+	case 0:
+		fmt.Println("Message Type == 0 is not supported by Data Service")
+		return errors.New("message type must not be zero")
+	case 1:
+		dstAddr := server.ClientSrcMapUdp[dst]
+		conn, err := net.DialUDP("udp", nil, &dstAddr)
 
+		if err != nil {
+			fmt.Println("Failed to build connection to clients")
+			return err
+		}
+		defer conn.Close()
+		_, err = conn.Write(pkt.ToServiceBuf())
+		if err != nil {
+			fmt.Println("Failed to send data to clients in UDP")
+			return err
+		}
+	case 2:
+		err := server.ClientSrcMapConn[dst].WriteJSON(pkt)
+		if err != nil {
+			fmt.Println("Failed to send data to clients in http")
+			return err
+		}
+	default:
+		fmt.Printf("Message type %d is not applicable.", int(messageTypes))
+		return errors.New("message type must not be zero")
+	}
 	return nil
 }
-//test
-func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, opt uint16, flag uint16, para uint16, para2 uint16) error {
+
+func (server *Server) sendOpt(messageTypes uint8, dst uint8, priority uint8, synt uint32, opt uint16, flag uint16, para uint16, para2 uint16) error {
 	var pkt ServicePacket
 	src, _ := utils.StringToInt(server.Src)
 	pkt.Src = uint8(src)
@@ -276,20 +294,36 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, opt uint16
 	pkt.Param = uint16(para)
 	pkt.Subparam = uint16(para2)
 
-	dstAddr := server.ClientSrcMapUdp[dst]
-	conn, err := net.DialUDP("udp", nil, &dstAddr)
-	if err != nil {
-		fmt.Println("Failed to build connection to clients")
-		return err
-	}
-	defer conn.Close()
+	switch messageTypes {
+	case 0:
+		fmt.Println("Message Type == 0 is not supported by Data Service")
+		return errors.New("message type must not be zero")
+	case 1:
+		dstAddr := server.ClientSrcMapUdp[dst]
+		conn, err := net.DialUDP("udp", nil, &dstAddr)
+		if err != nil {
+			fmt.Println("Failed to build connection to clients")
+			return err
+		}
+		defer conn.Close()
 
-	_, err = conn.Write(pkt.ToServiceBuf())
-	if err != nil {
-		fmt.Println("Failed to send data to clients")
-		return err
+		_, err = conn.Write(pkt.ToServiceBuf())
+		if err != nil {
+			fmt.Println("Failed to send data to clients")
+			return err
+		}
+		conn.Close()
+	case 2:
+		err := server.ClientSrcMapConn[dst].WriteJSON(pkt)
+		if err != nil {
+			fmt.Println("Failed to send data to clients in http")
+			return err
+		}
+	default:
+		fmt.Printf("Message type %d is not applicable.", int(messageTypes))
+		return errors.New("message type must not be zero")
 	}
-	conn.Close()
+
 	return nil
 }
 
@@ -355,7 +389,7 @@ func (server *Server) handle(pkt ServicePacket) error {
 			for i := 0; i < int(pkt.Row); i++ {
 				dataMat = append(dataMat, rawData[i*int(pkt.Col):(i+1)*int(pkt.Col)])
 			}
-			server.send(dst, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
+			server.send(1, dst, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
 				0, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
 		}
 
@@ -389,7 +423,7 @@ func (server *Server) handle(pkt ServicePacket) error {
 			for i := 0; i < int(pkt.Row); i++ {
 				dataMat = append(dataMat, rawData[i*int(pkt.Col):(i+1)*int(pkt.Col)])
 			}
-			server.send(dst, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
+			server.send(1, dst, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
 				0, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
 		}
 

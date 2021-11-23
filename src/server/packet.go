@@ -9,10 +9,9 @@ import (
 )
 
 type Packet struct {
-	Src          uint8  `json:"-"`
-	Dst          uint8  `json:"-"`
-	TransType    uint8  `json:"-"`
-	MessageType  uint8  `json:"-"`
+	Src          uint8  `json:"src"`
+	Dst          uint8  `json:"dst"`
+	MessageType  uint8  `json:"message_type"`
 	DataType     uint8  `json:"data_type"`
 	Priority     uint8  `json:"priority"`
 	PhysicalTime uint32 `json:"phy_time"`
@@ -37,7 +36,6 @@ func FromBuf(buf []byte) Packet {
 	pkt.Col = uint8(buf[13])
 	pkt.Length = binary.LittleEndian.Uint16(buf[14:16])
 	pkt.Payload = buf[16:]
-	pkt.TransType = 0
 	return pkt
 }
 
@@ -126,6 +124,6 @@ func FromServiceBuf(buf []byte) ServicePacket {
 func FromJSON(buf []byte) ServicePacket {
 	var pkt ServicePacket
 	json.Unmarshal(buf, &pkt)
-	pkt.MessageType = 1
+	pkt.MessageType = 2
 	return pkt
 }

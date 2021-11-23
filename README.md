@@ -46,10 +46,11 @@ Data packet is the basic form to send data and also to implement service API:
 
 - Src: Source address
 - Dst: Destination address
-- MessageType(messaage_type): Types of packet
-  - 0x00: Packet defined by Communication network
-  - 0x01: Packet defined Data Service
-- DataType(data_type): Types of data from 0 to 255
+- MessageType (messaage_type): Types of packet
+  - 0x00: Communication packet (only cross network) (Not applicable to Data Repository)
+  - 0x01: Data service packet (cross network or in system)
+  - 0x02: Data service json structure (only in system)
+- DataType (data_type): Types of data from 0 to 255
   - 0x00: No data
   - 0x01: FDD data
   - 0x02: Sensor data
@@ -273,7 +274,7 @@ To terminate Subscribe function, send
 - Param = ID of data subscribed
 - Subparam = 0
 - Data = Empty
- 
+
 \[ Same as register\]
 
 
