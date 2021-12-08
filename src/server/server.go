@@ -282,6 +282,7 @@ func (server *Server) listen(addr net.UDPAddr, wg *sync.WaitGroup) error {
 	if wg != nil {
 		defer wg.Done()
 	}
+
 	conn, err := net.ListenUDP("udp", &addr)
 	if err != nil {
 		fmt.Println("Failed to build connection to clients")
@@ -291,11 +292,14 @@ func (server *Server) listen(addr net.UDPAddr, wg *sync.WaitGroup) error {
 	var buf [utils.BUFFLEN]byte
 	for {
 		_, _, err := conn.ReadFromUDP(buf[:])
+		
 		if err != nil {
 			fmt.Println("Failed to listen packet from connection")
 		}
 		pkt := FromServiceBuf(buf[:])
 		err = server.handle(pkt)
+		fmt.Println(pkt.SimulinkTime, "simulink_time")
+		fmt.Println(pkt.PhysicalTime, "physical_time")
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -306,7 +310,6 @@ func (server *Server) handle(pkt ServicePacket) error {
 	switch pkt.Opt {
 	case 0: //Send (data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)
-		fmt.Println(rawData[:10])
 		err := server.Send(pkt.Param, pkt.SimulinkTime, rawData)
 		if err != nil {
 			return err

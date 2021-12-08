@@ -29,8 +29,8 @@ func FromBuf(buf []byte) Packet {
 	pkt.MessageType = uint8(temp >> 12 & 0x0f)
 	pkt.DataType = uint8(temp >> 4 & 0xff)
 	pkt.Priority = uint8(temp & 0x0f)
-	pkt.PhysicalTime = uint32(binary.BigEndian.Uint16(buf[4:8]))
-	pkt.SimulinkTime = uint32(binary.BigEndian.Uint16(buf[8:12]))
+	pkt.PhysicalTime = uint32(binary.BigEndian.Uint32(buf[4:8]))
+	pkt.SimulinkTime = uint32(binary.BigEndian.Uint32(buf[8:12]))
 	pkt.Row = uint8(buf[12])
 	pkt.Col = uint8(buf[13])
 	pkt.Length = binary.BigEndian.Uint16(buf[14:16])
@@ -44,8 +44,8 @@ func (pkt Packet) ToBuf() []byte {
 	buf[1] = byte(pkt.Dst)
 	temp := uint16(pkt.MessageType)<<12 + uint16(pkt.DataType)<<4 + uint16(pkt.Priority)
 	binary.BigEndian.PutUint16(buf[2:4], uint16(temp))
-	binary.BigEndian.PutUint16(buf[4:8], uint16(pkt.PhysicalTime))
-	binary.BigEndian.PutUint16(buf[8:12], uint16(pkt.SimulinkTime))
+	binary.BigEndian.PutUint32(buf[4:8], uint32(pkt.PhysicalTime))
+	binary.BigEndian.PutUint32(buf[8:12], uint32(pkt.SimulinkTime))
 	buf[12] = byte(pkt.Row)
 	buf[13] = byte(pkt.Col)
 	binary.BigEndian.PutUint16(buf[14:16], uint16(pkt.Length))
@@ -118,5 +118,6 @@ func FromServiceBuf(buf []byte) ServicePacket {
 	servicePkt.Subparam = binary.BigEndian.Uint16(pkt.Payload[6:8])
 	pkt.Payload = pkt.Payload[8:]
 	servicePkt.Packet = pkt
+
 	return servicePkt
 }
