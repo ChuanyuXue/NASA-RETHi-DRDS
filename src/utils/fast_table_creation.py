@@ -36,7 +36,7 @@ for data_base in ["nasa", "nasa_mirror"]:
     data_name = "npg_dust"
     data_type = 1
     data_rate = 1000
-    data_size = 1
+    data_size = 4
     actions[table_name].append(act%(data_base, data_id, data_name, data_type, data_rate, data_size))
 
     data_id = 4
@@ -90,7 +90,7 @@ for data_base in ["nasa", "nasa_mirror"]:
             "`physical_time` int unsigned NOT NULL,",
 
         ] + [
-            "`value%d` float,"%x for x in range(1)
+            "`value%d` float,"%x for x in range(4)
             
         ] + [
             "primary key (`simulink_time`), UNIQUE KEY `simulink_time` (`simulink_time`)",
