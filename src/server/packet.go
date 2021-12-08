@@ -25,15 +25,15 @@ func FromBuf(buf []byte) Packet {
 	var pkt Packet
 	pkt.Src = uint8(buf[0])
 	pkt.Dst = uint8(buf[1])
-	temp := binary.LittleEndian.Uint16(buf[2:4])
+	temp := binary.BigEndian.Uint16(buf[2:4])
 	pkt.MessageType = uint8(temp >> 12 & 0x0f)
 	pkt.DataType = uint8(temp >> 4 & 0xff)
 	pkt.Priority = uint8(temp & 0x0f)
-	pkt.PhysicalTime = uint32(binary.LittleEndian.Uint16(buf[4:8]))
-	pkt.SimulinkTime = uint32(binary.LittleEndian.Uint16(buf[8:12]))
+	pkt.PhysicalTime = uint32(binary.BigEndian.Uint16(buf[4:8]))
+	pkt.SimulinkTime = uint32(binary.BigEndian.Uint16(buf[8:12]))
 	pkt.Row = uint8(buf[12])
 	pkt.Col = uint8(buf[13])
-	pkt.Length = binary.LittleEndian.Uint16(buf[14:16])
+	pkt.Length = binary.BigEndian.Uint16(buf[14:16])
 	pkt.Payload = buf[16:]
 	return pkt
 }
@@ -43,19 +43,19 @@ func (pkt Packet) ToBuf() []byte {
 	buf[0] = byte(pkt.Src)
 	buf[1] = byte(pkt.Dst)
 	temp := uint16(pkt.MessageType)<<12 + uint16(pkt.DataType)<<4 + uint16(pkt.Priority)
-	binary.LittleEndian.PutUint16(buf[2:4], uint16(temp))
-	binary.LittleEndian.PutUint16(buf[4:8], uint16(pkt.PhysicalTime))
-	binary.LittleEndian.PutUint16(buf[8:12], uint16(pkt.SimulinkTime))
+	binary.BigEndian.PutUint16(buf[2:4], uint16(temp))
+	binary.BigEndian.PutUint16(buf[4:8], uint16(pkt.PhysicalTime))
+	binary.BigEndian.PutUint16(buf[8:12], uint16(pkt.SimulinkTime))
 	buf[12] = byte(pkt.Row)
 	buf[13] = byte(pkt.Col)
-	binary.LittleEndian.PutUint16(buf[14:16], uint16(pkt.Length))
+	binary.BigEndian.PutUint16(buf[14:16], uint16(pkt.Length))
 	return append(buf[:], pkt.Payload...)
 }
 
 func PayloadFloat2Buf(payload []float64) []byte {
 	var buft bytes.Buffer
 	for _, v := range payload {
-		err := binary.Write(&buft, binary.LittleEndian, v)
+		err := binary.Write(&buft, binary.BigEndian, v)
 		if err != nil {
 			fmt.Println("Failed to convert Payload to 64bytes")
 		}
@@ -94,17 +94,17 @@ func (pkt *ServicePacket) ToServiceBuf() []byte {
 	buf[0] = byte(pkt.Src)
 	buf[1] = byte(pkt.Dst)
 	temp := uint16(pkt.MessageType)<<12 + uint16(pkt.DataType)<<4 + uint16(pkt.Priority)
-	binary.LittleEndian.PutUint16(buf[2:4], uint16(temp))
-	binary.LittleEndian.PutUint32(buf[4:8], uint32(pkt.PhysicalTime))
-	binary.LittleEndian.PutUint32(buf[8:12], uint32(pkt.SimulinkTime))
+	binary.BigEndian.PutUint16(buf[2:4], uint16(temp))
+	binary.BigEndian.PutUint32(buf[4:8], uint32(pkt.PhysicalTime))
+	binary.BigEndian.PutUint32(buf[8:12], uint32(pkt.SimulinkTime))
 	buf[12] = byte(pkt.Row)
 	buf[13] = byte(pkt.Col)
-	binary.LittleEndian.PutUint16(buf[14:16], uint16(pkt.Length))
+	binary.BigEndian.PutUint16(buf[14:16], uint16(pkt.Length))
 
-	binary.LittleEndian.PutUint16(buf[16:18], uint16(pkt.Opt))
-	binary.LittleEndian.PutUint16(buf[18:20], uint16(pkt.Flag))
-	binary.LittleEndian.PutUint16(buf[20:22], uint16(pkt.Param))
-	binary.LittleEndian.PutUint16(buf[22:24], uint16(pkt.Subparam))
+	binary.BigEndian.PutUint16(buf[16:18], uint16(pkt.Opt))
+	binary.BigEndian.PutUint16(buf[18:20], uint16(pkt.Flag))
+	binary.BigEndian.PutUint16(buf[20:22], uint16(pkt.Param))
+	binary.BigEndian.PutUint16(buf[22:24], uint16(pkt.Subparam))
 
 	return append(buf[:], pkt.Payload...)
 }
@@ -112,10 +112,10 @@ func (pkt *ServicePacket) ToServiceBuf() []byte {
 func FromServiceBuf(buf []byte) ServicePacket {
 	pkt := FromBuf(buf)
 	servicePkt := ServicePacket{}
-	servicePkt.Opt = binary.LittleEndian.Uint16(pkt.Payload[:2])
-	servicePkt.Flag = binary.LittleEndian.Uint16(pkt.Payload[2:4])
-	servicePkt.Param = binary.LittleEndian.Uint16(pkt.Payload[4:6])
-	servicePkt.Subparam = binary.LittleEndian.Uint16(pkt.Payload[6:8])
+	servicePkt.Opt = binary.BigEndian.Uint16(pkt.Payload[:2])
+	servicePkt.Flag = binary.BigEndian.Uint16(pkt.Payload[2:4])
+	servicePkt.Param = binary.BigEndian.Uint16(pkt.Payload[4:6])
+	servicePkt.Subparam = binary.BigEndian.Uint16(pkt.Payload[6:8])
 	pkt.Payload = pkt.Payload[8:]
 	servicePkt.Packet = pkt
 	return servicePkt

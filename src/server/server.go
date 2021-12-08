@@ -90,7 +90,11 @@ func (server *Server) Init(databaseConfigPath string) error {
 	server.subscriberRigister = make(map[uint16][]uint8)
 
 	// Start Service -- For single port
-	server.listen(server.addr, nil)
+	var wg sync.WaitGroup
+	for _, clients_addr := range server.ClientSrcMap {
+		wg.Add(1)
+		go server.listen(clients_addr, &wg)
+	}
 
 	return nil
 }
@@ -302,6 +306,7 @@ func (server *Server) handle(pkt ServicePacket) error {
 	switch pkt.Opt {
 	case 0: //Send (data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)
+		fmt.Println(rawData[:10])
 		err := server.Send(pkt.Param, pkt.SimulinkTime, rawData)
 		if err != nil {
 			return err

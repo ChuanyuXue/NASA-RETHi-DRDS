@@ -86,16 +86,16 @@ func main() {
 	fmt.Println("Habitat Server Started")
 	time.Sleep(2 * time.Second)
 
-	// Start Ground server
-	groundServer := server.Server{}
-	utils.LoadFromJson("config/ground_server_configs.json", &groundServer)
-	go groundServer.Init("config/mirror_configs.json")
-	fmt.Println("Ground Server Started")
-	time.Sleep(2 * time.Second)
+	// // Start Ground server
+	// groundServer := server.Server{}
+	// utils.LoadFromJson("config/ground_server_configs.json", &groundServer)
+	// go groundServer.Init("config/mirror_configs.json")
+	// fmt.Println("Ground Server Started")
+	// time.Sleep(2 * time.Second)
 
-	// Let Ground server subscribe Habitat server
-	habitatServer.Subscribe(3, groundServer.LocalSrc, 0, 1000)
-	fmt.Println("Ground Server subscribed Habitat server")
+	// // Let Ground server subscribe Habitat server
+	// habitatServer.Subscribe(3, groundServer.LocalSrc, 0, 1000)
+	// fmt.Println("Ground Server subscribed Habitat server")
 
 	for {
 
