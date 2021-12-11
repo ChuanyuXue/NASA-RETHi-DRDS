@@ -1,152 +1,124 @@
 import mysql.connector
+import json
 
-for data_base in ["habitat", "ground"]:
-    cnx = mysql.connector.connect(user='root', password='12345678',
-                                host='127.0.0.1',
-                                database=data_base)
 
-    tables = {}
-    actions = {}
+class db_generator:
+    def __init__(self, conf_path) -> None:
+        with open(conf_path) as f:
+            self.param = json.load(f)
 
-    data_id = 0
-    table_name = "info%d"%data_id
-    tables[table_name] = '''
-    CREATE TABLE `%s`.`info0` (
-    `data_id` INT(16) UNSIGNED NOT NULL,
-    `data_name` VARCHAR(45) NULL,
-    `data_type` INT(8) UNSIGNED NOT NULL,
-    `data_subtype1` INT(8) UNSIGNED NULL,
-    `data_subtype2` INT(8) UNSIGNED NULL,
-    `data_rate` INT(16) UNSIGNED NULL,
-    `data_size` INT(16) UNSIGNED NULL,
-    `data_unit` VARCHAR(45) NULL,
-    `data_notes` VARCHAR(45) NULL,
-    PRIMARY KEY (`data_id`),
-    UNIQUE INDEX `data_id_UNIQUE` (`data_id` ASC) VISIBLE);
-    '''%data_base
+        if self.param['public'] != 'NA':
+            self.param['local'] = self.param['public']
 
-    actions[table_name] = []
+        self.cnx = mysql.connector.connect(
+            user=self.param['user_name'],
+            password=self.param['password'],
+            host=self.param['local'],
+            database=self.param['db_name']
+        )
 
-    act = '''
-    INSERT INTO `%s`.`info0` (`data_id`, `data_name`, `data_type`, `data_rate`, `data_size`) VALUES 
-    ('%d', '%s', '%d', '%d', '%d');
-    '''
+    def create_info(self, table_id=0) -> None:
+        table_name = "info%d" % table_id
+        create_table = '''
+            CREATE TABLE `%s`.`%s` (
+            `data_id` INT(16) UNSIGNED NOT NULL,
+            `data_name` VARCHAR(45) NULL,
+            `data_type` INT(8) UNSIGNED NOT NULL,
+            `data_subtype1` INT(8) UNSIGNED NULL,
+            `data_subtype2` INT(8) UNSIGNED NULL,
+            `data_rate` INT(16) UNSIGNED NULL,
+            `data_size` INT(16) UNSIGNED NULL,
+            `data_unit` VARCHAR(45) NULL,
+            `data_notes` VARCHAR(45) NULL,
+            PRIMARY KEY (`data_id`),
+            UNIQUE INDEX `data_id_UNIQUE` (`data_id` ASC) VISIBLE);
+            ''' % (self.param['db_name'], table_name)
+        cursor = self.db.cursor()
+        cursor.execute("DROP TABLE IF EXISTS %s.%s" %
+                       (self.param['db_name'], table_name))
+        cursor.execute(create_table)
 
-    data_id = 3
-    data_name = "npg_dust"
-    data_type = 1
-    data_rate = 1000
-    data_size = 4
-    actions[table_name].append(act%(data_base, data_id, data_name, data_type, data_rate, data_size))
+    def insert_info(self, data_description: dict) -> None:
+        act = '''
+        INSERT INTO `%s`.`info0` (`data_id`, `data_name`, `data_type`,`data_subtype1`,`data_subtype2`, `data_rate`, `data_size`,`data_unit`,`data_notes`) VALUES
+        ('%d', '%s', '%d', '%d', '%d', '%d', '%d', '%s', '%s');
+        '''
 
-    data_id = 4
-    data_name = "spg_paint"
-    data_type = 1
-    data_rate = 1000
-    data_size = 4
-    actions[table_name].append(act%(data_base, data_id, data_name, data_type, data_rate, data_size))
+        data_id = data_description["data_id"]
+        data_name = data_description["data_name"]
+        data_type = data_description["data_type"]
+        data_subtype1 = data_description["data_subtype1"] if "data_subtype1" in data_description else 255
+        data_subtype2 = data_description["data_subtype2"] if "data_subtype2" in data_description else 255
+        data_rate = data_description["data_rate"]
+        data_size = data_description["data_size"]
+        data_unit = data_description["data_unit"] if "data_unit" in data_description else "-"
+        data_notes = data_description["data_notes"] if "data_notes" in data_description else "-"
 
-    data_id = 5
-    data_name = "states_agent"
-    data_type = 3
-    data_rate = 1000
-    data_size = 1
-    actions[table_name].append(act%(data_base, data_id, data_name, data_type, data_rate, data_size))
+        insert_table = act % (data_base, data_id, data_name, data_type, data_subtype1, data_subtype2, data_rate, data_size, data_unit, data_notes))
+        cursor=self.db.cursor()
+        cursor.execute(insert_table)
 
-    ### Create tables
 
-    data_id = 1
-    table_name = "rela%d"%data_id
-    tables[table_name] = '''
-    CREATE TABLE `%s`.`rela1` (
-    `relationship_id` INT UNSIGNED NOT NULL,
-    `input_data_id` INT(16) UNSIGNED NOT NULL,
-    `output_data_id` INT(16) UNSIGNED NOT NULL,
-    `subsystem_id` INT(8) UNSIGNED NULL,
-    `relation_type` INT(8) UNSIGNED NULL,
-    PRIMARY KEY (`relationship_id`),
-    UNIQUE INDEX `relationship_id_UNIQUE` (`relationship_id` ASC) VISIBLE);
-    '''%data_base
+    def create_relationship(self, table_id = 1) -> None:
+        table_name="rela%d" % table_id
+        create_table='''
+        CREATE TABLE `%s`.`%s` (
+        `relationship_id` INT UNSIGNED NOT NULL,
+        `input_data_id` INT(16) UNSIGNED NOT NULL,
+        `output_data_id` INT(16) UNSIGNED NOT NULL,
+        `subsystem_id` INT(8) UNSIGNED NULL,
+        `relation_type` INT(8) UNSIGNED NULL,
+        PRIMARY KEY (`relationship_id`),
+        UNIQUE INDEX `relationship_id_UNIQUE` (`relationship_id` ASC) VISIBLE);
+        ''' % (self.param['db_name'], table_name)
+        cursor=self.db.cursor()
+        cursor.execute("DROP TABLE IF EXISTS %s.%s" %
+                       (self.param['db_name'], table_name))
+        cursor.execute(create_table)
 
-    data_id = 2
-    table_name = "link%d"%data_id
-    tables[table_name] = '''
-    CREATE TABLE `%s`.`link2` (
-    `data_id` INT(16) UNSIGNED NOT NULL,
-    `input_subsystem_id` INT(8) UNSIGNED NOT NULL,
-    `output_subsystem_id` INT(8) UNSIGNED NOT NULL,
-    `interaction_type` INT(8) UNSIGNED NULL,
-    PRIMARY KEY (`data_id`),
-    UNIQUE INDEX `data_id_UNIQUE` (`data_id` ASC) VISIBLE);
-    '''%data_base
+    def create_link(self, table_id = 2) -> None:
+        table_name="link%d" % table_id
+        create_table='''
+        CREATE TABLE `%s`.`%s` (
+        `data_id` INT(16) UNSIGNED NOT NULL,
+        `input_subsystem_id` INT(8) UNSIGNED NOT NULL,
+        `output_subsystem_id` INT(8) UNSIGNED NOT NULL,
+        `interaction_type` INT(8) UNSIGNED NULL,
+        PRIMARY KEY (`data_id`),
+        UNIQUE INDEX `data_id_UNIQUE` (`data_id` ASC) VISIBLE);
+        ''' % (self.param['db_name'], table_name)
+        cursor=self.db.cursor()
+        cursor.execute("DROP TABLE IF EXISTS %s.%s" %
+                       (self.param['db_name'], table_name))
+        cursor.execute(create_table)
 
-    ## Create for npg dust
-    data_id = 3
-    table_name = 'record%d'%data_id
-    tables[table_name] = ''.join(
-        [
-            "create table `%s` ("%table_name,
-            "`simulink_time` int unsigned NOT NULL,",
-            "`physical_time` int unsigned NOT NULL,",
+    def create_data(self, table_id, shape) -> None:
+        table_name='record%d' % table_id
+        create_table=''.join(
+            [
+                "create table `%s` (" % table_name,
+                "`simulink_time` int unsigned NOT NULL,",
+                "`physical_time` int unsigned NOT NULL,",
 
-        ] + [
-            "`value%d` float,"%x for x in range(4)
-            
-        ] + [
-            "primary key (`simulink_time`), UNIQUE KEY `simulink_time` (`simulink_time`)",
-            ")ENGINE=InnoDB"
-            
-        ]
-    )
+            ] + [
+                "`value%d` float," % x for x in range(shape)
 
-    ## Create for spg dust
-    data_id = 4
-    table_name = 'record%d'%data_id
-    tables[table_name] = ''.join(
-        [
-            "create table `%s` ("%table_name,
-            "`simulink_time` int unsigned NOT NULL,",
-            "`physical_time` int unsigned NOT NULL,",
+            ] + [
+                "primary key (`simulink_time`), UNIQUE KEY `simulink_time` (`simulink_time`)",
+                ")ENGINE=InnoDB"
 
-        ] + [
-            "`value%d` float,"%x for x in range(4)
-            
-        ] + [
-            "primary key (`simulink_time`), UNIQUE KEY `simulink_time` (`simulink_time`)",
-            ")ENGINE=InnoDB"
-            
-        ]
-    )
+            ]
+        )
+        cursor = self.db.cursor()
+        cursor.execute("DROP TABLE IF EXISTS %s.%s" %
+                       (self.param['db_name'], table_name))
+        cursor.execute(create_table)
 
-    ## Create for agent
-    data_id = 5
-    table_name = 'record%d'%data_id
-    tables[table_name] = ''.join(
-        [
-            "create table `%s` ("%table_name,
-            "`simulink_time` int unsigned NOT NULL,",
-            "`physical_time` int unsigned NOT NULL,",
+if __name__ == '__main__':
+    for db in ["habitat", "ground"]:
+        generator = db_generator('../../config/%s.json')
+        generator.create_info()
+        generator.create_relationship()
+        generator.create_link()
 
-        ] + [
-            "`value%d` float,"%x for x in range(1)
-            
-        ] + [
-            "primary key (`simulink_time`), UNIQUE KEY `simulink_time` (`simulink_time`)",
-            ")ENGINE=InnoDB"
-            
-        ]
-    )
-
-    cursor = cnx.cursor()
-
-    for key in tables:
-        cursor.execute("DROP TABLE IF EXISTS %s.%s"%(data_base, key))        
-
-    for key, value in tables.items():
-        back = cursor.execute(value)
-        if key in actions:
-            for i in actions[key]:
-                cursor.execute(i)
-    print("Data base %s has been initialized"%data_base)
-            
-    cnx.close()
+        
