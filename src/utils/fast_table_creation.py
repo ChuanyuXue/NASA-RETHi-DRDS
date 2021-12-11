@@ -1,6 +1,6 @@
 import mysql.connector
 
-for data_base in ["nasa", "nasa_mirror"]:
+for data_base in ["habitat", "ground"]:
     cnx = mysql.connector.connect(user='root', password='12345678',
                                 host='127.0.0.1',
                                 database=data_base)

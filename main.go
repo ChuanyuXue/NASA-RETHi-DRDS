@@ -82,7 +82,7 @@ func main() {
 	// Start Habitat server
 	habitatServer := server.Server{}
 	utils.LoadFromJson("config/habitat_server_configs.json", &habitatServer)
-	go habitatServer.Init("config/database_configs.json")
+	go habitatServer.Init("config/ground_db_configs.json")
 	fmt.Println("Habitat Server Started")
 	time.Sleep(2 * time.Second)
 

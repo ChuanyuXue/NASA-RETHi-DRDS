@@ -3,7 +3,7 @@
     "public" : "NA",
     "port" : "3306",
     "db_type" : "mysql",
-    "db_name" : "nasa",
+    "db_name" : "habitat",
     "user_name" : "root",
     "password" : "12345678"
 }
