@@ -14,7 +14,7 @@ ip_client = "127.0.0.1"
 port_client = 10002
 id_client = 1
 
-class Header(Structure):
+class Header(BigEndianStructure):
     _fields_ = [
         ("src", c_uint8),
         ("dst", c_uint8),
@@ -29,8 +29,6 @@ class Header(Structure):
         ("Param", c_uint16),
         ("Subparam", c_uint16),
     ]
-
-
 
 
 class Packet:
@@ -56,21 +54,21 @@ class Packet:
         values = {}
         values["src"] = c_uint8.from_buffer_copy(buffer[0:1]).value
         values["dst"] = c_uint8.from_buffer_copy(buffer[1:2]).value
-        temp = c_uint16.from_buffer_copy(buffer[2:4]).value
+        temp = c_uint16.from_buffer_copy(buffer[2:4][::-1]).value
 
         values["message_type"] = temp // 2**12
         values["data_type"] = (temp // 2**4) % 2 ** 8
         values["priority"] = temp % 2**4
 
-        values["physical_time"] =  c_uint32.from_buffer_copy(buffer[4:8]).value
-        values["simulink_time"] =  c_uint32.from_buffer_copy(buffer[8:12]).value
+        values["physical_time"] =  c_uint32.from_buffer_copy(buffer[4:8][::-1]).value
+        values["simulink_time"] =  c_uint32.from_buffer_copy(buffer[8:12][::-1]).value
         values["row"] = c_uint8.from_buffer_copy(buffer[12:13]).value
         values["col"] = c_uint8.from_buffer_copy(buffer[13:14]).value
-        values["length"] = c_uint16.from_buffer_copy(buffer[14:16]).value
-        values["opt"] = c_uint16.from_buffer_copy(buffer[16:18]).value
-        values["flag"] = c_uint16.from_buffer_copy(buffer[18:20]).value
-        values["param"] = c_uint16.from_buffer_copy(buffer[20:22]).value
-        values["subparam"] = c_uint16.from_buffer_copy(buffer[22:24]).value
+        values["length"] = c_uint16.from_buffer_copy(buffer[14:16][::-1]).value
+        values["opt"] = c_uint16.from_buffer_copy(buffer[16:18][::-1]).value
+        values["flag"] = c_uint16.from_buffer_copy(buffer[18:20][::-1]).value
+        values["param"] = c_uint16.from_buffer_copy(buffer[20:22][::-1]).value
+        values["subparam"] = c_uint16.from_buffer_copy(buffer[22:24][::-1]).value
         
         payload = []
         for i in range(values["length"]):
