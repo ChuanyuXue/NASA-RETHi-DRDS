@@ -1,11 +1,11 @@
 import sys
 sys.path.append("../../")
-import socket
-from struct import error, pack
-import time
-from ctypes import *
-from typing import Tuple
 from api import Header, Packet
+from typing import Tuple
+from ctypes import *
+import time
+from struct import error, pack
+import socket
 
 
 
