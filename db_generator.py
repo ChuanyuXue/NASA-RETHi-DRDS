@@ -1,10 +1,8 @@
 import json
 import mysql.connector
-from os import confstr_names
-import sys
 
 
-CONF_PATH = "../../config/data_description.json"
+CONF_PATH = "config/data_description.json"
 
 
 class db_generator:
@@ -125,7 +123,7 @@ if __name__ == '__main__':
         data_description = json.loads(f.read())
 
     for db in ["habitat", "ground"]:
-        generator = db_generator('../../config/%s_db_configs.json' % db)
+        generator = db_generator('config/%s_db_configs.json' % db)
         generator.create_info()
         generator.create_relationship()
         generator.create_link()

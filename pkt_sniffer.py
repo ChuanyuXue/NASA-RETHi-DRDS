@@ -1,9 +1,5 @@
-import sys
-sys.path.append("../../")
 from api import Header, Packet
-from typing import Tuple
 from ctypes import *
-import time
 from struct import error, pack
 import socket
 
@@ -11,7 +7,7 @@ import socket
 
 UDP_IP = "127.0.0.1"
 
-for port in [10006]:
+for port in [10004]:
     try:
         sock = socket.socket(
             socket.AF_INET,  # Internet
