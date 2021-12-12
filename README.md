@@ -28,8 +28,8 @@ Please visit https://www.purdue.edu/rethi for more information.
 ## 3. Service Protocol
 - **For Python, please reference [demo.py](./demo.py) and [api.py](./api.py).**
 - **For GoLang, please reference demo.go and api.go.**
-- **For JavaScript, please reference demo.html**
-- **Simulink API is still being developed**
+- **For JavaScript, please reference demo.html** (Currently not stable, please see another branch)
+- **For Simulink API, please reference demo.slx and api.m**
 - **For other Language, please implement by following standards:**
 
 
