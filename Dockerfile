@@ -6,7 +6,5 @@ RUN go install ./... .
 
 FROM alpine
 COPY --from=builder /go/bin/data-service ./
-## delete
-COPY config .
 EXPOSE 20001/udp 
 CMD ["./data-service"]

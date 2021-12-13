@@ -1,10 +1,16 @@
 package main
 
 import (
+	"data-service/src/handler"
 	"data-service/src/server"
 	"fmt"
 	"time"
 )
+
+func init() {
+	handler.DatabaseGenerator(0)
+	handler.DatabaseGenerator(1)
+}
 
 func main() {
 	// --------------------- Test for packet --------------------------

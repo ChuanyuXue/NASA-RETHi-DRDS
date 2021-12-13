@@ -72,20 +72,21 @@ func (server *Server) Init(src uint8) error {
 	server.publisherRegister = make(map[uint16][]uint8)
 	server.subscriberRegister = make(map[uint16][]uint8)
 
-	// Start Service -- For single port
 	var wg sync.WaitGroup
+	go server.listen(server.addr, &wg)
 
-	portLog := make([]uint8, 0)
-	for _, clients_addr := range server.ClientSrcMap {
-		wg.Add(1)
-		port := uint8(clients_addr.Port)
-		// Avoid listen to repetitive port
-		if !utils.Uint8Contains(portLog, port) {
-			portLog = append(portLog, port)
-			go server.listen(clients_addr, &wg)
-			fmt.Println("Keep listening on port:", port)
-		}
-	}
+	// Start Service -- For single port
+	// portLog := make([]uint32, 0)
+	// for _, clients_addr := range server.ClientSrcMap {
+	// 	wg.Add(1)
+	// 	port := clients_addr.Port
+	// 	// Avoid listen to repetitive port
+	// 	if !utils.Uint32Contains(portLog, uint32(port)) {
+	// 		portLog = append(portLog, uint32(port))
+	// 		go server.listen(clients_addr, &wg)
+	// 		fmt.Println("Keep listening on port:", port)
+	// 	}
+	// }
 	return nil
 }
 
@@ -218,7 +219,7 @@ func (server *Server) send(dst uint8, types uint8, priority uint8, synt uint32, 
 	conn, err := net.DialUDP("udp", nil, &dstAddr)
 
 	if err != nil {
-		fmt.Println("Failed to build connection to clients")
+		fmt.Println("Failed to dial clients")
 		return err
 	}
 	defer conn.Close()
@@ -254,7 +255,7 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, opt uint16
 	dstAddr := server.ClientSrcMap[dst]
 	conn, err := net.DialUDP("udp", nil, &dstAddr)
 	if err != nil {
-		fmt.Println("Failed to build connection to clients")
+		fmt.Println("Failed to dial clients")
 		return err
 	}
 	defer conn.Close()
@@ -275,7 +276,7 @@ func (server *Server) listen(addr net.UDPAddr, wg *sync.WaitGroup) error {
 
 	conn, err := net.ListenUDP("udp", &addr)
 	if err != nil {
-		fmt.Println("Failed to build connection to clients")
+		fmt.Println("Failed to bind client", addr)
 		return err
 	}
 
