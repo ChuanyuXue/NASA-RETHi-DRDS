@@ -1,15 +1,15 @@
 package server
 
 import (
-	"datarepo/src/handler"
-	"datarepo/src/utils"
+	"data-service/src/handler"
+	"data-service/src/utils"
 	"errors"
+	"os"
 	"time"
 
 	// "errors"
 	"fmt"
 	"net"
-	"strconv"
 	"sync"
 )
 
@@ -17,14 +17,8 @@ type Server struct {
 	utils.JsonStandard
 	utils.ServiceStandard
 
-	Local       string   `json:"local"`
-	Public      string   `json:"public"`
-	Port        string   `json:"port"`
-	Type        string   `json:"type"`
-	Src         string   `json:"src"`
-	Clients     []string `json:"clients"`
-	ClientsPort []string `json:"clients_port"`
-	ClientsSrc  []string `json:"clients_src"`
+	Type string
+	Src  string
 
 	handler *handler.Handler
 
@@ -33,69 +27,65 @@ type Server struct {
 	ClientSrc    []uint8
 	ClientSrcMap map[uint8]net.UDPAddr
 
-	publisherRigister  map[uint16][]uint8 // publisherRigister[data_id] = [client_0, ....]
-	subscriberRigister map[uint16][]uint8 // subscriberRigister[data_id] = [client_0, ....]
+	publisherRegister  map[uint16][]uint8 // publisherRegister[data_id] = [client_0, ....]
+	subscriberRegister map[uint16][]uint8 // subscriberRegister[data_id] = [client_0, ....]
 }
 
-func (server *Server) Init(databaseConfigPath string) error {
-	// Init data service server
-	var (
-		addr net.UDPAddr
-		err  error
-	)
+func (server *Server) Init(src uint8) error {
+	// -------------------------- Fix the paramter for docker envirioment
+	if src == 0 {
+		server.Type = "GROUND"
+		server.ClientSrc = []uint8{1, 2, 3, 4, 5, 6, 7}
 
-	if server.Public == "NA" {
-		addr.Port, err = utils.StringToInt(server.Port)
-		addr.IP = net.ParseIP(server.Local)
-	} else {
-		addr.Port, err = utils.StringToInt(server.Port)
-		addr.IP = net.ParseIP(server.Public)
+	} else if src == 1 {
+		server.Type = "HABITAT"
+		server.ClientSrc = []uint8{0, 2, 3, 4, 5, 6, 7}
 	}
+	server.Src = string(src)
+	server.LocalSrc = uint8(src)
+	server.ClientSrcMap = make(map[uint8]net.UDPAddr)
+
+	localAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_ADDR_"+server.Type))
 	if err != nil {
+		return errors.New(fmt.Sprintf("unable to resolve local address for %s", server.Type))
+	}
+	remoteAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_REMOTE_ADDR_"+server.Type))
+	if err != nil {
+		return errors.New(fmt.Sprintf("unable to resolve remote address for %s", server.Type))
+	}
+
+	server.addr = *localAddr
+	for key := range server.ClientSrc {
+		server.ClientSrcMap[uint8(key)] = *remoteAddr
+	}
+
+	// -------------------------- Fix the paramter for docker envirioment
+	// Init data service handler
+	server.handler = &handler.Handler{}
+	err = server.handler.Init(server.LocalSrc)
+	if err != nil {
+		fmt.Println("Failed to init data handler")
 		fmt.Println(err)
 		return err
 	}
-	server.addr = addr
-	temp, _ := strconv.Atoi(server.Src)
-	server.LocalSrc = uint8(temp)
-	server.ClientSrc = make([]uint8, len(server.ClientsSrc))
-	server.ClientSrcMap = make(map[uint8]net.UDPAddr)
 
-	for i := range server.Clients {
-		addr.Port, err = utils.StringToInt(server.ClientsPort[i])
-		addr.IP = net.ParseIP(server.Clients[i])
-		if err != nil {
-			fmt.Println("Failed to load clients configuration")
-			return err
-		}
-		if addr.IP == nil {
-			fmt.Println("Failed to load clients configuration")
-		}
-
-		clientSrc, _ := strconv.Atoi(server.ClientsSrc[i])
-		server.ClientSrc[i] = uint8(clientSrc)
-		server.ClientSrcMap[uint8(clientSrc)] = addr
-	}
-
-	// Init data service handler
-	server.handler = &handler.Handler{}
-	utils.LoadFromJson(databaseConfigPath, server.handler)
-	err = server.handler.Init()
-	if err != nil {
-		fmt.Println("Failed to init data handler")
-		panic(err)
-	}
-
-	server.publisherRigister = make(map[uint16][]uint8)
-	server.subscriberRigister = make(map[uint16][]uint8)
+	server.publisherRegister = make(map[uint16][]uint8)
+	server.subscriberRegister = make(map[uint16][]uint8)
 
 	// Start Service -- For single port
 	var wg sync.WaitGroup
+
+	portLog := make([]uint8, 0)
 	for _, clients_addr := range server.ClientSrcMap {
 		wg.Add(1)
-		go server.listen(clients_addr, &wg)
+		port := uint8(clients_addr.Port)
+		// Avoid listen to repetitive port
+		if !utils.Uint8Contains(portLog, port) {
+			portLog = append(portLog, port)
+			go server.listen(clients_addr, &wg)
+			fmt.Println("Keep listening on port:", port)
+		}
 	}
-
 	return nil
 }
 
@@ -150,7 +140,7 @@ func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16,
 }
 
 func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt uint32, rawData []float64) error {
-	if utils.Uint8Contains(server.publisherRigister[id], dst) { // if publisher registered
+	if utils.Uint8Contains(server.publisherRegister[id], dst) { // if publisher registered
 		// if para2 is stop streaming
 		lastSynt := server.handler.QueryLastSynt(id)
 		if synt < lastSynt {
@@ -171,7 +161,7 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 		if err != nil {
 			return err
 		}
-		server.publisherRigister[id] = append(server.publisherRigister[id], dst)
+		server.publisherRegister[id] = append(server.publisherRegister[id], dst)
 		server.sendOpt(dst, 7, synt, 10, 0, id, uint16(rate))
 	}
 
@@ -179,7 +169,7 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 }
 
 func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) error {
-	if utils.Uint8Contains(server.subscriberRigister[id], dst) { // if subscriber registered
+	if utils.Uint8Contains(server.subscriberRegister[id], dst) { // if subscriber registered
 		lastSynt := server.handler.QueryLastSynt(id)
 		dataType, _ := server.handler.QueryInfo(id, "data_type")
 		if synt <= lastSynt {
@@ -192,7 +182,7 @@ func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) 
 		}
 
 	} else {
-		server.subscriberRigister[id] = append(server.subscriberRigister[id], dst)
+		server.subscriberRegister[id] = append(server.subscriberRegister[id], dst)
 		server.sendOpt(dst, 7, synt, 10, 0, id, rate)
 	}
 	return nil
@@ -314,7 +304,7 @@ func (server *Server) handle(pkt ServicePacket) error {
 		}
 
 		// forward incoming data
-		for _, dst := range server.subscriberRigister[pkt.Param] {
+		for _, dst := range server.subscriberRegister[pkt.Param] {
 			var dataMat [][]float64
 			for i := 0; i < int(pkt.Row); i++ {
 				dataMat = append(dataMat, rawData[i*int(pkt.Col):(i+1)*int(pkt.Col)])
@@ -348,7 +338,7 @@ func (server *Server) handle(pkt ServicePacket) error {
 			return nil
 		}
 
-		for _, dst := range server.subscriberRigister[pkt.Param] {
+		for _, dst := range server.subscriberRegister[pkt.Param] {
 			var dataMat [][]float64
 			for i := 0; i < int(pkt.Row); i++ {
 				dataMat = append(dataMat, rawData[i*int(pkt.Col):(i+1)*int(pkt.Col)])

@@ -1,8 +1,7 @@
 package main
 
 import (
-	"datarepo/src/server"
-	"datarepo/src/utils"
+	"data-service/src/server"
 	"fmt"
 	"time"
 )
@@ -78,18 +77,18 @@ func main() {
 	// 	fmt.Print(nil)
 	// }
 	// --------------- Test for Ground <-- Habitat <--> Subsystem ------------------------
-
 	// Start Habitat server
 	habitatServer := server.Server{}
-	utils.LoadFromJson("config/habitat_server_configs.json", &habitatServer)
-	go habitatServer.Init("config/habitat_db_configs.json")
+	err := habitatServer.Init(1)
+	if err != nil {
+		fmt.Println(err)
+	}
 	fmt.Println("Habitat Server Started")
 	time.Sleep(2 * time.Second)
 
 	// // Start Ground server
 	// groundServer := server.Server{}
-	// utils.LoadFromJson("config/ground_server_configs.json", &groundServer)
-	// go groundServer.Init("config/mirror_configs.json")
+	// go groundServer.Init(0)
 	// fmt.Println("Ground Server Started")
 	// time.Sleep(2 * time.Second)
 
@@ -97,8 +96,6 @@ func main() {
 	// habitatServer.Subscribe(3, groundServer.LocalSrc, 0, 1000)
 	// fmt.Println("Ground Server subscribed Habitat server")
 
-	for {
-
-	}
+	select {}
 
 }
