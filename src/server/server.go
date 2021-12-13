@@ -296,6 +296,7 @@ func (server *Server) listen(addr net.UDPAddr, wg *sync.WaitGroup) error {
 }
 
 func (server *Server) handle(pkt ServicePacket) error {
+	fmt.Println("SimTime:", pkt.SimulinkTime/1000, " ------ Insert into table record", pkt.Param)
 	switch pkt.Opt {
 	case 0: //Send (data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)

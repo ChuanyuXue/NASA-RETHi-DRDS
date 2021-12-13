@@ -92,15 +92,15 @@ func main() {
 	fmt.Println("Habitat Server Started")
 	time.Sleep(2 * time.Second)
 
-	// // Start Ground server
-	// groundServer := server.Server{}
-	// go groundServer.Init(0)
-	// fmt.Println("Ground Server Started")
-	// time.Sleep(2 * time.Second)
+	// Start Ground server
+	groundServer := server.Server{}
+	go groundServer.Init(0)
+	fmt.Println("Ground Server Started")
+	time.Sleep(2 * time.Second)
 
 	// // Let Ground server subscribe Habitat server
-	// habitatServer.Subscribe(3, groundServer.LocalSrc, 0, 1000)
-	// fmt.Println("Ground Server subscribed Habitat server")
+	habitatServer.Subscribe(3, groundServer.LocalSrc, 0, 1000)
+	fmt.Println("Ground Server subscribed Habitat server")
 
 	select {}
 

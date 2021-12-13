@@ -48,10 +48,10 @@ services:
     ports:
       - "20001:20001/udp"
     environment:
-      DS_LOCAL_ADDR_GROUND: ":10000"
-      DS_REMOTE_ADDR_GROUND: "host.docker.internal:20000"
-      DS_LOCAL_ADDR_HABITAT: ":10001"
-      DS_REMOTE_ADDR_HABITAT: "host.docker.internal:20001"
+      DS_LOCAL_ADDR_GROUND: ":20000"
+      DS_REMOTE_ADDR_GROUND: "host.docker.internal:10000"
+      DS_LOCAL_ADDR_HABITAT: ":20001"
+      DS_REMOTE_ADDR_HABITAT: "host.docker.internal:10001"
 
       DB_NAME_GROUND: ground
       DB_USER_GROUND: uu
