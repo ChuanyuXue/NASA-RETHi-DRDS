@@ -123,6 +123,8 @@ To require asynchronous data, first set up headers:
 
 Then send this packet by UDP channel to server.
 
+*If Simulink_Time == 0xffffffff, it returns the last record. If Simulink_Time < 0xffffffff and Subparam == 0xffff, it returns the data from Simulink_Time to the last data*
+
 Next keep listening from server, a packet will be send back with following headers:
 
 - Src = 0

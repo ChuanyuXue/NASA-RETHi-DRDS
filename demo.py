@@ -35,12 +35,12 @@ api.send(synt=synt, id=table, value = value)
 print("Clident send data %s to table %d"%(str(value), table))
 
 table = 3
-re = api.request(synt=0, id=table)
+re = api.request(synt=(1), id=table)
 print("Clident request data at %s to table %d"%(str(0), table))
 print("Clident receive data %s to table %d"%(str(re["data"]), table))
 
 table = 3
-re = api.request(synt=(0,2), id=table)
+re = api.request(synt=(1, 2), id=table)
 print("Clident request data at %s to table %d"%(str((0,2)), table))
 print("Clident receive data %s to table %d"%(str(re["data"]), table))
 

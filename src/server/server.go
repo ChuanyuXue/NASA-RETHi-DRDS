@@ -108,6 +108,11 @@ func (server *Server) Send(id uint16, time uint32, rawData []float64) error {
 }
 
 func (server *Server) Request(id uint16, synt uint32, dst uint8) error {
+	// for request last data
+	if synt == 0xFFFFFFFF {
+		synt = server.handler.QueryLastSynt(id)
+	}
+
 	data, err := server.handler.ReadSynt(id, synt)
 	if err != nil {
 		return err
@@ -128,6 +133,10 @@ func (server *Server) Request(id uint16, synt uint32, dst uint8) error {
 
 func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16, dst uint8) error {
 	var dataMat [][]float64
+	// for request last data
+	if timeDiff == 0xFFFF {
+		timeDiff = uint16(server.handler.QueryLastSynt(id) - timeStart)
+	}
 
 	for i := uint16(0); i < timeDiff; i++ {
 		data, err := server.handler.ReadSynt(id, timeStart+uint32(i))
