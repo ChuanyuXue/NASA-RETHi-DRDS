@@ -24,7 +24,6 @@ func LoadFromJson(path string, server JsonStandard) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

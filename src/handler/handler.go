@@ -1,9 +1,10 @@
 package handler
 
 import (
+	"data-service/src/utils"
 	"database/sql"
-	"datarepo/src/utils"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -14,12 +15,7 @@ import (
 
 type Handler struct {
 	utils.JsonStandard
-
-	Local  string `json:"local"`
-	Public string `json:"public"`
-	Port   string `json:"port"`
-	DBType string `json:"db_type"`
-	DBName string `json:"db_name"`
+	DBName string
 
 	DBPointer    *sql.DB
 	Tables       []string
@@ -29,31 +25,48 @@ type Handler struct {
 	RecordTables []uint16
 
 	DataShapes map[uint16]uint8
-
-	UserName string `json:"user_name"`
-	PassWord string `json:"password"`
 }
 
-func (handler *Handler) Init() error {
+func (handler *Handler) Init(src uint8) error {
 	var (
 		err       error
 		tableName string
 	)
 
-	// Connect database
-	loginInfo := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s",
-		handler.UserName,
-		handler.PassWord,
-		handler.Local,
-		handler.Port,
-		handler.DBName,
-	)
+	// -------------------------- Fix the paramter for docker envirioment
 
-	handler.DBPointer, err = sql.Open(handler.DBType, loginInfo)
+	if src == 0 {
+		handler.DBPointer, err = sql.Open("mysql", fmt.Sprintf("%v:%v@(ground_db:3306)/%v", // "hms_db" is the database container's name in the docker-compose.yml
+			os.Getenv("DB_USER_GROUND"),
+			os.Getenv("DB_PASSWORD_GROUND"),
+			os.Getenv("DB_NAME_GROUND")))
+		handler.DBName = "ground"
+
+	} else if src == 1 {
+		handler.DBPointer, err = sql.Open("mysql", fmt.Sprintf("%v:%v@(habitat_db:3306)/%v", // "hms_db" is the database container's name in the docker-compose.yml
+			os.Getenv("DB_USER_HABITAT"),
+			os.Getenv("DB_PASSWORD_HABITAT"),
+			os.Getenv("DB_NAME_HABITAT")))
+		handler.DBName = "habitat"
+	}
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
+
+	// wait database container to start
+	for {
+		err := handler.DBPointer.Ping()
+		if err == nil {
+			break
+		}
+		fmt.Println(err)
+		time.Sleep(2 * time.Second)
+	}
+
+	fmt.Println("Database " + handler.DBName + " has been connected!")
+
+	// -------------------------- Fix the paramter for docker envirioment
 
 	//Record all tables
 	query := fmt.Sprintf("SHOW TABLES from %s", handler.DBName)
@@ -77,7 +90,7 @@ func (handler *Handler) Init() error {
 				temp, err := utils.StringToInt(matchInte[0][4:])
 				if err != nil {
 					fmt.Println("Sniff relationship table error:", err)
-					panic("sniff relationship table error")
+					return err
 				}
 				if temp != 1 {
 					fmt.Println("Table ID of relationship table not equal to one!", err)
@@ -91,7 +104,7 @@ func (handler *Handler) Init() error {
 				temp, err := utils.StringToInt(matchLink[0][4:])
 				if err != nil {
 					fmt.Println("Sniff Interaction table error:", err)
-					panic("sniff Interaction table error")
+					return err
 				}
 				if temp != 2 {
 					fmt.Println("Table ID of Interaction table not equal to two!", err)
@@ -104,7 +117,7 @@ func (handler *Handler) Init() error {
 				temp, err := utils.StringToInt(matchInfo[0][4:])
 				if err != nil {
 					fmt.Println("Sniff Data Information table error:", err)
-					panic("sniff data information table error")
+					return err
 				}
 				if temp != 0 {
 					fmt.Println("Table ID of information table not equal to zero!", err)
@@ -136,7 +149,9 @@ func (handler *Handler) Init() error {
 
 	rows, err = handler.DBPointer.Query(query)
 	if err != nil {
-		panic("failed to query information table")
+		fmt.Println("failed to query information table")
+		return err
+
 	}
 
 	handler.DataShapes = make(map[uint16]uint8)
