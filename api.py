@@ -6,13 +6,13 @@ from typing import Tuple
 
 from numpy import cdouble, uint, uint8
 
-ip_server = "127.0.0.1"    ## Destination IP, referring server_configuration.json
-port_server = 10001       ## Destination Port, referring server_configuration.json
-id_server = 0
+IP_SERVER = "127.0.0.1"    ## Destination IP, referring server_configuration.json
+PORT_SERVER = 10001       ## Destination Port, referring server_configuration.json
+ID_SERVER = 0
 
-ip_client = "127.0.0.1" 
-port_client = 10002
-id_client = 1
+IP_CLIENT = "127.0.0.1" 
+PORT_CLIENT = 10002
+ID_CLIENT = 1
 
 class Header(BigEndianStructure):
     _fields_ = [
@@ -78,39 +78,39 @@ class Packet:
 
         
 
-def init(client_ip, client_port, server_ip, server_port, client_id = 1, server_id=0):
-    global id_client
-    global id_server
-    global ip_client
-    global ip_server
-    global port_client
-    global port_server
-    global out_sock
-    global in_sock
+def init(local_ip, local_port, to_ip, to_port, client_id = 1, server_id=0):
+    global ID_CLIENT
+    global ID_SERVER
+    global IP_CLIENT
+    global IP_SERVER
+    global PORT_CLIENT
+    global PORT_SERVER
+    global OUT_SOCK
+    global IN_SOCK
 
-    id_client = client_id
-    id_server = server_id
-    ip_client = client_ip
-    ip_server = server_ip
-    port_client = client_port
-    port_server = server_port
+    ID_CLIENT = client_id
+    ID_SERVER = server_id
+    IP_CLIENT = local_ip
+    IP_SERVER = to_ip
+    PORT_CLIENT = local_port
+    PORT_SERVER = to_port
 
-    out_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    in_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    in_sock.bind((ip_client, port_client))
-    in_sock.setblocking(False)
+    OUT_SOCK = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    IN_SOCK = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    IN_SOCK.bind((IP_CLIENT, PORT_CLIENT))
+    IN_SOCK.setblocking(False)
 
 def send(id, synt, value, priority=7, type=1):
-    global id_client
-    global id_server
-    global ip_client
-    global ip_server
-    global port_client
-    global port_server
+    global ID_CLIENT
+    global ID_SERVER
+    global IP_CLIENT
+    global IP_SERVER
+    global PORT_CLIENT
+    global PORT_SERVER
 
 
-    _src = id_client
-    _dst = id_server
+    _src = ID_CLIENT
+    _dst = ID_SERVER
     _message_type = 1
     _data_type = type
     _priority = priority
@@ -135,23 +135,22 @@ def send(id, synt, value, priority=7, type=1):
 
     pkt = Packet()
     buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
-    out_sock.sendto(buf, (ip_server, port_server))
-    pkt.buf2Pkt(buf)
+    OUT_SOCK.sendto(buf, (IP_SERVER, PORT_SERVER))
 
 
 
 
 def request(id, synt, priority = 7):
-    global id_client
-    global id_server
-    global ip_client
-    global ip_server
-    global port_client
-    global port_server
+    global ID_CLIENT
+    global ID_SERVER
+    global IP_CLIENT
+    global IP_SERVER
+    global PORT_CLIENT
+    global PORT_SERVER
 
     if not isinstance(synt, tuple):
-        _src = id_client
-        _dst = id_server
+        _src = ID_CLIENT
+        _dst = ID_SERVER
         _message_type = 1
         _data_type = 0
         _priority = priority
@@ -170,10 +169,10 @@ def request(id, synt, priority = 7):
 
         pkt = Packet()
         buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
-        out_sock.sendto(buf, (ip_server, port_server))
+        OUT_SOCK.sendto(buf, (IP_SERVER, PORT_SERVER))
     else:
-        _src = id_client
-        _dst = id_server
+        _src = ID_CLIENT
+        _dst = ID_SERVER
         _message_type = 1
         _data_type = 0
         _priority = priority
@@ -192,19 +191,19 @@ def request(id, synt, priority = 7):
 
         pkt = Packet()
         buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
-        out_sock.sendto(buf, (ip_server, port_server))
+        OUT_SOCK.sendto(buf, (IP_SERVER, PORT_SERVER))
 
     while True:
         try:
-            message, _ = in_sock.recvfrom(65536)
+            message, _ = IN_SOCK.recvfrom(65536)
             return pkt.get_values(message)
         except:
             continue
 
 
 def publish_register(id, synt, priority=7):
-    _src = id_client
-    _dst = id_server
+    _src = ID_CLIENT
+    _dst = ID_SERVER
     _message_type = 1
     _data_type = 0
     _priority = priority
@@ -223,19 +222,19 @@ def publish_register(id, synt, priority=7):
 
     pkt = Packet()
     buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
-    out_sock.sendto(buf, (ip_server, port_server))
+    OUT_SOCK.sendto(buf, (IP_SERVER, PORT_SERVER))
 
     while True:
         try:
-            message, _ = in_sock.recvfrom(65536)
+            message, _ = IN_SOCK.recvfrom(65536)
             return pkt.get_values(message)
         except:
             pass
 
  
 def publish(id, synt,value, priority = 7, type=1):
-    _src = id_client
-    _dst = id_server
+    _src = ID_CLIENT
+    _dst = ID_SERVER
     _message_type = 1
     _data_type = type
     _priority = priority
@@ -260,13 +259,13 @@ def publish(id, synt,value, priority = 7, type=1):
 
     pkt = Packet()
     buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
-    out_sock.sendto(buf, (ip_server, port_server))
+    OUT_SOCK.sendto(buf, (IP_SERVER, PORT_SERVER))
 
 
 
 def subscribe_register(id, synt, priority=7):
-    _src = id_client
-    _dst = id_server
+    _src = ID_CLIENT
+    _dst = ID_SERVER
     _message_type = 1
     _data_type = 0
     _priority = priority
@@ -285,11 +284,11 @@ def subscribe_register(id, synt, priority=7):
 
     pkt = Packet()
     buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
-    out_sock.sendto(buf, (ip_server, port_server))
+    OUT_SOCK.sendto(buf, (IP_SERVER, PORT_SERVER))
 
     while True:
         try:
-            message, _ = in_sock.recvfrom(65536)
+            message, _ = IN_SOCK.recvfrom(65536)
             return pkt.get_values(message)
         except:
             continue
@@ -300,7 +299,7 @@ def subscribe(id):
 
     while True:
         try:
-            message, _ = in_sock.recvfrom(65536)
+            message, _ = IN_SOCK.recvfrom(65536)
             return pkt.get_values(message)
         except:
             continue

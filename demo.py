@@ -2,10 +2,10 @@ import api
 import time
 
 api.init(
-    client_ip ="127.0.0.1",
-    client_port = 10002,
-    server_ip = "127.0.0.1",
-    server_port = 10001,
+    local_ip = "127.0.0.1",
+    local_port= 10002,
+    to_ip = "127.0.0.1",
+    to_port = 10001,
     client_id = 1,
     server_id = 0
 )
