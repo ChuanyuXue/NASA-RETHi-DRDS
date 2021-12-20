@@ -126,7 +126,7 @@ func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16,
 	var dataMat [][]float64
 	// for request last data
 	if timeDiff == 0xFFFF {
-		timeDiff = uint16(server.handler.QueryLastSynt(id) - timeStart)
+		timeDiff = uint16(server.handler.QueryLastSynt(id) - timeStart) / 100 + 1
 	}
 
 	for i := uint16(0); i < timeDiff; i++ {

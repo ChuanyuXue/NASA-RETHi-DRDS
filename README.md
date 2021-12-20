@@ -41,6 +41,16 @@ Data packet is the basic form to send data and also to implement service API:
 
 
 - Src: Source address
+
+  - 0x00: GCC
+  - 0x01: HMS
+  - 0x02: STR
+  - 0x03: PWR
+  - 0x04: ECLSS
+  - 0x05: AGT
+  - 0x06: ING
+  - 0x07: EXT
+
 - Dst: Destination address
 - MessageType(messaage_type): Types of packet
   - 0x00: Packet defined by Communication network
@@ -63,7 +73,8 @@ Data packet is the basic form to send data and also to implement service API:
   - 0x0001: Streaming message
   - 0xFFFE: Warning
   - 0xFFFF: Error
-- Time(time): Physical Unix time from 0 to 4294967295
+- SimulinkTime(simulink_time): Simulink time from 0 to 4294967295
+- PhysicalTime(physical_time): Physical Unix time from 0 to 4294967295
 - Row(raw): Length of data
 - Col(col): Width of data
 - Length(length): Flatten length of data (Row * Col)
@@ -272,11 +283,79 @@ To terminate Subscribe function, send
 - Param = ID of data subscribed
 - Subparam = 0
 - Data = Empty
- 
+
 \[ Same as register\]
 
 
-## 4. Current Plan
+
+## 4. Integration Guide
+
+### 4.1 Install Data repository & Communication network
+
+**Step1: ** Download Docker Desktop in lastest version.
+
+**Step2: ** Copy `docker-compose.yml` to an empty folder and run `docker-compose up` in the same folder. This yml file can be found [here](https://raw.githubusercontent.com/ChuanyuXue/NASA-RETHi-DataService/master/docker-compose.yml). Following outputs from terminal implies the application is running successfully.
+
+```shell
+comm_1          | Start Communication Network
+comm_1          | *SGo* -- Listen on :8000
+data_service_1  | Database has been initialized
+data_service_1  | Database has been initialized
+data_service_1  | Database habitat has been connected!
+data_service_1  | Habitat Server Started
+```
+
+**Step3:** Go website `http://localhost:8000` , the dashboard of communication network should be running.
+
+**Step4: **Run `MCVT_generator.py` to generate fake data for testing.
+
+
+
+### 4.2 How to use python api for C2
+
+Put `api.py` in the same folder with your application first. This python API file can be found [here](https://raw.githubusercontent.com/ChuanyuXue/NASA-RETHi-DataService/master/MCVT_generator.py).
+
+Using `api.init` function to set ip and port of local and remote server. 
+
+```
+import api
+
+api.init(
+    local_ip = "127.0.0.1",
+    local_port= 10002,
+    to_ip = "127.0.0.1",
+    to_port = 10001,
+    client_id = 1,
+    server_id = 0
+)
+```
+
+Using `api.request(Data_ID, Simulink_Time, Priority) -> Data`  request data.
+
+```
+## Request data(SPG DUST) whose ID == 3 at simulink time 1000
+re = api.request(synt=1, id=3)
+
+## Request data(SPG DUST) whose ID == 3 the lasted updated value
+re = api.request(synt=0xffffffff, id=3)
+
+## Request 5 records of data(SPG DUST) whose ID == 3 after simulink time 1000
+re = api.request(synt=(1000, 5), id=3)
+
+## Request data(SPG DUST) whose ID == 3 from simulink time 1000 to the lasted update value (this method severely rely on the correct setting of data frequency)
+re = api.request(synt=(1000, 0xffff), id=3
+```
+
+Using `api.send(Data_ID, Simulink_Time, Data, Priority, type) -> None`  send data to server (You can send to different subsystems by `api.init` function)
+
+```
+## Send data (SPG DUST) whose ID == 3 at simulink time 1000
+api.send(synt=1000, id=3, value = [0.1, 0.1, 0.1])
+```
+
+
+
+## 5. Current Plan
 
 This is the current [plan](https://docs.google.com/document/d/1x7Yfs2CWdzcWZeG3DvCrZ7T6m8J3jXQr/edit) for Communication and Data Repository subgroup.
 
