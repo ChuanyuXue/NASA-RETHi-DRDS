@@ -292,11 +292,11 @@ To terminate Subscribe function, send
 
 ### 4.1 Install Data repository & Communication network
 
-**Step1: ** Download Docker Desktop in lastest version.
+**Step1: ** Download Docker Desktop in latest version.
 
 **Step2: ** Copy `docker-compose.yml` to an empty folder and run `docker-compose up` in the same folder. This yml file can be found [here](https://raw.githubusercontent.com/ChuanyuXue/NASA-RETHi-DataService/master/docker-compose.yml). Following outputs from terminal implies the application is running successfully.
 
-```shell
+```
 comm_1          | Start Communication Network
 comm_1          | *SGo* -- Listen on :8000
 data_service_1  | Database has been initialized
@@ -307,13 +307,13 @@ data_service_1  | Habitat Server Started
 
 **Step3:** Go website `http://localhost:8000` , the dashboard of communication network should be running.
 
-**Step4: **Run `MCVT_generator.py` to generate fake data for testing.
+**Step4: ** Run `MCVT_generator.py` to generate fake data for testing. This python script can be found [here](https://raw.githubusercontent.com/ChuanyuXue/NASA-RETHi-DataService/master/MCVT_generator.py)
 
 
 
 ### 4.2 How to use python api for C2
 
-Put `api.py` in the same folder with your application first. This python API file can be found [here](https://raw.githubusercontent.com/ChuanyuXue/NASA-RETHi-DataService/master/MCVT_generator.py).
+Put `api.py` in the same folder with your application first. This python API file can be found [here](https://raw.githubusercontent.com/ChuanyuXue/NASA-RETHi-DataService/master/api.py).
 
 Using `api.init` function to set ip and port of local and remote server. 
 
@@ -352,6 +352,8 @@ Using `api.send(Data_ID, Simulink_Time, Data, Priority, type) -> None`  send dat
 ## Send data (SPG DUST) whose ID == 3 at simulink time 1000
 api.send(synt=1000, id=3, value = [0.1, 0.1, 0.1])
 ```
+
+
 
 
 
