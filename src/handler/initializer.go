@@ -2,12 +2,26 @@ package handler
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"time"
 )
 
-func DatabaseGenerator(src uint8) error {
+type TableInfo struct {
+	Id         uint16 `json:"data_id"`
+	Name       string `json:"data_name"`
+	Type       uint16 `json:"data_type"`
+	Subtype    uint16 `json:"data_subtype1"`
+	Subsubtype uint16 `json:"data_subtype2"`
+	Rate       uint16 `json:"data_rate"`
+	Size       uint16 `json:"data_size"`
+	Unit       string `json:"data_unit"`
+	Notes      string `json:"data_notes"`
+}
+
+func DatabaseGenerator(src uint8, path string) error {
 	// -------------------- Connect database ----------------------------------
 	var err error
 	var db *sql.DB
@@ -63,35 +77,44 @@ func DatabaseGenerator(src uint8) error {
 		fmt.Println(err, 1)
 	}
 
-	// ---------------------- Insert info
-	idList := [...]uint16{8, 6, 131, 132, 133, 134, 3, 7, 128, 129, 130, 4, 5, 135, 136}
-	nameList := [...]string{
-		"agent",
-		"str_dmg",
-		"Sys2_Out_PanelDamageProbabilities",
-		"Sys2_Out_Damage_Detection_Probabilities",
-		"Sys2_Out_Impact_Location_Probabiilities",
-		"Sys2_Out_FDD_Structure_Damage_xe",
-		"spg_dust",
-		"fdd_dust",
-		"SolarPV_FDD",
-		"SolarPV_FDD_simu",
-		"Nuclear_Dust_FDD",
-		"eclss_dust",
-		"eclss_paint",
-		"FDD_ECLSS_Dust_xe",
-		"FDD_ECLSS_Paint_xe"}
+	// ---------------------- Read json file
 
-	typeList := [...]uint8{1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 1, 1, 2, 2}
-	rateList := [len(typeList)]uint16{}
-	for i, _ := range idList {
-		rateList[i] = 1000
+	var dataList []TableInfo
+	var objmap map[string]json.RawMessage
+
+	file, err := os.Open(path)
+	if err != nil {
+		return err
 	}
-	sizeList := [...]uint16{1, 1, 1, 10, 5, 1, 4, 1, 1, 4, 1, 50, 50, 50, 50}
+	defer file.Close()
 
-	for index, id := range idList {
+	byteValue, err := ioutil.ReadAll(file)
+	if err != nil {
+		fmt.Println("Failed to read data configuration file")
+		return err
+	}
+
+	err = json.Unmarshal(byteValue, &objmap)
+	if err != nil {
+		fmt.Println("Failed to unmarshal data configuration json file")
+		return err
+	}
+	// dataList = make([]TableInfo, len(objmap))
+
+	for _, value := range objmap {
+		var info TableInfo
+		err = json.Unmarshal(value, &info)
+		if err != nil {
+			return err
+		}
+		dataList = append(dataList, info)
+	}
+
+	// ---------------------- Insert info
+
+	for _, info := range dataList {
 		act := fmt.Sprintf(`INSERT INTO %s.%s (data_id, data_name, data_type, data_rate, data_size) VALUES
-				("%d", "%s", "%d", "%d", "%d");`, dbName, tableName, id, nameList[index], typeList[index], rateList[index], sizeList[index])
+				("%d", "%s", "%d", "%d", "%d");`, dbName, tableName, info.Id, info.Name, info.Type, info.Rate, info.Size)
 		_, err = db.Exec(act)
 		if err != nil {
 			fmt.Println(err, 2)
@@ -99,14 +122,14 @@ func DatabaseGenerator(src uint8) error {
 	}
 
 	// ---------------------- Create data table
-	for index, id := range idList {
-		tableName = fmt.Sprintf(`record%d`, id)
+	for _, info := range dataList {
+		tableName = fmt.Sprintf(`record%d`, info.Id)
 		drop := fmt.Sprintf(`DROP TABLE IF EXISTS %s`, tableName)
-		_, err = db.Exec(drop)
+		db.Exec(drop)
 		act := fmt.Sprintf("create table `%s` (", tableName)
 		act = act + "simulink_time int unsigned NOT NULL,"
 		act = act + "physical_time int unsigned NOT NULL,"
-		for i := 0; i != int(sizeList[index]); i++ {
+		for i := 0; i != int(info.Size); i++ {
 			act = act + fmt.Sprintf("value%d float,", i)
 		}
 		act = act + "primary key (simulink_time), UNIQUE KEY simulink_time (simulink_time)"

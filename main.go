@@ -8,8 +8,14 @@ import (
 )
 
 func init() {
-	handler.DatabaseGenerator(0)
-	handler.DatabaseGenerator(1)
+	err := handler.DatabaseGenerator(0, "db_info.json")
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = handler.DatabaseGenerator(1, "db_info.json")
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func main() {
