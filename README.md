@@ -61,7 +61,11 @@ Data packet is the basic form to send data and also to implement service API:
   - 0x02: Sensor data
   - 0x03: Agent data
   - 0x03: Other data
-- Priority(priority): Priority of frame
+- Priority(priority): Quality of Service (QoS) prioritizes network traffic and manages available bandwidth so that the most important traffic goes first.
+  - 0x00, 0x01: Low Priority e.g. Best Effort Flow as back ground
+  - 0x02, 0x03: Normal Priority e.g. Audio Vedio Flow to maximum throughput
+  - 0x04, 0x05: Medium Priority e.g. Sensor Flow to minimize latency
+  - 0x06, 0x07: High Priority e.g. FDD flow as time critical message
 - Opt(opt): Options from 0 to 65535
   - 0x0001: Send operation
   - 0x0002: Request operation
