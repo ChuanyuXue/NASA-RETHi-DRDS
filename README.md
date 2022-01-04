@@ -311,7 +311,7 @@ data_service_1  | Habitat Server Started
 
 **Step3:** Go website `http://localhost:8000` , the dashboard of communication network should be running.
 
-**Step4: ** Run `MCVT_generator.py` to generate fake data for testing. This python script can be found [here](https://raw.githubusercontent.com/ChuanyuXue/NASA-RETHi-DataService/master/MCVT_generator.py)
+**Step4: ** Run `data_generator.py` to generate fake data for testing. This python script can be found [here](https://raw.githubusercontent.com/ChuanyuXue/NASA-RETHi-DataService/master/data_generator.py)
 
 
 
