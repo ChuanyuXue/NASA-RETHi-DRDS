@@ -8,7 +8,7 @@
         "data_rate": 1000,
         "data_size": 4,
         "data_unit": "NaN",
-        "data_notes": "NaN"
+        "data_notes": "3"
     },
     "ECLSS_FDD_Dust": {
         "data_id": 4,
@@ -19,7 +19,7 @@
         "data_rate": 1000,
         "data_size": 50,
         "data_unit": "NaN",
-        "data_notes": "NaN"
+        "data_notes": "4"
     },
     "ECLSS_FDD_Paint": {
         "data_id": 5,
@@ -30,7 +30,7 @@
         "data_rate": 1000,
         "data_size": 50,
         "data_unit": "NaN",
-        "data_notes": "NaN"
+        "data_notes": "4"
     },
     "Str_FDD_Dmg": {
         "data_id": 6,
@@ -41,7 +41,7 @@
         "data_rate": 1000,
         "data_size": 1,
         "data_unit": "NaN",
-        "data_notes": "NaN"
+        "data_notes": "2"
     },
     "NPG_FDD_Dust": {
         "data_id": 7,
@@ -52,7 +52,7 @@
         "data_rate": 1000,
         "data_size": 1,
         "data_unit": "NaN",
-        "data_notes": "NaN"
+        "data_notes": "3"
     },
     "Agent": {
         "data_id": 8,
@@ -63,7 +63,7 @@
         "data_rate": 1000,
         "data_size": 1,
         "data_unit": "NaN",
-        "data_notes": "NaN"
+        "data_notes": "5"
     },
     "Sys3_Out_PowerStorage": {
         "data_id": 128,
@@ -74,7 +74,7 @@
         "data_rate": 1000,
         "data_size": 1,
         "data_unit": "NaN",
-        "data_notes": "NaN"
+        "data_notes": "3"
     },
     "Sys2_out_PowerConsumption": {
         "data_id": 129,
@@ -85,7 +85,7 @@
         "data_rate": 1000,
         "data_size": 1,
         "data_unit": "NaN",
-        "data_notes": "NaN"
+        "data_notes": "2"
     },
     "Sys2_out_InteriorWallSurfTemp_Sensors": {
         "data_id": 130,
@@ -96,7 +96,7 @@
         "data_rate": 1000,
         "data_size": 1,
         "data_unit": "NaN",
-        "data_notes": "NaN"
+        "data_notes": "2"
     },
     "Sys5_Out_PowerRequest": {
         "data_id": 131,
@@ -107,7 +107,7 @@
         "data_rate": 1000,
         "data_size": 1,
         "data_unit": "NaN",
-        "data_notes": "NaN"
+        "data_notes": "5"
     },
     "Sys5_Out_PowerConsumption": {
         "data_id": 132,
@@ -118,6 +118,6 @@
         "data_rate": 1000,
         "data_size": 1,
         "data_unit": "NaN",
-        "data_notes": "NaN"
+        "data_notes": "5"
     }
 }
