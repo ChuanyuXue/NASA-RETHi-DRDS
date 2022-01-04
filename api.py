@@ -6,13 +6,14 @@ from typing import Tuple
 
 from numpy import cdouble, uint, uint8
 
-IP_SERVER = "127.0.0.1"    ## Destination IP, referring server_configuration.json
-PORT_SERVER = 10001       ## Destination Port, referring server_configuration.json
+IP_SERVER = "127.0.0.1"  # Destination IP, referring server_configuration.json
+PORT_SERVER = 10001  # Destination Port, referring server_configuration.json
 ID_SERVER = 0
 
-IP_CLIENT = "127.0.0.1" 
+IP_CLIENT = "127.0.0.1"
 PORT_CLIENT = 10002
 ID_CLIENT = 1
+
 
 class Header(BigEndianStructure):
     _fields_ = [
@@ -34,20 +35,22 @@ class Header(BigEndianStructure):
 class Packet:
     def __init__(self):
         pass
-    
+
     # payload is a double list
     def pkt2Buf(self, _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload):
         temp = _message_type << 12 + _data_type << 4 + _priority
-        header_buf = Header(_src, _dst, temp, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam)
+        header_buf = Header(_src, _dst, temp, _physical_time, _simulink_time,
+                            _row, _col, _length, _opt, _flag, _param, _subparam)
         double_arr = c_double * _length
         payload_buf = double_arr(*_payload)
         buf = bytes(header_buf)+bytes(payload_buf)
         return buf
-        
+
     def buf2Pkt(self, buffer):
         self.header = Header.from_buffer_copy(buffer[:24])
         double_arr = c_double * self.header.length
-        self.payload = double_arr.from_buffer_copy(buffer[24:24 + 8*self.header.length])
+        self.payload = double_arr.from_buffer_copy(
+            buffer[24:24 + 8*self.header.length])
         return self.header._fields_
 
     def get_values(self, buffer):
@@ -60,25 +63,27 @@ class Packet:
         values["data_type"] = (temp // 2**4) % 2 ** 8
         values["priority"] = temp % 2**4
 
-        values["physical_time"] =  c_uint32.from_buffer_copy(buffer[4:8][::-1]).value
-        values["simulink_time"] =  c_uint32.from_buffer_copy(buffer[8:12][::-1]).value
+        values["physical_time"] = c_uint32.from_buffer_copy(
+            buffer[4:8][::-1]).value
+        values["simulink_time"] = c_uint32.from_buffer_copy(
+            buffer[8:12][::-1]).value
         values["row"] = c_uint8.from_buffer_copy(buffer[12:13]).value
         values["col"] = c_uint8.from_buffer_copy(buffer[13:14]).value
         values["length"] = c_uint16.from_buffer_copy(buffer[14:16][::-1]).value
         values["opt"] = c_uint16.from_buffer_copy(buffer[16:18][::-1]).value
         values["flag"] = c_uint16.from_buffer_copy(buffer[18:20][::-1]).value
         values["param"] = c_uint16.from_buffer_copy(buffer[20:22][::-1]).value
-        values["subparam"] = c_uint16.from_buffer_copy(buffer[22:24][::-1]).value
-        
+        values["subparam"] = c_uint16.from_buffer_copy(
+            buffer[22:24][::-1]).value
+
         payload = []
         for i in range(values["length"]):
             payload.append(c_double.from_buffer_copy(buffer[24+i*8: 24+i*8+8]))
         values["data"] = payload
         return values
 
-        
 
-def init(local_ip, local_port, to_ip, to_port, client_id = 1, server_id=0):
+def init(local_ip, local_port, to_ip, to_port, client_id=1, server_id=0):
     global ID_CLIENT
     global ID_SERVER
     global IP_CLIENT
@@ -100,6 +105,7 @@ def init(local_ip, local_port, to_ip, to_port, client_id = 1, server_id=0):
     IN_SOCK.bind((IP_CLIENT, PORT_CLIENT))
     IN_SOCK.setblocking(False)
 
+
 def send(id, synt, value, priority=7, type=1):
     global ID_CLIENT
     global ID_SERVER
@@ -107,7 +113,6 @@ def send(id, synt, value, priority=7, type=1):
     global IP_SERVER
     global PORT_CLIENT
     global PORT_SERVER
-
 
     _src = ID_CLIENT
     _dst = ID_SERVER
@@ -134,13 +139,12 @@ def send(id, synt, value, priority=7, type=1):
         _length = _row * _col
 
     pkt = Packet()
-    buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
+    buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority, _physical_time,
+                      _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
     OUT_SOCK.sendto(buf, (IP_SERVER, PORT_SERVER))
 
 
-
-
-def request(id, synt, priority = 7):
+def request(id, synt, priority=7):
     global ID_CLIENT
     global ID_SERVER
     global IP_CLIENT
@@ -168,7 +172,8 @@ def request(id, synt, priority = 7):
         _payload = []
 
         pkt = Packet()
-        buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
+        buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority, _physical_time,
+                          _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
         OUT_SOCK.sendto(buf, (IP_SERVER, PORT_SERVER))
     else:
         _src = ID_CLIENT
@@ -190,7 +195,8 @@ def request(id, synt, priority = 7):
         _payload = []
 
         pkt = Packet()
-        buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
+        buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority, _physical_time,
+                          _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
         OUT_SOCK.sendto(buf, (IP_SERVER, PORT_SERVER))
 
     while True:
@@ -221,7 +227,8 @@ def publish_register(id, synt, priority=7):
     _payload = []
 
     pkt = Packet()
-    buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
+    buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority, _physical_time,
+                      _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
     OUT_SOCK.sendto(buf, (IP_SERVER, PORT_SERVER))
 
     while True:
@@ -231,8 +238,8 @@ def publish_register(id, synt, priority=7):
         except:
             pass
 
- 
-def publish(id, synt,value, priority = 7, type=1):
+
+def publish(id, synt, value, priority=7, type=1):
     _src = ID_CLIENT
     _dst = ID_SERVER
     _message_type = 1
@@ -258,9 +265,9 @@ def publish(id, synt,value, priority = 7, type=1):
         _length = _row * _col
 
     pkt = Packet()
-    buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
+    buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority, _physical_time,
+                      _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
     OUT_SOCK.sendto(buf, (IP_SERVER, PORT_SERVER))
-
 
 
 def subscribe_register(id, synt, priority=7):
@@ -281,9 +288,9 @@ def subscribe_register(id, synt, priority=7):
     _subparam = 0
     _payload = []
 
-
     pkt = Packet()
-    buf = pkt.pkt2Buf( _src, _dst, _message_type, _data_type, _priority, _physical_time, _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
+    buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority, _physical_time,
+                      _simulink_time, _row, _col, _length, _opt, _flag, _param, _subparam, _payload)
     OUT_SOCK.sendto(buf, (IP_SERVER, PORT_SERVER))
 
     while True:
@@ -303,4 +310,8 @@ def subscribe(id):
             return pkt.get_values(message)
         except:
             continue
-        
+
+
+def close():
+    IN_SOCK.close()
+    OUT_SOCK.close()
