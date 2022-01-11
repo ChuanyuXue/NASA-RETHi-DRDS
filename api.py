@@ -53,35 +53,6 @@ class Packet:
             buffer[24:24 + 8*self.header.length])
         return self.header._fields_
 
-    def get_values(self, buffer):
-        values = {}
-        values["src"] = c_uint8.from_buffer_copy(buffer[0:1]).value
-        values["dst"] = c_uint8.from_buffer_copy(buffer[1:2]).value
-        temp = c_uint16.from_buffer_copy(buffer[2:4][::-1]).value
-
-        values["message_type"] = temp // 2**12
-        values["data_type"] = (temp // 2**4) % 2 ** 8
-        values["priority"] = temp % 2**4
-
-        values["physical_time"] = c_uint32.from_buffer_copy(
-            buffer[4:8][::-1]).value
-        values["simulink_time"] = c_uint32.from_buffer_copy(
-            buffer[8:12][::-1]).value
-        values["row"] = c_uint8.from_buffer_copy(buffer[12:13]).value
-        values["col"] = c_uint8.from_buffer_copy(buffer[13:14]).value
-        values["length"] = c_uint16.from_buffer_copy(buffer[14:16][::-1]).value
-        values["opt"] = c_uint16.from_buffer_copy(buffer[16:18][::-1]).value
-        values["flag"] = c_uint16.from_buffer_copy(buffer[18:20][::-1]).value
-        values["param"] = c_uint16.from_buffer_copy(buffer[20:22][::-1]).value
-        values["subparam"] = c_uint16.from_buffer_copy(
-            buffer[22:24][::-1]).value
-
-        payload = []
-        for i in range(values["length"]):
-            payload.append(c_double.from_buffer_copy(buffer[24+i*8: 24+i*8+8]))
-        values["data"] = payload
-        return values
-
 
 def init(local_ip, local_port, to_ip, to_port, client_id=1, server_id=0):
     global ID_CLIENT
@@ -202,7 +173,8 @@ def request(id, synt, priority=7):
     while True:
         try:
             message, _ = IN_SOCK.recvfrom(65536)
-            return pkt.get_values(message)
+            pkt.buf2Pkt(message)
+            return pkt
         except:
             continue
 
@@ -234,7 +206,8 @@ def publish_register(id, synt, priority=7):
     while True:
         try:
             message, _ = IN_SOCK.recvfrom(65536)
-            return pkt.get_values(message)
+            pkt.buf2Pkt(message)
+            return pkt
         except:
             pass
 
@@ -296,7 +269,8 @@ def subscribe_register(id, synt, priority=7):
     while True:
         try:
             message, _ = IN_SOCK.recvfrom(65536)
-            return pkt.get_values(message)
+            pkt.buf2Pkt(message)
+            return pkt
         except:
             continue
 
@@ -307,7 +281,8 @@ def subscribe(id):
     while True:
         try:
             message, _ = IN_SOCK.recvfrom(65536)
-            return pkt.get_values(message)
+            pkt.buf2Pkt(message)
+            return pkt
         except:
             continue
 
