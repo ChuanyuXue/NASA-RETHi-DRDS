@@ -50,7 +50,7 @@ class Packet:
         self.header = Header.from_buffer_copy(buffer[:24])
         double_arr = c_double * self.header.length
         self.payload = double_arr.from_buffer_copy(
-            buffer[24:24 + 8*self.header.length])
+            buffer[24:24 + 8*self.header.length][::-1])[::-1]
         return self.header._fields_
 
 
