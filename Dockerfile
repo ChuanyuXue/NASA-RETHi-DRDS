@@ -7,5 +7,5 @@ RUN go install ./... .
 FROM alpine
 COPY --from=builder /go/bin/data-service ./
 COPY ./db_info.json ./
-EXPOSE 20001/udp 25530/udp
+EXPOSE 20001/udp
 CMD ["./data-service"]

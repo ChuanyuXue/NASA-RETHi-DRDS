@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"data-service/src/utils"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -26,14 +27,14 @@ func DatabaseGenerator(src uint8, path string) error {
 	var err error
 	var db *sql.DB
 	var dbName string
-	if src == 0 {
+	if src == utils.SRC_GCC {
 		db, err = sql.Open("mysql", fmt.Sprintf("%v:%v@(ground_db:3306)/%v", // "hms_db" is the database container's name in the docker-compose.yml
 			os.Getenv("DB_USER_GROUND"),
 			os.Getenv("DB_PASSWORD_GROUND"),
 			os.Getenv("DB_NAME_GROUND")))
 		dbName = "ground"
 
-	} else if src == 1 {
+	} else if src == utils.SRC_HMS {
 		db, err = sql.Open("mysql", fmt.Sprintf("%v:%v@(habitat_db:3306)/%v", // "hms_db" is the database container's name in the docker-compose.yml
 			os.Getenv("DB_USER_HABITAT"),
 			os.Getenv("DB_PASSWORD_HABITAT"),
@@ -74,7 +75,7 @@ func DatabaseGenerator(src uint8, path string) error {
 
 	_, err = db.Exec(action)
 	if err != nil {
-		fmt.Println(err, 1)
+		fmt.Println(err)
 	}
 
 	// ---------------------- Read json file
@@ -117,7 +118,7 @@ func DatabaseGenerator(src uint8, path string) error {
 				("%d", "%s", "%d", "%d", "%d");`, dbName, tableName, info.Id, info.Name, info.Type, info.Rate, info.Size)
 		_, err = db.Exec(act)
 		if err != nil {
-			fmt.Println(err, 2)
+			fmt.Println(err)
 		}
 	}
 
@@ -137,7 +138,7 @@ func DatabaseGenerator(src uint8, path string) error {
 
 		_, err = db.Exec(act)
 		if err != nil {
-			fmt.Println(err, 3)
+			fmt.Println(err)
 		}
 	}
 	fmt.Println("Database has been initialized")

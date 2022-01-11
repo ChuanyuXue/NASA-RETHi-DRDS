@@ -31,13 +31,27 @@ type Server struct {
 
 func (server *Server) Init(src uint8) error {
 	// -------------------------- Fix the paramter for docker envirioment
-	if src == 0 {
+	if src == utils.SRC_GCC {
 		server.Type = "GROUND"
-		server.ClientSrc = []uint8{1, 2, 3, 4, 5, 6, 7}
+		server.ClientSrc = []uint8{
+			utils.SRC_AGT,
+			utils.SRC_ECLSS,
+			utils.SRC_EXT,
+			utils.SRC_HMS,
+			utils.SRC_ING,
+			utils.SRC_PWR,
+			utils.SRC_STR}
 
-	} else if src == 1 {
+	} else if src == utils.SRC_HMS {
 		server.Type = "HABITAT"
-		server.ClientSrc = []uint8{0, 2, 3, 4, 5, 6, 7}
+		server.ClientSrc = []uint8{
+			utils.SRC_AGT,
+			utils.SRC_ECLSS,
+			utils.SRC_EXT,
+			utils.SRC_GCC,
+			utils.SRC_ING,
+			utils.SRC_PWR,
+			utils.SRC_STR}
 	}
 	server.Src = string(src)
 	server.LocalSrc = uint8(src)
@@ -79,23 +93,9 @@ func (server *Server) Init(src uint8) error {
 	server.publisherRegister = make(map[uint16][]uint8)
 	server.subscriberRegister = make(map[uint16][]uint8)
 
-	// var wg sync.WaitGroup
-
 	go server.listen(localAddr)
 	go server.listen(loopAddr)
 
-	// Start Service -- For single port
-	// portLog := make([]uint32, 0)
-	// for _, clients_addr := range server.ClientSrcMap {
-	// 	wg.Add(1)
-	// 	port := clients_addr.Port
-	// 	// Avoid listen to repetitive port
-	// 	if !utils.Uint32Contains(portLog, uint32(port)) {
-	// 		portLog = append(portLog, uint32(port))
-	// 		go server.listen(clients_addr, &wg)
-	// 		fmt.Println("Keep listening on port:", port)
-	// 	}
-	// }
 	return nil
 }
 
@@ -109,7 +109,7 @@ func (server *Server) Send(id uint16, time uint32, rawData []float64) error {
 
 func (server *Server) Request(id uint16, synt uint32, dst uint8) error {
 	// for request last data
-	if synt == 0xFFFFFFFF {
+	if synt == utils.TIME_SIMU_LAST {
 		synt = server.handler.QueryLastSynt(id)
 	}
 
@@ -124,7 +124,8 @@ func (server *Server) Request(id uint16, synt uint32, dst uint8) error {
 	var dataMat [][]float64
 	dataMat = append(dataMat, data)
 	// opt = 0, types = 0, priority = 7
-	err = server.send(dst, uint8(data_type), 7, synt, 1, 0, id, 0, dataMat)
+	err = server.send(dst, uint8(data_type), utils.PRIORITY_HIGHT,
+		synt, utils.OPT_REQUEST, utils.FLAG_SINGLE, id, utils.PARAMTER_EMPTY, dataMat)
 	if err != nil {
 		return err
 	}
@@ -133,8 +134,9 @@ func (server *Server) Request(id uint16, synt uint32, dst uint8) error {
 
 func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16, dst uint8) error {
 	var dataMat [][]float64
+
 	// for request last data
-	if timeDiff == 0xFFFF {
+	if timeDiff == utils.PARAMTER_REQUEST_LAST {
 		timeDiff = uint16(server.handler.QueryLastSynt(id)-timeStart)/100 + 1
 	}
 
@@ -151,7 +153,8 @@ func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16,
 		return err
 	}
 
-	err = server.send(dst, uint8(data_type), 7, timeStart, 1, 0, id, timeDiff, dataMat)
+	err = server.send(dst, uint8(data_type), utils.PRIORITY_HIGHT,
+		timeStart, utils.OPT_REQUEST, utils.FLAG_SINGLE, id, timeDiff, dataMat)
 	if err != nil {
 		return err
 	}
@@ -164,7 +167,8 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 		lastSynt := server.handler.QueryLastSynt(id)
 		if synt < lastSynt {
 			// Send error back to dst
-			server.sendOpt(dst, 7, synt, 10, 65535, id, 0)
+			server.sendOpt(dst, utils.PRIORITY_HIGHT, synt, utils.OPT_RESPONSE,
+				utils.FLAG_ERROR, id, utils.PARAMTER_EMPTY)
 			return errors.New("published data not synchronous")
 		}
 
@@ -181,7 +185,8 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 			return err
 		}
 		server.publisherRegister[id] = append(server.publisherRegister[id], dst)
-		server.sendOpt(dst, 7, synt, 10, 0, id, uint16(rate))
+		server.sendOpt(dst, utils.PRIORITY_HIGHT, synt, utils.OPT_RESPONSE,
+			utils.FLAG_SINGLE, id, uint16(rate))
 	}
 
 	return nil
@@ -196,13 +201,15 @@ func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) 
 				row, _ := server.handler.ReadSynt(id, i)
 				dataMap := make([][]float64, 0)
 				dataMap = append(dataMap, row)
-				server.send(dst, uint8(dataType), 7, i, 0, 1, id, 0, dataMap)
+				server.send(dst, uint8(dataType), utils.PRIORITY_HIGHT, i,
+					utils.OPT_SEND, utils.FLAG_SINGLE, id, utils.PARAMTER_EMPTY, dataMap)
 			}
 		}
 
 	} else {
 		server.subscriberRegister[id] = append(server.subscriberRegister[id], dst)
-		server.sendOpt(dst, 7, synt, 10, 0, id, rate)
+		server.sendOpt(dst, utils.PRIORITY_HIGHT, synt,
+			utils.OPT_RESPONSE, utils.FLAG_SINGLE, id, rate)
 	}
 	return nil
 }
@@ -212,7 +219,7 @@ func (server *Server) send(dst uint8, types uint8, priority uint8, synt uint32, 
 	src, _ := utils.StringToInt(server.Src)
 	pkt.Src = uint8(src)
 	pkt.Dst = dst
-	pkt.MessageType = 1
+	pkt.MessageType = utils.MSG_OUTER
 	pkt.DataType = types
 	pkt.Priority = priority
 	pkt.PhysicalTime = uint32(time.Now().Unix())
@@ -255,8 +262,8 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, opt uint16
 	src, _ := utils.StringToInt(server.Src)
 	pkt.Src = uint8(src)
 	pkt.Dst = dst
-	pkt.MessageType = 1
-	pkt.DataType = 0
+	pkt.MessageType = utils.MSG_OUTER
+	pkt.DataType = utils.TYPE_FDD
 	pkt.Priority = priority
 	pkt.PhysicalTime = uint32(time.Now().Unix())
 	pkt.SimulinkTime = synt
@@ -288,9 +295,6 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, opt uint16
 }
 
 func (server *Server) listen(addr *net.UDPAddr) error {
-	// if wg != nil {
-	// 	defer wg.Done()
-	// }
 
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
@@ -312,14 +316,14 @@ func (server *Server) listen(addr *net.UDPAddr) error {
 			fmt.Println(err)
 		}
 	}
-	
+
 	return nil
 }
 
 func (server *Server) handle(pkt ServicePacket) error {
 	fmt.Println("SimTime:", pkt.SimulinkTime, " ------ Insert into table record", pkt.Param)
 	switch pkt.Opt {
-	case 0: //Send (data packet)
+	case utils.OPT_SEND: //Send (data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)
 		err := server.Send(pkt.Param, pkt.SimulinkTime, rawData)
 		if err != nil {
@@ -336,7 +340,7 @@ func (server *Server) handle(pkt ServicePacket) error {
 				0, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
 		}
 
-	case 1: //Request (operation packet)
+	case utils.OPT_REQUEST: //Request (operation packet)
 		if pkt.Subparam == 1 {
 			err := server.Request(pkt.Param, pkt.SimulinkTime, pkt.Src)
 			if err != nil {
@@ -349,7 +353,7 @@ func (server *Server) handle(pkt ServicePacket) error {
 			}
 		}
 
-	case 2: // Publish (opeartion packet / data packet)
+	case utils.OPT_PUBLISH: // Publish (opeartion packet / data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)
 		err := server.Publish(pkt.Param, pkt.Src, pkt.Row, pkt.Col, pkt.SimulinkTime, rawData)
 		if err != nil {
@@ -370,7 +374,7 @@ func (server *Server) handle(pkt ServicePacket) error {
 				0, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
 		}
 
-	case 3: // Subscribe (operation packet)
+	case utils.OPT_SUBSCRIBE: // Subscribe (operation packet)
 		err := server.Subscribe(pkt.Param, pkt.Src, pkt.SimulinkTime, pkt.Subparam)
 		if err != nil {
 			return err

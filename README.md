@@ -359,8 +359,6 @@ api.send(synt=1000, id=3, value = [0.1, 0.1, 0.1])
 
 
 
-
-
 <img src="./img/nasa_logo.jpg" width="50" height="50"> *This project is supported by the National Aeronautics and Space Administration*
 
 
