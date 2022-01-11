@@ -90,6 +90,7 @@ func main() {
 	// }
 	// --------------- Test for Ground <-- Habitat <--> Subsystem ------------------------
 	// Start Habitat server
+
 	habitatServer := server.Server{}
 	err := habitatServer.Init(1)
 	if err != nil {

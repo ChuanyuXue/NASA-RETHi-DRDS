@@ -10,7 +10,6 @@ import (
 	// "errors"
 	"fmt"
 	"net"
-	"sync"
 )
 
 type Server struct {
@@ -22,7 +21,6 @@ type Server struct {
 
 	handler *handler.Handler
 
-	addr         net.UDPAddr
 	LocalSrc     uint8
 	ClientSrc    []uint8
 	ClientSrcMap map[uint8]net.UDPAddr
@@ -53,11 +51,20 @@ func (server *Server) Init(src uint8) error {
 	if err != nil {
 		return errors.New(fmt.Sprintf("unable to resolve remote address for %s", server.Type))
 	}
+	loopAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_LOOP_"+server.Type))
+	if err != nil {
+		return errors.New("unable to resolve local loop")
+	}
 
-	server.addr = *localAddr
 	for key := range server.ClientSrc {
 		server.ClientSrcMap[uint8(key)] = *remoteAddr
 	}
+
+	remoteAddr, err = net.ResolveUDPAddr("udp", os.Getenv("DS_REMOTE_LOOP_"+server.Type))
+	if err != nil {
+		return errors.New("unable to resolve remote loop")
+	}
+	server.ClientSrcMap[uint8(src)] = *remoteAddr
 
 	// -------------------------- Fix the paramter for docker envirioment
 	// Init data service handler
@@ -72,8 +79,10 @@ func (server *Server) Init(src uint8) error {
 	server.publisherRegister = make(map[uint16][]uint8)
 	server.subscriberRegister = make(map[uint16][]uint8)
 
-	var wg sync.WaitGroup
-	go server.listen(server.addr, &wg)
+	// var wg sync.WaitGroup
+
+	go server.listen(localAddr)
+	go server.listen(loopAddr)
 
 	// Start Service -- For single port
 	// portLog := make([]uint32, 0)
@@ -126,7 +135,7 @@ func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16,
 	var dataMat [][]float64
 	// for request last data
 	if timeDiff == 0xFFFF {
-		timeDiff = uint16(server.handler.QueryLastSynt(id) - timeStart) / 100 + 1
+		timeDiff = uint16(server.handler.QueryLastSynt(id)-timeStart)/100 + 1
 	}
 
 	for i := uint16(0); i < timeDiff; i++ {
@@ -278,14 +287,14 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, opt uint16
 	return nil
 }
 
-func (server *Server) listen(addr net.UDPAddr, wg *sync.WaitGroup) error {
-	if wg != nil {
-		defer wg.Done()
-	}
+func (server *Server) listen(addr *net.UDPAddr) error {
+	// if wg != nil {
+	// 	defer wg.Done()
+	// }
 
-	conn, err := net.ListenUDP("udp", &addr)
+	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
-		fmt.Println("Failed to bind client", addr)
+		fmt.Println("Failed to bind client", addr, err)
 		return err
 	}
 
@@ -296,16 +305,19 @@ func (server *Server) listen(addr net.UDPAddr, wg *sync.WaitGroup) error {
 		if err != nil {
 			fmt.Println("Failed to listen packet from connection")
 		}
+
 		pkt := FromServiceBuf(buf[:])
 		err = server.handle(pkt)
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
+	
+	return nil
 }
 
 func (server *Server) handle(pkt ServicePacket) error {
-	fmt.Println("SimTime:", pkt.SimulinkTime/1000, " ------ Insert into table record", pkt.Param)
+	fmt.Println("SimTime:", pkt.SimulinkTime, " ------ Insert into table record", pkt.Param)
 	switch pkt.Opt {
 	case 0: //Send (data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)
