@@ -67,10 +67,10 @@ Data packet is the basic form to send data and also to implement service API:
   - 0x04, 0x05: Medium Priority e.g. Sensor Flow to minimize latency
   - 0x06, 0x07: High Priority e.g. FDD flow as time critical message
 - Opt(opt): Options from 0 to 65535
-  - 0x0001: Send operation
-  - 0x0002: Request operation
-  - 0x0003: Publish operation
-  - 0x0004: Subscribe operation
+  - 0x0000: Send operation
+  - 0x0001: Request operation
+  - 0x0002: Publish operation
+  - 0x0003: Subscribe operation
   - 0x000A: Response
 - Flag(flag):
   - 0x0000: Single message
