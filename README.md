@@ -333,7 +333,7 @@ api.init(
     to_ip = "127.0.0.1",
     to_port = 65531,
     client_id = 1,
-    server_id = 0
+    server_id = 1
 )
 ```
 
@@ -346,11 +346,11 @@ re = api.request(synt=1, id=3)
 ## Request data(SPG DUST) whose ID == 3 the lasted updated value
 re = api.request(synt=0xffffffff, id=3)
 
-## Request 5 records of data(SPG DUST) whose ID == 3 after simulink time 1000
-re = api.request(synt=(1000, 5), id=3)
+## Request 5 records of data(SPG DUST) whose ID == 3 after simulink time 1
+re = api.request(synt=(1, 5), id=3)
 
-## Request data(SPG DUST) whose ID == 3 from simulink time 1000 to the lasted update value (this method severely rely on the correct setting of data frequency)
-re = api.request(synt=(1000, 0xffff), id=3
+## Request data(SPG DUST) whose ID == 3 from simulink time 1 to the lasted update value (this method severely rely on the correct setting of data frequency)
+re = api.request(synt=(1, 0xffff), id=3
 ```
 
 Using `api.send(Data_ID, Simulink_Time, Data, Priority, type) -> None`  send data to server (You can send to different subsystems by `api.init` function)
