@@ -294,6 +294,8 @@ To terminate Subscribe function, send
 
 ## 4. Integration Guide
 
+The guide document is [here](https://docs.google.com/document/d/12J9YN7X1mOZ9V3jyVSI7JLqs4B8RDRLaMuK92zJOCio/edit#heading=h.9qqmtz1fu6lr).
+
 ### 4.1 Install Data repository & Communication network
 
 **Step1: ** Download Docker Desktop in latest version.
