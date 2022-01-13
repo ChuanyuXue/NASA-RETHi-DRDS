@@ -216,8 +216,7 @@ func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) 
 
 func (server *Server) send(dst uint8, types uint8, priority uint8, synt uint32, opt uint16, flag uint16, para uint16, para2 uint16, dataMap [][]float64) error {
 	var pkt ServicePacket
-	src, _ := utils.StringToInt(server.Src)
-	pkt.Src = uint8(src)
+	pkt.Src = server.LocalSrc
 	pkt.Dst = dst
 	pkt.MessageType = utils.MSG_OUTER
 	pkt.DataType = types
@@ -321,10 +320,15 @@ func (server *Server) listen(addr *net.UDPAddr) error {
 }
 
 func (server *Server) handle(pkt ServicePacket) error {
-	fmt.Println("SimTime:", pkt.SimulinkTime, " ------ Insert into table record", pkt.Param)
+	// fmt.Println("SimTime:", pkt.SimulinkTime, " ------ Insert into table record", pkt.Param)
 	switch pkt.Opt {
 	case utils.OPT_SEND: //Send (data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)
+
+		if pkt.Param == 3 {
+			fmt.Println(pkt.Dst, "----", rawData[:pkt.Col])
+		}
+
 		err := server.Send(pkt.Param, pkt.SimulinkTime, rawData)
 		if err != nil {
 			return err
@@ -337,7 +341,7 @@ func (server *Server) handle(pkt ServicePacket) error {
 				dataMat = append(dataMat, rawData[i*int(pkt.Col):(i+1)*int(pkt.Col)])
 			}
 			server.send(dst, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
-				0, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
+				utils.OPT_SEND, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
 		}
 
 	case utils.OPT_REQUEST: //Request (operation packet)
@@ -371,7 +375,7 @@ func (server *Server) handle(pkt ServicePacket) error {
 				dataMat = append(dataMat, rawData[i*int(pkt.Col):(i+1)*int(pkt.Col)])
 			}
 			server.send(dst, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
-				0, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
+				utils.OPT_SEND, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
 		}
 
 	case utils.OPT_SUBSCRIBE: // Subscribe (operation packet)

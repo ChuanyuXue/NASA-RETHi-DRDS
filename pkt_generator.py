@@ -18,7 +18,7 @@ for synt in range(600):
             server_id=1
         )
 
-        value = [random.random() for i in range(data['data_size'])]
+        value = [data['data_id'] for i in range(data['data_size'])]
         api.send(synt=synt, id=data['data_id'],
                  value=value, priority=3, type=1)
         api.close()

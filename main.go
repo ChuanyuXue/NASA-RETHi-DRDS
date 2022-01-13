@@ -3,6 +3,7 @@ package main
 import (
 	"data-service/src/handler"
 	"data-service/src/server"
+	"data-service/src/utils"
 	"fmt"
 	"time"
 )
@@ -92,7 +93,7 @@ func main() {
 	// Start Habitat server
 
 	habitatServer := server.Server{}
-	err := habitatServer.Init(1)
+	err := habitatServer.Init(utils.SRC_HMS)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -101,7 +102,7 @@ func main() {
 
 	// Start Ground server
 	groundServer := server.Server{}
-	go groundServer.Init(0)
+	go groundServer.Init(utils.SRC_GCC)
 	fmt.Println("Ground Server Started")
 	time.Sleep(2 * time.Second)
 

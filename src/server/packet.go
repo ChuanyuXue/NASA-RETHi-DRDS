@@ -55,7 +55,7 @@ func (pkt Packet) ToBuf() []byte {
 func PayloadFloat2Buf(payload []float64) []byte {
 	var buft bytes.Buffer
 	for _, v := range payload {
-		err := binary.Write(&buft, binary.BigEndian, v)
+		err := binary.Write(&buft, binary.LittleEndian, v)
 		if err != nil {
 			fmt.Println("Failed to convert Payload to 64bytes")
 		}
@@ -65,7 +65,6 @@ func PayloadFloat2Buf(payload []float64) []byte {
 
 func PayloadBuf2Float(buf []byte) []float64 {
 	var data64 []float64
-
 	for i, _ := range buf {
 		if i%8 == 0 {
 			targetBuf := buf[i : i+8]
