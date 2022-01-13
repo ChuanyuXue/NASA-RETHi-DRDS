@@ -10,7 +10,10 @@ api.init(
     server_id=1
 )
 
-re = api.request(synt=322, id=3)
+re = api.request(synt=2, id=3)
+print(list(re.payload))
+
+re = api.request(synt=(0, 45), id=3)
 print(list(re.payload))
 
 # ## -------------- synt 0 --------------------------

@@ -135,26 +135,41 @@ func (server *Server) Request(id uint16, synt uint32, dst uint8) error {
 func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16, dst uint8) error {
 	var dataMat [][]float64
 
-	// for request last data
-	if timeDiff == utils.PARAMTER_REQUEST_LAST {
-		timeDiff = uint16(server.handler.QueryLastSynt(id)-timeStart)/100 + 1
-	}
+	// // for request last data
+	// if timeDiff == utils.PARAMTER_REQUEST_LAST {
+	// 	timeDiff = uint16(server.handler.QueryLastSynt(id) - timeStart)/100 + 1
+	// }
 
-	for i := uint16(0); i < timeDiff; i++ {
-		data, err := server.handler.ReadSynt(id, timeStart+uint32(i))
-		if err != nil {
-			return err
-		}
-		dataMat = append(dataMat, data)
-	}
+	// for i := uint16(0); i < timeDiff; i++ {
+	// 	data, err := server.handler.ReadSynt(id, timeStart+uint32(i))
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	dataMat = append(dataMat, data)
+	// }
 
 	data_type, err := server.handler.QueryInfo(id, "data_type")
 	if err != nil {
 		return err
 	}
 
+	if timeDiff == utils.PARAMTER_REQUEST_LAST {
+		dataMat, err = server.handler.ReadRange(id, timeStart, server.handler.QueryLastSynt(id))
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+	} else {
+		dataMat, err = server.handler.ReadRange(id, timeStart, timeStart+uint32(timeDiff))
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+	}
+
 	err = server.send(dst, uint8(data_type), utils.PRIORITY_HIGHT,
 		timeStart, utils.OPT_REQUEST, utils.FLAG_SINGLE, id, timeDiff, dataMat)
+
 	if err != nil {
 		return err
 	}
@@ -324,11 +339,6 @@ func (server *Server) handle(pkt ServicePacket) error {
 	switch pkt.Opt {
 	case utils.OPT_SEND: //Send (data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)
-
-		if pkt.Param == 3 {
-			fmt.Println(pkt.Dst, "----", rawData[:pkt.Col])
-		}
-
 		err := server.Send(pkt.Param, pkt.SimulinkTime, rawData)
 		if err != nil {
 			return err

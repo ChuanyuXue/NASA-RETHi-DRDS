@@ -91,13 +91,18 @@ func main() {
 	// }
 	// --------------- Test for Ground <-- Habitat <--> Subsystem ------------------------
 	// Start Habitat server
-
 	habitatServer := server.Server{}
 	err := habitatServer.Init(utils.SRC_HMS)
 	if err != nil {
 		fmt.Println(err)
 	}
 	fmt.Println("Habitat Server Started")
+	time.Sleep(2 * time.Second)
+
+	// Start Habitat http service
+	habitatStream := server.Stream{}
+	go habitatStream.Init(utils.SRC_HMS)
+	fmt.Println("Habitat Stream Started")
 	time.Sleep(2 * time.Second)
 
 	// Start Ground server
