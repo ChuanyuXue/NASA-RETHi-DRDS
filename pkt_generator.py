@@ -6,6 +6,8 @@ import random
 with open("db_info.json") as f:
     data_discript = json.load(f)
 
+# server_id : 1 -> Habitat database
+# server_id : 0 -> Ground Database
 # Simulation for 600 seconds
 for synt in range(600):
     for name, data in data_discript.items():
