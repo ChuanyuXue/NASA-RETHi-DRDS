@@ -152,33 +152,31 @@ func (server *Stream) send(dst uint8, types uint8, priority uint8, synt uint32, 
 }
 
 func (server *Stream) wsHandler(ctx *sgo.Context) error {
-	fmt.Println("wsHandler invoke")
 	ws, err := server.upgrader.Upgrade(ctx.Resp, ctx.Req, nil)
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	fmt.Println("2")
 	dataID, err := strconv.Atoi(ctx.Param("dataID"))
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	fmt.Println("3")
 	wsPktCh := server.wsPktChMap[dataID]
 	// server.wsOpenSig <- true
 	// <-server.wsOpenSig
-	fmt.Println("sadfdasfads")
 	closeSig := make(chan bool)
 
 	// receive
-	// go func() {
-	// 	for {
-	// 		_, buf, err := ws.ReadMessage()
-	// 		if err != nil {
-	// 			fmt.Println(err)
-	// 			closeSig <- true
-	// 		}
+	go func() {
+		for {
+			_, _, err := ws.ReadMessage()
+			if err != nil {
+				fmt.Println(err)
+				closeSig <- true
+			}
+		}
+	}()
 	// 		pkt := new(Packet)
 	// 		if err = pkt.FromJSON(buf); err != nil {
 	// 			fmt.Println(err)
@@ -187,12 +185,9 @@ func (server *Stream) wsHandler(ctx *sgo.Context) error {
 	// 		fmt.Println("received from js:", pkt)
 	// 	}
 	// }()
-	fmt.Println("4")
 	go server.Publish(uint16(dataID))
-	fmt.Println("published")
 	// // send
 	go func() {
-		fmt.Println("START LOOP")
 		for {
 			pkt := <-wsPktCh
 			pkt.Data = PayloadBuf2Float(pkt.Payload)
@@ -200,7 +195,6 @@ func (server *Stream) wsHandler(ctx *sgo.Context) error {
 				fmt.Println(err)
 				continue
 			}
-			fmt.Printf("sent %v to js\n", pkt.Payload)
 		}
 	}()
 
