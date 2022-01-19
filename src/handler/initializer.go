@@ -22,6 +22,41 @@ type TableInfo struct {
 	Notes      string `json:"data_notes"`
 }
 
+func ReadDataInfo(path string) ([]TableInfo, error) {
+	var dataList []TableInfo
+	var objmap map[string]json.RawMessage
+
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	byteValue, err := ioutil.ReadAll(file)
+	if err != nil {
+		fmt.Println("Failed to read data configuration file")
+		return nil, err
+	}
+
+	err = json.Unmarshal(byteValue, &objmap)
+	if err != nil {
+		fmt.Println("Failed to unmarshal data configuration json file")
+		return nil, err
+	}
+	// dataList = make([]TableInfo, len(objmap))
+
+	for _, value := range objmap {
+		var info TableInfo
+		err = json.Unmarshal(value, &info)
+		if err != nil {
+			return nil, err
+		}
+		dataList = append(dataList, info)
+	}
+	return dataList, nil
+
+}
+
 func DatabaseGenerator(src uint8, path string) error {
 	// -------------------- Connect database ----------------------------------
 	var err error
@@ -80,35 +115,10 @@ func DatabaseGenerator(src uint8, path string) error {
 
 	// ---------------------- Read json file
 
-	var dataList []TableInfo
-	var objmap map[string]json.RawMessage
-
-	file, err := os.Open(path)
+	dataList, err := ReadDataInfo(path)
 	if err != nil {
+		fmt.Println(err)
 		return err
-	}
-	defer file.Close()
-
-	byteValue, err := ioutil.ReadAll(file)
-	if err != nil {
-		fmt.Println("Failed to read data configuration file")
-		return err
-	}
-
-	err = json.Unmarshal(byteValue, &objmap)
-	if err != nil {
-		fmt.Println("Failed to unmarshal data configuration json file")
-		return err
-	}
-	// dataList = make([]TableInfo, len(objmap))
-
-	for _, value := range objmap {
-		var info TableInfo
-		err = json.Unmarshal(value, &info)
-		if err != nil {
-			return err
-		}
-		dataList = append(dataList, info)
 	}
 
 	// ---------------------- Insert info

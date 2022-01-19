@@ -1,0 +1,44 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>WebSocket API testing</title>
+</head>
+
+<body>
+    WebSocket API testing
+    <script>
+        const ws = new WebSocket('ws://localhost:8888/ws/3');
+        ws.onopen = function (event) {
+            ws.send(JSON.stringify({
+                data_type: 1,
+                data: [1.1, 2.2, 3.3],
+            }))
+            console.log("sent")
+        }
+        ws.onmessage = function (event) {
+            console.log(event.data)
+        }
+        ws.onclose = function (event) {
+            console.log(event)
+        }
+
+        const ws2 = new WebSocket('ws://localhost:8888/ws/4');
+        ws2.onopen = function (event) {
+            ws2.send(JSON.stringify({
+                data_type: 1,
+                data: [1.1, 2.2, 3.3],
+            }))
+            console.log("sent")
+        }
+        ws2.onmessage = function (event) {
+            console.log(event.data)
+        }
+        ws2.onclose = function (event) {
+            console.log(event)
+        }
+
+    </script>
+</body>
+
+</html>

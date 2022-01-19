@@ -268,6 +268,62 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) ([]float64, error) {
 	return rawData, nil
 }
 
+func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([][]float64, error) {
+	var tableName string
+	var dataSize uint8
+	var columnPattern string
+	var dataMat [][]float64
+
+	tableName = "record" + strconv.Itoa(int(id))
+	dataSize = handler.DataShapes[id]
+
+	if dataSize == 1 {
+		columnPattern = "value0"
+	} else {
+		var columnList []string
+		for i := 0; i < int(dataSize); i++ {
+			columnList = append(columnList, "value"+strconv.Itoa(i))
+		}
+		columnPattern = strings.Join(columnList, ",")
+	}
+
+	query := fmt.Sprintf(
+		"SELECT %s FROM %s.%s WHERE (simulink_time >= %s) AND (simulink_time < %s);",
+		columnPattern,
+		handler.DBName,
+		tableName,
+		strconv.Itoa(int(start)),
+		strconv.Itoa(int(end)),
+	)
+
+	scans := make([]interface{}, dataSize)
+	values := make([][]byte, dataSize)
+	for i := range values {
+		scans[i] = &values[i]
+	}
+
+	rows, err := handler.DBPointer.Query(query)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	for rows.Next() {
+		rows.Scan(scans...)
+		var rawData []float64
+		for _, v := range values {
+			data := string(v)
+			s, err := strconv.ParseFloat(data, 64)
+			if err != nil {
+				fmt.Println("Failed to parse scan result from SQL query.")
+			}
+			rawData = append(rawData, s)
+		}
+		dataMat = append(dataMat, rawData)
+	}
+	return dataMat, nil
+}
+
 func (handler *Handler) QueryInfo(id uint16, column string) (int, error) {
 
 	tableName := "info" + strconv.Itoa(int(handler.InfoTable))
@@ -295,6 +351,23 @@ func (handler *Handler) QueryLastSynt(id uint16) uint32 {
 	tableName := "record" + strconv.Itoa(int(id))
 	query := fmt.Sprintf(
 		"SELECT simulink_time FROM %s.%s ORDER BY simulink_time DESC LIMIT 1;",
+		handler.DBName,
+		tableName,
+	)
+	row := handler.DBPointer.QueryRow(query)
+	err := row.Scan(&time)
+	if err != nil {
+		fmt.Println("Failed to retrieve last time stamp")
+	}
+	result, _ := utils.StringToInt(time)
+	return uint32(result)
+}
+
+func (handler *Handler) QueryFirstSynt(id uint16) uint32 {
+	var time string
+	tableName := "record" + strconv.Itoa(int(id))
+	query := fmt.Sprintf(
+		"SELECT simulink_time FROM %s.%s ORDER BY simulink_time LIMIT 1;",
 		handler.DBName,
 		tableName,
 	)

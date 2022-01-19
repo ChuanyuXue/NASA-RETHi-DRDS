@@ -55,6 +55,7 @@ Data packet is the basic form to send data and also to implement service API:
 - MessageType(messaage_type): Types of packet
   - 0x00: Packet defined by Communication network
   - 0x01: Packet defined Data Service
+  - 0x02: Json struct defined Data Service
 - DataType(data_type): Types of data from 0 to 255
   - 0x00: No data
   - 0x01: FDD data

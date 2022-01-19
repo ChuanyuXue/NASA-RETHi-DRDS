@@ -3,6 +3,7 @@ package main
 import (
 	"data-service/src/handler"
 	"data-service/src/server"
+	"data-service/src/utils"
 	"fmt"
 	"time"
 )
@@ -90,18 +91,23 @@ func main() {
 	// }
 	// --------------- Test for Ground <-- Habitat <--> Subsystem ------------------------
 	// Start Habitat server
-
 	habitatServer := server.Server{}
-	err := habitatServer.Init(1)
+	err := habitatServer.Init(utils.SRC_HMS)
 	if err != nil {
 		fmt.Println(err)
 	}
 	fmt.Println("Habitat Server Started")
 	time.Sleep(2 * time.Second)
 
+	// Start Habitat http service
+	habitatStream := server.Stream{}
+	go habitatStream.Init(utils.SRC_HMS)
+	fmt.Println("Habitat Stream Started")
+	time.Sleep(2 * time.Second)
+
 	// Start Ground server
 	groundServer := server.Server{}
-	go groundServer.Init(0)
+	go groundServer.Init(utils.SRC_GCC)
 	fmt.Println("Ground Server Started")
 	time.Sleep(2 * time.Second)
 

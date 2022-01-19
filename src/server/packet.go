@@ -8,17 +8,20 @@ import (
 )
 
 type Packet struct {
-	Src          uint8
-	Dst          uint8
-	MessageType  uint8
-	DataType     uint8
-	Priority     uint8
-	PhysicalTime uint32
-	SimulinkTime uint32
-	Row          uint8
-	Col          uint8
-	Length       uint16
-	Payload      []byte // don't parse payload here
+	Src          uint8  `json:"src"`
+	Dst          uint8  `json:"dst"`
+	MessageType  uint8  `json:"message_type"`
+	DataType     uint8  `json:"data_type"`
+	Priority     uint8  `json:"priority"`
+	PhysicalTime uint32 `json:"physical_time"`
+	SimulinkTime uint32 `json:"simulink_time"`
+	Row          uint8  `json:"row"`
+	Col          uint8  `json:"col"`
+	Length       uint16 `json:"length"`
+	Payload      []byte `json:"-"`
+
+	// for visualization
+	Data []float64 `json:"data"`
 }
 
 func FromBuf(buf []byte) Packet {
@@ -55,7 +58,7 @@ func (pkt Packet) ToBuf() []byte {
 func PayloadFloat2Buf(payload []float64) []byte {
 	var buft bytes.Buffer
 	for _, v := range payload {
-		err := binary.Write(&buft, binary.BigEndian, v)
+		err := binary.Write(&buft, binary.LittleEndian, v)
 		if err != nil {
 			fmt.Println("Failed to convert Payload to 64bytes")
 		}
@@ -65,7 +68,6 @@ func PayloadFloat2Buf(payload []float64) []byte {
 
 func PayloadBuf2Float(buf []byte) []float64 {
 	var data64 []float64
-
 	for i, _ := range buf {
 		if i%8 == 0 {
 			targetBuf := buf[i : i+8]
@@ -83,10 +85,10 @@ func Float64frombytes(bytes []byte) float64 {
 
 type ServicePacket struct {
 	Packet
-	Opt      uint16
-	Flag     uint16
-	Param    uint16
-	Subparam uint16
+	Opt      uint16 `json:"opt"`
+	Flag     uint16 `json:"flag"`
+	Param    uint16 `json:"param"`
+	Subparam uint16 `json:"subparam"`
 }
 
 func (pkt *ServicePacket) ToServiceBuf() []byte {
