@@ -1,8 +1,8 @@
 version: "3.9"
 services:
   comm:
-    image: amyangxyz111/rethi-comm
-    # image: comm-t
+    # image: amyangxyz111/rethi-comm
+    image: comm-t
     environment:
       ADDR_LOCAL_GCC: ":10000"
       ADDR_LOCAL_HMS: ":10001"
@@ -23,6 +23,11 @@ services:
       DB_DB: comm
       DB_USER: uu
       DB_PASSWORD: password
+
+      ANIMATION_ENABLED: "false"
+      CONSOLE_ENABLED: "true"
+      DELAY_ENABLED: "true"
+      FRER_ENABLED: "false"
     ports:
       - "8000:8000"
       - "10000-10007:10000-10007/udp"

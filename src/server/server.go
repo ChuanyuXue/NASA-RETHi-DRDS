@@ -212,13 +212,13 @@ func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) 
 		lastSynt := server.handler.QueryLastSynt(id)
 		dataType, _ := server.handler.QueryInfo(id, "data_type")
 		if synt <= lastSynt {
+			dataMap := make([][]float64, 0)
 			for i := synt; i <= lastSynt; i++ {
 				row, _ := server.handler.ReadSynt(id, i)
-				dataMap := make([][]float64, 0)
 				dataMap = append(dataMap, row)
-				server.send(dst, uint8(dataType), utils.PRIORITY_HIGHT, i,
-					utils.OPT_SEND, utils.FLAG_SINGLE, id, utils.PARAMTER_EMPTY, dataMap)
 			}
+			server.send(dst, uint8(dataType), utils.PRIORITY_HIGHT, synt,
+				utils.OPT_SEND, utils.FLAG_SINGLE, id, utils.PARAMTER_EMPTY, dataMap)
 		}
 
 	} else {
@@ -336,6 +336,7 @@ func (server *Server) listen(addr *net.UDPAddr) error {
 
 func (server *Server) handle(pkt ServicePacket) error {
 	// fmt.Println("SimTime:", pkt.SimulinkTime, " ------ Insert into table record", pkt.Param)
+
 	switch pkt.Opt {
 	case utils.OPT_SEND: //Send (data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)
@@ -350,8 +351,12 @@ func (server *Server) handle(pkt ServicePacket) error {
 			for i := 0; i < int(pkt.Row); i++ {
 				dataMat = append(dataMat, rawData[i*int(pkt.Col):(i+1)*int(pkt.Col)])
 			}
-			server.send(dst, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
+			err = server.send(dst, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
 				utils.OPT_SEND, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
+			if err != nil {
+				fmt.Println("failed to forward data:  ", err)
+				return err
+			}
 		}
 
 	case utils.OPT_REQUEST: //Request (operation packet)
@@ -384,8 +389,13 @@ func (server *Server) handle(pkt ServicePacket) error {
 			for i := 0; i < int(pkt.Row); i++ {
 				dataMat = append(dataMat, rawData[i*int(pkt.Col):(i+1)*int(pkt.Col)])
 			}
-			server.send(dst, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
+			err = server.send(dst, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
 				utils.OPT_SEND, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
+			if err != nil {
+				fmt.Println("failed to forward data:  ", err)
+				return err
+			}
+
 		}
 
 	case utils.OPT_SUBSCRIBE: // Subscribe (operation packet)
