@@ -1,6 +1,6 @@
-import api
+import api_old
 
-api.init(
+api_old.init(
     local_ip = "127.0.0.1",
     local_port= 65533,
     to_ip = "127.0.0.1",
@@ -12,7 +12,7 @@ api.init(
 
 ## Request data(SPG DUST) whose ID == 3 at simulink time 1
 # re = api.request(synt=0xffffffff, id=3)
-re = api.request(synt=(0, 0xffff), id=3)
+re = api_old.request(synt=(0, 0xffff), id=3)
 # from pprint import pprint
 print(re.header.simulink_time)
 print(re.header.length)

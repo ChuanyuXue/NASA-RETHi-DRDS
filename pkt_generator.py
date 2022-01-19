@@ -1,4 +1,4 @@
-import api
+import api_old
 import time
 import json
 import random
@@ -11,7 +11,7 @@ with open("db_info.json") as f:
 # Simulation for 600 seconds
 for synt in range(600):
     for name, data in data_discript.items():
-        api.init(
+        api_old.init(
             local_ip="127.0.0.1",
             local_port=61234,
             to_ip="127.0.0.1",
@@ -21,8 +21,8 @@ for synt in range(600):
         )
 
         value = [random.random() for i in range(data['data_size'])]
-        api.send(synt=synt, id=data['data_id'],
+        api_old.send(synt=synt, id=data['data_id'],
                  value=value, priority=3, type=1)
-        api.close()
+        api_old.close()
     time.sleep(1)
     print("Simulation time -----------", synt)
