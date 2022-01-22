@@ -99,8 +99,8 @@ func (server *Server) Init(src uint8) error {
 	return nil
 }
 
-func (server *Server) Send(id uint16, time uint32, rawData []float64) error {
-	err := server.handler.WriteSynt(id, time, rawData)
+func (server *Server) Send(id uint16, time uint32, physical_time uint32, rawData []float64) error {
+	err := server.handler.WriteSynt(id, time, physical_time, rawData)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16,
 	return nil
 }
 
-func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt uint32, rawData []float64) error {
+func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt uint32, physical_time uint32, rawData []float64) error {
 	if utils.Uint8Contains(server.publisherRegister[id], dst) { // if publisher registered
 		// if para2 is stop streaming
 		lastSynt := server.handler.QueryLastSynt(id)
@@ -191,6 +191,7 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 		for row := 0; row < int(rows); row++ {
 			server.handler.WriteSynt(id,
 				synt+uint32(row),
+				physical_time,
 				rawData[row*col:(row+1)*col],
 			)
 		}
@@ -340,7 +341,7 @@ func (server *Server) handle(pkt ServicePacket) error {
 	switch pkt.Opt {
 	case utils.OPT_SEND: //Send (data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)
-		err := server.Send(pkt.Param, pkt.SimulinkTime, rawData)
+		err := server.Send(pkt.Param, pkt.SimulinkTime, pkt.PhysicalTime, rawData)
 		if err != nil {
 			return err
 		}
@@ -374,7 +375,7 @@ func (server *Server) handle(pkt ServicePacket) error {
 
 	case utils.OPT_PUBLISH: // Publish (opeartion packet / data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)
-		err := server.Publish(pkt.Param, pkt.Src, pkt.Row, pkt.Col, pkt.SimulinkTime, rawData)
+		err := server.Publish(pkt.Param, pkt.Src, pkt.Row, pkt.Col, pkt.SimulinkTime, pkt.PhysicalTime, rawData)
 		if err != nil {
 			return err
 		}

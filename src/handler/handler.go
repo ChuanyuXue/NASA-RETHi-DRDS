@@ -167,7 +167,7 @@ func (handler *Handler) Init(src uint8) error {
 	return nil
 }
 
-func (handler *Handler) WriteSynt(id uint16, synt uint32, value []float64) error {
+func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []float64) error {
 	//Security Check:
 	// // 1. ID == 0 is not allowed
 	// if handler.InteTable == id {
@@ -190,6 +190,7 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, value []float64) error
 	var columnFillin []string
 	columnList = append(columnList, "simulink_time")
 	columnList = append(columnList, "physical_time")
+	columnList = append(columnList, "physical_time_2")
 
 	for i := 0; i != int(handler.DataShapes[id]); i++ {
 		columnList = append(columnList, "value"+strconv.Itoa(i))
@@ -198,6 +199,7 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, value []float64) error
 
 	columnFillin = append(columnFillin, strconv.Itoa(int(synt)))
 	// Need to fix int64 -> unsigned int32?
+	columnFillin = append(columnFillin, strconv.Itoa(int(phyt)))
 	columnFillin = append(columnFillin, strconv.Itoa(int(time.Now().Unix())))
 	for i := 0; i != int(handler.DataShapes[id]); i++ {
 		columnFillin = append(columnFillin, fmt.Sprintf("%f", value[i]))
