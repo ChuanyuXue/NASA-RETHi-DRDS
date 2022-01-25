@@ -140,6 +140,7 @@ func DatabaseGenerator(src uint8, path string) error {
 		act := fmt.Sprintf("create table `%s` (", tableName)
 		act = act + "simulink_time int unsigned NOT NULL,"
 		act = act + "physical_time int unsigned NOT NULL,"
+		act = act + "physical_time_2 int unsigned NOT NULL,"
 		for i := 0; i != int(info.Size); i++ {
 			act = act + fmt.Sprintf("value%d float,", i)
 		}
