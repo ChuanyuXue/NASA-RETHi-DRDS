@@ -59,9 +59,10 @@ Data packet is the basic form to send data and also to implement service API:
 - DataType(data_type): Types of data from 0 to 255
   - 0x00: No data
   - 0x01: FDD data
-  - 0x02: Sensor data
+  - 0x02: Sensor data [from MCVT]
   - 0x03: Agent data
-  - 0x03: Other data
+  - 0x04: Sensor data [from Physical Sensor]
+  - 0x05: Other data
 - Priority(priority): Quality of Service (QoS) prioritizes network traffic and manages available bandwidth so that the most important traffic goes first.
   - 0x00, 0x01: Low Priority e.g. Best Effort Flow as back ground
   - 0x02, 0x03: Normal Priority e.g. Audio Vedio Flow to maximum throughput

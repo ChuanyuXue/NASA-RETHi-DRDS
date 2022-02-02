@@ -25,10 +25,10 @@ class Header(BigEndianStructure):
         ("row", c_uint8),
         ("col", c_uint8),
         ("length", c_uint16),
-        ("Option", c_uint16),
-        ("Flag", c_uint16),
-        ("Param", c_uint16),
-        ("Subparam", c_uint16),
+        ("option", c_uint16),
+        ("flag", c_uint16),
+        ("param", c_uint16),
+        ("subparam", c_uint16),
     ]
 
 

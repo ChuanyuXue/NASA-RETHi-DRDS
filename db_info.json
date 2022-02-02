@@ -119,5 +119,17 @@
         "data_size": 1,
         "data_unit": "NaN",
         "data_notes": "5"
+    },
+    "Sys2_Phy_Harmmer":{
+        "data_id": 256,
+        "data_name": "Sys2_Phy_Harmmer",
+        "data_type": 4,
+        "data_subtype1": 255,
+        "data_subtype2": 255,
+        "data_rate": 1000,
+        "data_size": 34,
+        "data_unit": "NaN",
+        "data_notes": "2"
     }
+    
 }
