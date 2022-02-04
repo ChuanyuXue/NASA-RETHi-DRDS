@@ -1,4 +1,4 @@
-from test.api import Header, Packet
+from pyapi.utils import Header, Packet
 from ctypes import *
 from struct import error, pack
 import socket
