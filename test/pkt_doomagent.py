@@ -3,7 +3,7 @@ from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 import scipy.io
 import numpy as np
-import api
+import pyapi.api as api
 
 SAMPLE_RATE = 0.001
 CYCLE = 8
@@ -29,7 +29,7 @@ def send(event):
         data = np.concatenate([t.reshape(1, -1), X]).T
         data = data[:: int(1 / SAMPLE_RATE)]
 
-        api.init(
+        ins = api.API(
             local_ip="127.0.0.1",
             local_port=61234,
             to_ip="127.0.0.1",
@@ -40,8 +40,9 @@ def send(event):
 
         count = 0
         for row in data:
-            api.send(256, count, row[1:], 7, 4)
+            ins.send(256, count, row[1:], 7, 4)
             time.sleep(CYCLE / len(data))
+        ins.close()
 
 
 class Trigger:

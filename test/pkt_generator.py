@@ -1,12 +1,9 @@
-import test.api as api
+import pyapi.api as api
 import time
-import json
-import random
 import pandas as pd
 
-with open("db_info.json") as f:
-    data_discript = json.load(f)
-
+# with open("db_info.json") as f:
+#     data_discript = json.load(f)
 # Simulation for 600 seconds
 # for synt in range(600):
 #     for name, data in data_discript.items():
@@ -26,10 +23,11 @@ with open("db_info.json") as f:
 #     time.sleep(1)
 #     print("Simulation time -----------", synt)
 
-
+# server_id : 1 -> Habitat database
+# server_id : 0 -> Ground Database
 for _, df in pd.read_csv("data.csv").groupby('time'):
     for _, row in df.iterrows():
-        api.init(
+        ins = api.API(
             local_ip="127.0.0.1",
             local_port=61234,
             to_ip="127.0.0.1",
@@ -38,8 +36,8 @@ for _, df in pd.read_csv("data.csv").groupby('time'):
             server_id=1
         )
         value = eval(row['data'])
-        api.send(synt=row['time'], id=row['dataId'],
+        ins.send(synt=row['time'], id=row['dataId'],
                  value=value, priority=3, type=1)
-        api.close()
+        ins.close()
     time.sleep(1)
     print("Simulation time -----------", row['time'])
