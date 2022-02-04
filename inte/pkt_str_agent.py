@@ -5,7 +5,7 @@ import scipy.io
 import numpy as np
 import pyapi.api as api
 
-SAMPLE_RATE = 0.001
+SAMPLE_RATE = 0.01
 CYCLE = 8
 
 patterns = ["*"]
@@ -38,9 +38,8 @@ def send(event):
             server_id=1
         )
 
-        count = 0
         for row in data:
-            ins.send(256, count, row[1:], 7, 4)
+            ins.send(256, int(row[0] * 1e7), row[1:], 7, 4)
             time.sleep(CYCLE / len(data))
         ins.close()
 
