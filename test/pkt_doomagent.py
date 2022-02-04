@@ -5,7 +5,7 @@ import scipy.io
 import numpy as np
 import api
 
-SAMPLE_RATE = 0.01
+SAMPLE_RATE = 0.001
 CYCLE = 8
 
 patterns = ["*"]
