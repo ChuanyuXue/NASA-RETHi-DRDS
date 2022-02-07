@@ -106,19 +106,19 @@ func main() {
 	time.Sleep(2 * time.Second)
 
 	// Start Ground server
-	groundServer := server.Server{}
-	go groundServer.Init(utils.SRC_GCC)
-	fmt.Println("Ground Server Started")
-	time.Sleep(2 * time.Second)
+	// groundServer := server.Server{}
+	// go groundServer.Init(utils.SRC_GCC)
+	// fmt.Println("Ground Server Started")
+	// time.Sleep(2 * time.Second)
 
 	// // Let Ground server subscribe Habitat server
-	habitatServer.Subscribe(3, groundServer.LocalSrc, 0, 1000)
-	habitatServer.Subscribe(4, groundServer.LocalSrc, 0, 1000)
-	habitatServer.Subscribe(5, groundServer.LocalSrc, 0, 1000)
-	habitatServer.Subscribe(6, groundServer.LocalSrc, 0, 1000)
-	habitatServer.Subscribe(7, groundServer.LocalSrc, 0, 1000)
-	habitatServer.Subscribe(8, groundServer.LocalSrc, 0, 1000)
-	fmt.Println("Ground Server subscribed Habitat server")
+	// habitatServer.Subscribe(3, groundServer.LocalSrc, 0, 1000)
+	// habitatServer.Subscribe(4, groundServer.LocalSrc, 0, 1000)
+	// habitatServer.Subscribe(5, groundServer.LocalSrc, 0, 1000)
+	// habitatServer.Subscribe(6, groundServer.LocalSrc, 0, 1000)
+	// habitatServer.Subscribe(7, groundServer.LocalSrc, 0, 1000)
+	// habitatServer.Subscribe(8, groundServer.LocalSrc, 0, 1000)
+	// fmt.Println("Ground Server subscribed Habitat server")
 
 	// Let MCVT subscribe Habitat server
 	// habitatServer.Subscribe()

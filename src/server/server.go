@@ -20,6 +20,7 @@ type Server struct {
 	Src  string
 
 	handler *handler.Handler
+	Count   uint32
 
 	LocalSrc     uint8
 	ClientSrc    []uint8
@@ -55,6 +56,7 @@ func (server *Server) Init(src uint8) error {
 	}
 	server.Src = string(src)
 	server.LocalSrc = uint8(src)
+	server.Count = 0
 	server.ClientSrcMap = make(map[uint8]net.UDPAddr)
 
 	localAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_ADDR_"+server.Type))
@@ -237,7 +239,7 @@ func (server *Server) send(dst uint8, types uint8, priority uint8, synt uint32, 
 	pkt.MessageType = utils.MSG_OUTER
 	pkt.DataType = types
 	pkt.Priority = priority
-	pkt.PhysicalTime = uint32(time.Now().Unix().UnixNano())
+	pkt.PhysicalTime = uint32(time.Now().UnixNano())
 	pkt.SimulinkTime = synt
 
 	pkt.Row = uint8(len(dataMap))
@@ -279,7 +281,7 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, opt uint16
 	pkt.MessageType = utils.MSG_OUTER
 	pkt.DataType = utils.TYPE_FDD
 	pkt.Priority = priority
-	pkt.PhysicalTime = uint32(time.Now().Unix().UnixNano())
+	pkt.PhysicalTime = uint32(time.Now().UnixNano())
 	pkt.SimulinkTime = synt
 
 	pkt.Row = 0
@@ -336,7 +338,8 @@ func (server *Server) listen(addr *net.UDPAddr) error {
 
 func (server *Server) handle(pkt ServicePacket) error {
 	// fmt.Println("SimTime:", pkt.SimulinkTime, " ------ Insert into table record", pkt.Param)
-
+	fmt.Println("Pkt index:", server.Count, "----- Time:", int(time.Now().UnixNano()))
+	server.Count += 1
 	switch pkt.Opt {
 	case utils.OPT_SEND: //Send (data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)
