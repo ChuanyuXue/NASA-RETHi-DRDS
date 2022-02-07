@@ -128,7 +128,7 @@ func (server *Stream) send(dst uint8, types uint8, priority uint8, synt uint32, 
 	pkt.MessageType = utils.MSG_OUTER
 	pkt.DataType = types
 	pkt.Priority = priority
-	pkt.PhysicalTime = uint32(time.Now().Unix())
+	pkt.PhysicalTime = uint32(time.Now().Unix().UnixNano())
 	pkt.SimulinkTime = synt
 
 	pkt.Row = uint8(len(dataMap))

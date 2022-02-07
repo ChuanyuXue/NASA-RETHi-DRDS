@@ -200,7 +200,7 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 	columnFillin = append(columnFillin, strconv.Itoa(int(synt)))
 	// Need to fix int64 -> unsigned int32?
 	columnFillin = append(columnFillin, strconv.Itoa(int(phyt)))
-	columnFillin = append(columnFillin, strconv.Itoa(int(time.Now().Unix())))
+	columnFillin = append(columnFillin, strconv.Itoa(int(time.Now().UnixNano())))
 	for i := 0; i != int(handler.DataShapes[id]); i++ {
 		columnFillin = append(columnFillin, fmt.Sprintf("%f", value[i]))
 	}
