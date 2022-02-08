@@ -25,19 +25,21 @@ import pandas as pd
 
 # server_id : 1 -> Habitat database
 # server_id : 0 -> Ground Database
+df = pd.read_csv("data.csv")
 for _, df in pd.read_csv("data.csv").groupby('time'):
     for _, row in df.iterrows():
-        ins = api.API(
-            local_ip="127.0.0.1",
-            local_port=61234,
-            to_ip="127.0.0.1",
-            to_port=10000 + row['src'],
-            client_id=row['src'],
-            server_id=1
-        )
+        ins = api.API(local_ip="127.0.0.1",
+                      local_port=61234,
+                      to_ip="127.0.0.1",
+                      to_port=10000 + row['src'],
+                      client_id=row['src'],
+                      server_id=1)
         value = eval(row['data'])
-        ins.send(synt=row['time'], id=row['dataId'],
-                 value=value, priority=3, type=1)
+        ins.send(synt=row['time'],
+                 id=row['dataId'],
+                 value=value,
+                 priority=3,
+                 type=1)
         ins.close()
     time.sleep(1)
     print("Simulation time -----------", row['time'])
