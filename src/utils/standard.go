@@ -3,7 +3,8 @@ package utils
 //---------- Basic configuraitons ----------
 const (
 	BUFFLEN    uint32 = 65536
-	CHANELLEN  uint32 = 128
+	QUEUELELN  uint32 = 65536
+	PROCNUMS   uint8  = 64
 	FRENQUENCE uint32 = 10000
 	SUBSNUMS   uint8  = 10
 	TABLENUMS  uint32 = 65536

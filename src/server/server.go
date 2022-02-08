@@ -29,6 +29,8 @@ type Server struct {
 	ClientSrc    []uint8
 	ClientSrcMap map[uint8]net.UDPAddr
 
+	inboundQueue chan *ServicePacket
+
 	publisherRegister  map[uint16][]uint8 // publisherRegister[data_id] = [client_0, ....]
 	subscriberRegister map[uint16][]uint8 // subscriberRegister[data_id] = [client_0, ....]
 }
@@ -61,6 +63,8 @@ func (server *Server) Init(src uint8) error {
 	server.LocalSrc = uint8(src)
 	server.Count = 0
 	server.ClientSrcMap = make(map[uint8]net.UDPAddr)
+
+	server.inboundQueue = make(chan *ServicePacket, utils.BUFFLEN)
 
 	localAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_ADDR_"+server.Type))
 	if err != nil {
@@ -98,8 +102,8 @@ func (server *Server) Init(src uint8) error {
 	server.publisherRegister = make(map[uint16][]uint8)
 	server.subscriberRegister = make(map[uint16][]uint8)
 
-	go server.listen(localAddr)
-	go server.listen(loopAddr)
+	go server.listen(localAddr, int(utils.PROCNUMS))
+	go server.listen(loopAddr, int(utils.PROCNUMS))
 
 	return nil
 }
@@ -313,7 +317,7 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, opt uint16
 	return nil
 }
 
-func (server *Server) listen(addr *net.UDPAddr) error {
+func (server *Server) listen(addr *net.UDPAddr, procnums int) error {
 
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
@@ -321,26 +325,38 @@ func (server *Server) listen(addr *net.UDPAddr) error {
 		return err
 	}
 
+	// consumer
+	for i := 0; i < procnums; i++ {
+		go func() {
+			for {
+				pkt := <-server.inboundQueue
+				server.handle(pkt)
+			}
+		}()
+	}
+
+	// producer
 	var buf [utils.BUFFLEN]byte
 	for {
 		_, _, err := conn.ReadFromUDP(buf[:])
-
 		if err != nil {
 			fmt.Println("Failed to listen packet from connection")
 		}
-
 		pkt := FromServiceBuf(buf[:])
-		go server.handle(pkt)
+		server.inboundQueue <- &pkt
 	}
 }
 
-func (server *Server) handle(pkt ServicePacket) error {
+func (server *Server) handle(pkt *ServicePacket) error {
 	// fmt.Println("SimTime:", pkt.SimulinkTime, " ------ Insert into table record", pkt.Param)
-	fmt.Println("Pkt index:", server.Count, "----- Time:", int(time.Now().UnixNano()))
-	// pkt.SimulinkTime = server.Count
+
+	// // --------- For latency test ---------
 	// server.Mu.Lock()
+	// fmt.Println("Pkt index:", server.Count, "----- Time:", int(time.Now().UnixNano()))
+	// pkt.SimulinkTime = server.Count
 	// server.Count += 1
 	// server.Mu.Unlock()
+	// // ----------------------------------
 
 	switch pkt.Opt {
 	case utils.OPT_SEND: //Send (data packet)
