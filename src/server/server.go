@@ -5,6 +5,7 @@ import (
 	"data-service/src/utils"
 	"errors"
 	"os"
+	"sync"
 	"time"
 
 	// "errors"
@@ -20,7 +21,9 @@ type Server struct {
 	Src  string
 
 	handler *handler.Handler
-	Count   uint32
+
+	Count uint32
+	Mu    sync.Mutex
 
 	LocalSrc     uint8
 	ClientSrc    []uint8
@@ -327,19 +330,18 @@ func (server *Server) listen(addr *net.UDPAddr) error {
 		}
 
 		pkt := FromServiceBuf(buf[:])
-		err = server.handle(pkt)
-		if err != nil {
-			fmt.Println(err)
-		}
+		go server.handle(pkt)
 	}
-
-	return nil
 }
 
 func (server *Server) handle(pkt ServicePacket) error {
 	// fmt.Println("SimTime:", pkt.SimulinkTime, " ------ Insert into table record", pkt.Param)
 	fmt.Println("Pkt index:", server.Count, "----- Time:", int(time.Now().UnixNano()))
-	server.Count += 1
+	// pkt.SimulinkTime = server.Count
+	// server.Mu.Lock()
+	// server.Count += 1
+	// server.Mu.Unlock()
+
 	switch pkt.Opt {
 	case utils.OPT_SEND: //Send (data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)

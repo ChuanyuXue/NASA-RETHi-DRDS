@@ -95,6 +95,9 @@ func DatabaseGenerator(src uint8, path string) error {
 	tableName := "info0"
 	drop := fmt.Sprintf(`DROP TABLE IF EXISTS %s.%s`, dbName, tableName)
 	_, err = db.Exec(drop)
+	if err != nil {
+		fmt.Println(err)
+	}
 	action := fmt.Sprintf(`CREATE TABLE %s.%s (
             data_id INT(16) UNSIGNED NOT NULL,
             data_name VARCHAR(45) NULL,
