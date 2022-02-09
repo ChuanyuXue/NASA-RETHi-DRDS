@@ -246,7 +246,7 @@ func (server *Server) send(dst uint8, types uint8, priority uint8, synt uint32, 
 	pkt.MessageType = utils.MSG_OUTER
 	pkt.DataType = types
 	pkt.Priority = priority
-	pkt.PhysicalTime = uint32(time.Now().UnixNano())
+	pkt.PhysicalTime = uint32(time.Now().Unix())
 	pkt.SimulinkTime = synt
 
 	pkt.Row = uint8(len(dataMap))
@@ -288,7 +288,7 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, opt uint16
 	pkt.MessageType = utils.MSG_OUTER
 	pkt.DataType = utils.TYPE_FDD
 	pkt.Priority = priority
-	pkt.PhysicalTime = uint32(time.Now().UnixNano())
+	pkt.PhysicalTime = uint32(time.Now().Unix())
 	pkt.SimulinkTime = synt
 
 	pkt.Row = 0

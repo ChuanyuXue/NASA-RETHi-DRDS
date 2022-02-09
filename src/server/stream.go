@@ -133,7 +133,7 @@ func (server *Stream) send(dst uint8, types uint8, priority uint8, synt uint32, 
 	pkt.MessageType = utils.MSG_OUTER
 	pkt.DataType = types
 	pkt.Priority = priority
-	pkt.PhysicalTime = uint32(time.Now().UnixNano())
+	pkt.PhysicalTime = uint32(time.Now().Unix())
 	pkt.SimulinkTime = synt
 
 	pkt.Row = 1
@@ -146,7 +146,6 @@ func (server *Stream) send(dst uint8, types uint8, priority uint8, synt uint32, 
 	pkt.Subparam = uint16(para2)
 	pkt.Data = dataMap
 	server.wsPktChMap[int(pkt.Param)] <- &pkt
-
 	return nil
 }
 
