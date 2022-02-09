@@ -132,7 +132,11 @@ func (server *Stream) send(dst uint8, types uint8, priority uint8, synt uint32, 
 	pkt.SimulinkTime = synt
 
 	pkt.Row = uint8(len(dataMap))
-	pkt.Col = uint8(len(dataMap[0]))
+	if len(dataMap) > 0 {
+		pkt.Col = uint8(len(dataMap[0]))
+	}else{
+		pkt.Col = uint8(0)
+	}
 	pkt.Length = uint16(pkt.Row * pkt.Col)
 
 	pkt.Opt = uint16(opt)

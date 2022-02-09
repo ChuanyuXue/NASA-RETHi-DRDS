@@ -21,27 +21,27 @@ def send(event):
         print("Updates on %s is detected" % event.src_path)
         try:
             mat = scipy.io.loadmat(event.src_path)
+            X = [x[:, 1] for x in mat.values() if type(x) == np.ndarray]
+            t = [x for x in mat.values() if type(x) == np.ndarray][0][:, 0]
+            data = np.concatenate([t.reshape(1, -1), X]).T
+            data = data[:: int(1 / SAMPLE_RATE)]
+
+            ins = api.API(
+                local_ip="127.0.0.1",
+                local_port=61234,
+                to_ip="127.0.0.1",
+                to_port=10002,
+                client_id=2,
+                server_id=1
+            )
+
+            for row in data:
+                ins.send(256, int(row[0] * 1e8), row[1:], 7, 4)
+                time.sleep(CYCLE / len(data))
+            ins.close()
+
         except OSError:
             print("Cound not read %s" % event.src_path)
-
-        X = [x[:, 1] for x in mat.values() if type(x) == np.ndarray]
-        t = [x for x in mat.values() if type(x) == np.ndarray][0][:, 0]
-        data = np.concatenate([t.reshape(1, -1), X]).T
-        data = data[:: int(1 / SAMPLE_RATE)]
-
-        ins = api.API(
-            local_ip="127.0.0.1",
-            local_port=61234,
-            to_ip="127.0.0.1",
-            to_port=10002,
-            client_id=2,
-            server_id=1
-        )
-
-        for row in data:
-            ins.send(256, int(row[0] * 1e7), row[1:], 7, 4)
-            time.sleep(CYCLE / len(data))
-        ins.close()
 
 
 class Trigger:
