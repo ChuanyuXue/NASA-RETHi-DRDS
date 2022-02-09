@@ -175,7 +175,6 @@ func (server *Stream) wsHandler(ctx *sgo.Context) error {
 		for {
 			_, _, err := ws.ReadMessage()
 			if err != nil {
-				fmt.Println("browser closed", err)
 				closeSig <- true
 			}
 		}
@@ -197,7 +196,7 @@ func (server *Stream) wsHandler(ctx *sgo.Context) error {
 		select {
 		case pkt := <-wsPktCh:
 			if err = ws.WriteJSON(pkt); err != nil {
-				fmt.Println("123123123", err)
+				fmt.Println(err)
 				continue
 			}
 		case <-closeSig:
