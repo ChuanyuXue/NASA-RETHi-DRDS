@@ -102,8 +102,8 @@ func (server *Server) Init(src uint8) error {
 	server.publisherRegister = make(map[uint16][]uint8)
 	server.subscriberRegister = make(map[uint16][]uint8)
 
-	go server.listen(localAddr, int(utils.PROCNUMS))
-	go server.listen(loopAddr, int(utils.PROCNUMS))
+	go server.listen(localAddr, 1)
+	go server.listen(loopAddr, 1)
 
 	return nil
 }
@@ -163,13 +163,13 @@ func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16,
 	}
 
 	if timeDiff == utils.PARAMTER_REQUEST_LAST {
-		dataMat, err = server.handler.ReadRange(id, timeStart, server.handler.QueryLastSynt(id))
+		_, dataMat, err = server.handler.ReadRange(id, timeStart, server.handler.QueryLastSynt(id))
 		if err != nil {
 			fmt.Println(err)
 			return err
 		}
 	} else {
-		dataMat, err = server.handler.ReadRange(id, timeStart, timeStart+uint32(timeDiff))
+		_, dataMat, err = server.handler.ReadRange(id, timeStart, timeStart+uint32(timeDiff))
 		if err != nil {
 			fmt.Println(err)
 			return err

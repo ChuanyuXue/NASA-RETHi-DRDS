@@ -41,5 +41,7 @@ for _, df in pd.read_csv("data.csv").groupby('time'):
                  priority=3,
                  type=1)
         ins.close()
+
+        print(row['time'], value)
     time.sleep(1)
     print("Simulation time -----------", row['time'])

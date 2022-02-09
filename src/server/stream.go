@@ -30,9 +30,8 @@ type Stream struct {
 
 	upgrader websocket.Upgrader
 
-	wsPktChMap  map[int]chan *ServicePacket
-	wsOpenSig   chan bool
-	wsCloseFlag bool
+	wsPktChMap map[int]chan *ServicePacket
+	wsOpenSig  chan bool
 }
 
 func (server *Stream) Init(src uint8) error {
@@ -80,48 +79,54 @@ func (server *Stream) Publish(id uint16) error {
 	lastTime := server.handler.QueryLastSynt(id)
 	firstTime := server.handler.QueryFirstSynt(id)
 	dataType, _ := server.handler.QueryInfo(id, "data_type")
-	dataMat, err := server.handler.ReadRange(id, firstTime, lastTime)
+
+	timeVec, dataMat, err := server.handler.ReadRange(id, firstTime, lastTime)
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	server.send(
-		utils.SRC_HMS,
-		uint8(dataType),
-		utils.PRIORITY_HIGHT,
-		lastTime,
-		utils.OPT_SEND,
-		utils.FLAG_SINGLE,
-		id,
-		uint16(lastTime-firstTime),
-		dataMat,
-	)
 
-	for {
-		time.Sleep(1 * time.Second)
-		currentTime := server.handler.QueryLastSynt(id)
-		dataMat, err := server.handler.ReadRange(id, lastTime, currentTime)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
+	for i, t := range timeVec {
 		server.send(
 			utils.SRC_HMS,
 			uint8(dataType),
 			utils.PRIORITY_HIGHT,
-			lastTime,
+			t,
 			utils.OPT_SEND,
 			utils.FLAG_SINGLE,
 			id,
 			uint16(lastTime-firstTime),
-			dataMat,
+			dataMat[i],
 		)
+	}
+
+	for {
+		time.Sleep(1 * time.Second)
+		currentTime := server.handler.QueryLastSynt(id)
+		timeVec, dataMat, err := server.handler.ReadRange(id, lastTime, currentTime)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		for i, t := range timeVec {
+			server.send(
+				utils.SRC_HMS,
+				uint8(dataType),
+				utils.PRIORITY_HIGHT,
+				t,
+				utils.OPT_SEND,
+				utils.FLAG_SINGLE,
+				id,
+				uint16(lastTime-firstTime),
+				dataMat[i],
+			)
+		}
 		lastTime = currentTime
 	}
 
 }
 
-func (server *Stream) send(dst uint8, types uint8, priority uint8, synt uint32, opt uint16, flag uint16, para uint16, para2 uint16, dataMap [][]float64) error {
+func (server *Stream) send(dst uint8, types uint8, priority uint8, synt uint32, opt uint16, flag uint16, para uint16, para2 uint16, dataMap []float64) error {
 	var pkt ServicePacket
 	pkt.Src = server.LocalSrc
 	pkt.Dst = dst
@@ -131,27 +136,17 @@ func (server *Stream) send(dst uint8, types uint8, priority uint8, synt uint32, 
 	pkt.PhysicalTime = uint32(time.Now().UnixNano())
 	pkt.SimulinkTime = synt
 
-	pkt.Row = uint8(len(dataMap))
-	if len(dataMap) > 0 {
-		pkt.Col = uint8(len(dataMap[0]))
-	}else{
-		pkt.Col = uint8(0)
-	}
+	pkt.Row = 1
+	pkt.Col = uint8(len(dataMap))
 	pkt.Length = uint16(pkt.Row * pkt.Col)
 
 	pkt.Opt = uint16(opt)
 	pkt.Flag = uint16(flag)
 	pkt.Param = uint16(para)
 	pkt.Subparam = uint16(para2)
-
-	var dataFlatten []float64
-	for _, row := range dataMap {
-		dataFlatten = append(dataFlatten, row...)
-	}
-
-	pkt.Payload = PayloadFloat2Buf(dataFlatten)
-
+	pkt.Data = dataMap
 	server.wsPktChMap[int(pkt.Param)] <- &pkt
+
 	return nil
 }
 
@@ -161,6 +156,10 @@ func (server *Stream) wsHandler(ctx *sgo.Context) error {
 		fmt.Println(err)
 		return err
 	}
+	defer func() {
+		ws.Close()
+		fmt.Println("ws/client closed")
+	}()
 	dataID, err := strconv.Atoi(ctx.Param("dataID"))
 	if err != nil {
 		fmt.Println(err)
@@ -176,7 +175,7 @@ func (server *Stream) wsHandler(ctx *sgo.Context) error {
 		for {
 			_, _, err := ws.ReadMessage()
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println("browser closed", err)
 				closeSig <- true
 			}
 		}
@@ -189,21 +188,20 @@ func (server *Stream) wsHandler(ctx *sgo.Context) error {
 	// 		fmt.Println("received from js:", pkt)
 	// 	}
 	// }()
+
 	go server.Publish(uint16(dataID))
+
 	// // send
-	go func() {
-		for {
-			pkt := <-wsPktCh
-			pkt.Data = PayloadBuf2Float(pkt.Payload)
+
+	for {
+		select {
+		case pkt := <-wsPktCh:
 			if err = ws.WriteJSON(pkt); err != nil {
-				fmt.Println(err)
+				fmt.Println("123123123", err)
 				continue
 			}
+		case <-closeSig:
+			return nil
 		}
-	}()
-
-	<-closeSig
-	server.wsCloseFlag = true
-	ws.Close()
-	return nil
+	}
 }

@@ -270,10 +270,11 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) ([]float64, error) {
 	return rawData, nil
 }
 
-func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([][]float64, error) {
+func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32, [][]float64, error) {
 	var tableName string
 	var dataSize uint8
 	var columnPattern string
+	var timeVec []uint32
 	var dataMat [][]float64
 
 	tableName = "record" + strconv.Itoa(int(id))
@@ -290,7 +291,7 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([][]floa
 	}
 
 	query := fmt.Sprintf(
-		"SELECT %s FROM %s.%s WHERE (simulink_time >= %s) AND (simulink_time < %s);",
+		"SELECT simulink_time,%s FROM %s.%s WHERE (simulink_time >= %s) AND (simulink_time < %s);",
 		columnPattern,
 		handler.DBName,
 		tableName,
@@ -298,8 +299,8 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([][]floa
 		strconv.Itoa(int(end)),
 	)
 
-	scans := make([]interface{}, dataSize)
-	values := make([][]byte, dataSize)
+	scans := make([]interface{}, dataSize+1)
+	values := make([][]byte, dataSize+1)
 	for i := range values {
 		scans[i] = &values[i]
 	}
@@ -307,23 +308,34 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([][]floa
 	rows, err := handler.DBPointer.Query(query)
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return nil, nil, err
 	}
 
 	for rows.Next() {
 		rows.Scan(scans...)
 		var rawData []float64
-		for _, v := range values {
+		for i, v := range values {
 			data := string(v)
-			s, err := strconv.ParseFloat(data, 64)
-			if err != nil {
-				fmt.Println("Failed to parse scan result from SQL query.")
+
+			if i == 0 {
+				s, err := strconv.ParseInt(data, 10, 32)
+				timeVec = append(timeVec, uint32(s))
+				if err != nil {
+					fmt.Println("Failed to parse scan result from SQL query.")
+				}
+
+			} else {
+				s, err := strconv.ParseFloat(data, 64)
+				rawData = append(rawData, s)
+				if err != nil {
+					fmt.Println("Failed to parse scan result from SQL query.")
+				}
+
 			}
-			rawData = append(rawData, s)
 		}
 		dataMat = append(dataMat, rawData)
 	}
-	return dataMat, nil
+	return timeVec, dataMat, nil
 }
 
 func (handler *Handler) QueryInfo(id uint16, column string) (int, error) {
