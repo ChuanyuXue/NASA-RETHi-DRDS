@@ -102,8 +102,8 @@ func (server *Server) Init(src uint8) error {
 	server.publisherRegister = make(map[uint16][]uint8)
 	server.subscriberRegister = make(map[uint16][]uint8)
 
-	go server.listen(localAddr, 1)
-	go server.listen(loopAddr, 1)
+	go server.listen(localAddr, int(utils.PROCNUMS))
+	go server.listen(loopAddr, int(utils.PROCNUMS))
 
 	return nil
 }
@@ -336,8 +336,9 @@ func (server *Server) listen(addr *net.UDPAddr, procnums int) error {
 	}
 
 	// producer
-	var buf [utils.BUFFLEN]byte
+
 	for {
+		var buf [utils.BUFFLEN]byte
 		_, _, err := conn.ReadFromUDP(buf[:])
 		if err != nil {
 			fmt.Println("Failed to listen packet from connection")
