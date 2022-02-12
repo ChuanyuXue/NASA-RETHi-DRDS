@@ -15,15 +15,21 @@ import socket
 from pyapi.utils import Header
 from pyapi.utils import Packet
 
+
 class API:
     """
     The API object for communicating with the Communication and Data-
     Handling System (CDHS)
 
     """
-    def __init__(self, local_ip, local_port, to_ip, to_port,
-        client_id=1, 
-        server_id=0):
+
+    def __init__(self,
+                 local_ip,
+                 local_port,
+                 to_ip,
+                 to_port,
+                 client_id=1,
+                 server_id=0):
 
         self.id_client = client_id
         self.id_server = server_id
@@ -36,7 +42,7 @@ class API:
         self.in_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.in_sock.bind((self.ip_client, self.port_client))
         self.in_sock.setblocking(False)
-    
+
     def send(self, id, synt, value, priority=7, type=1):
         """
         Send packets (??)
@@ -78,23 +84,11 @@ class API:
             _row = len(value)
             _col = len(value[0])
             _length = _row * _col
-        
+
         pkt = Packet()
-        buf = pkt.pkt2Buf(_src, _dst,
-            _message_type,
-            _data_type,
-            _priority,
-            _physical_time,
-            _simulink_time,
-            _row,
-            _col,
-            _length,
-            _opt,
-            _flag,
-            _param,
-            _subparam,
-            _payload
-        )
+        buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority,
+                          _physical_time, _simulink_time, _row, _col, _length,
+                          _opt, _flag, _param, _subparam, _payload)
         self.out_sock.sendto(buf, (self.ip_server, self.port_server))
 
     def request(self, id, synt, priority=7):
@@ -116,7 +110,7 @@ class API:
         _data_type = 0
         _priority = priority
         _physical_time = int(time.time())
-        _simulink_time = synt
+        _simulink_time = synt[0]
         _row = 0
         _col = 0
         _length = 0
@@ -131,42 +125,22 @@ class API:
             _payload = []
 
             pkt = Packet()
-            buf = pkt.pkt2Buf(_src, _dst, _message_type,
-                _data_type,
-                _priority,
-                _physical_time,
-                _simulink_time,
-                _row,
-                _col,
-                _length,
-                _opt,
-                _flag,
-                _param,
-                _subparam,
-                _payload
-            )
+            buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority,
+                              _physical_time, _simulink_time, _row, _col,
+                              _length, _opt, _flag, _param, _subparam,
+                              _payload)
             self.out_sock.sendto(buf, (self.ip_server, self.port_server))
         else:
             _subparam = synt[1]
             _payload = []
 
             pkt = Packet()
-            buf = pkt.pkt2Buf(_src, _dst, _message_type,
-                _data_type,
-                _priority,
-                _physical_time,
-                _simulink_time,
-                _row,
-                _col,
-                _length,
-                _opt,
-                _flag,
-                _param,
-                _subparam,
-                _payload
-            )
+            buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority,
+                              _physical_time, _simulink_time, _row, _col,
+                              _length, _opt, _flag, _param, _subparam,
+                              _payload)
             self.out_sock.sendto(buf, (self.ip_server, self.port_server))
-        
+
         while True:
             try:
                 message, _ = self.in_sock.recvfrom(65536)
@@ -174,7 +148,7 @@ class API:
                 return pkt
             except:
                 continue
-    
+
     def publish_register(self, id, synt, priority=7):
         """
         Publish what (??)
@@ -208,21 +182,9 @@ class API:
         _payload = []
 
         pkt = Packet()
-        buf = pkt.pkt2Buf(_src, _dst,
-            _message_type, 
-            _data_type,
-            _priority,
-            _physical_time,
-            _simulink_time,
-            _row,
-            _col,
-            _length,
-            _opt,
-            _flag,
-            _param,
-            _subparam,
-            _payload
-        )
+        buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority,
+                          _physical_time, _simulink_time, _row, _col, _length,
+                          _opt, _flag, _param, _subparam, _payload)
         self.out_sock.sendto(buf, (self.ip_server, self.port_server))
 
         while True:
@@ -274,21 +236,9 @@ class API:
             _length = _row * _col
 
         pkt = Packet()
-        buf = pkt.pkt2Buf(_src, _dst,
-            _message_type,
-            _data_type,
-            _priority,
-            _physical_time,
-            _simulink_time,
-            _row,
-            _col,
-            _length,
-            _opt,
-            _flag,
-            _param,
-            _subparam,
-            _payload
-        )
+        buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority,
+                          _physical_time, _simulink_time, _row, _col, _length,
+                          _opt, _flag, _param, _subparam, _payload)
         self.out_sock.sendto(buf, (self.ip_server, self.port_server))
 
     def subscribe_register(self, id, synt, priority=7):
@@ -324,21 +274,9 @@ class API:
         _payload = []
 
         pkt = Packet()
-        buf = pkt.pkt2Buf(_src, _dst,
-            _message_type,
-            _data_type,
-            _priority,
-            _physical_time,
-            _simulink_time,
-            _row,
-            _col,
-            _length,
-            _opt,
-            _flag,
-            _param,
-            _subparam,
-            _payload
-        )
+        buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority,
+                          _physical_time, _simulink_time, _row, _col, _length,
+                          _opt, _flag, _param, _subparam, _payload)
         self.out_sock.sendto(buf, (self.ip_server, self.port_server))
 
         while True:

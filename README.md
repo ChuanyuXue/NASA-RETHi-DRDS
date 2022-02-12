@@ -138,7 +138,7 @@ To require asynchronous data, first set up headers:
 - Opt = 1
 - Flag = 0
 - Param = ID of data requested
-- Subparam = Number of rows of required data
+- Subparam = Request time interval length from start time.
 - Data = Empty
 
 Then send this packet by UDP channel to server.
@@ -153,12 +153,12 @@ Next keep listening from server, a packet will be send back with following heade
 - Data_Type = Depend on data
 - Priority_Type = 7
 - Physical_Time = Message sending time
-- Simulink_Time = Simulink time of data
+- Simulink_Time = Start time of data
 - [Row, Col, Length]  = Depend on data
 - Opt = 1
 - Flag = 0
 - Param = ID of data requested
-- Subparam = Number of rows of required data
+- Subparam = None
 - Data = Requested data
 
 Finally decode payload by its shape [Row * Col]
