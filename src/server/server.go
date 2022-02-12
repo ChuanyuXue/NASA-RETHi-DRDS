@@ -148,9 +148,7 @@ func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16,
 	if err != nil {
 		return err
 	}
-
 	if timeDiff == utils.PARAMTER_REQUEST_LAST {
-		fmt.Println(server.handler.QueryLastSynt(id))
 		_, dataMat, err = server.handler.ReadRange(id, timeStart, server.handler.QueryLastSynt(id))
 		if err != nil {
 			fmt.Println(err)

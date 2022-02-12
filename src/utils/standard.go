@@ -8,6 +8,7 @@ const (
 	FRENQUENCE uint32 = 10000
 	SUBSNUMS   uint8  = 10
 	TABLENUMS  uint32 = 65536
+	MTU        uint16 = 1500
 )
 
 //---------- Source_address
