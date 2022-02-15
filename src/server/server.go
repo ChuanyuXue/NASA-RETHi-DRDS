@@ -128,6 +128,7 @@ func (server *Server) Request(id uint16, synt uint32, dst uint8) error {
 	}
 	data_type, err := server.handler.QueryInfo(id, "data_type")
 	if err != nil {
+
 		return err
 	}
 	var dataMat [][]float64
@@ -316,7 +317,10 @@ func (server *Server) listen(addr *net.UDPAddr, procnums int) error {
 		go func() {
 			for {
 				pkt := <-server.inboundQueue
-				server.handle(pkt)
+				err = server.handle(pkt)
+				if err != nil {
+					fmt.Println(err)
+				}
 			}
 		}()
 	}

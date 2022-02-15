@@ -221,18 +221,18 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 
 func (handler *Handler) ReadSynt(id uint16, synt uint32) ([]float64, error) {
 	var tableName string
-	var dataSize uint8
+	var columnSize uint8
 	var columnPattern string
 	var rawData []float64
 
 	tableName = "record" + strconv.Itoa(int(id))
-	dataSize = handler.DataShapes[id]
+	columnSize = handler.DataShapes[id]
 
-	if dataSize == 1 {
+	if columnSize == 1 {
 		columnPattern = "value0"
 	} else {
 		var columnList []string
-		for i := 0; i < int(dataSize); i++ {
+		for i := 0; i < int(columnSize); i++ {
 			columnList = append(columnList, "value"+strconv.Itoa(i))
 		}
 		columnPattern = strings.Join(columnList, ",")
@@ -246,8 +246,8 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) ([]float64, error) {
 		strconv.Itoa(int(synt)),
 	)
 
-	scans := make([]interface{}, dataSize)
-	values := make([][]byte, dataSize)
+	scans := make([]interface{}, columnSize)
+	values := make([][]byte, columnSize)
 	for i := range values {
 		scans[i] = &values[i]
 	}

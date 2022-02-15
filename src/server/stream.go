@@ -75,7 +75,7 @@ func (server *Stream) Init(src uint8) error {
 	return nil
 }
 
-func (server *Stream) Publish(id uint16) error {
+func (server *Stream) Publish(id uint16, closeSig *bool) error {
 	lastTime := server.handler.QueryLastSynt(id)
 	firstTime := server.handler.QueryFirstSynt(id)
 	dataType, _ := server.handler.QueryInfo(id, "data_type")
@@ -95,12 +95,15 @@ func (server *Stream) Publish(id uint16) error {
 			utils.OPT_SEND,
 			utils.FLAG_SINGLE,
 			id,
-			uint16(lastTime-firstTime),
+			65535,
 			dataMat[i],
 		)
 	}
 
 	for {
+		if *closeSig {
+			return nil
+		}
 		time.Sleep(1 * time.Second)
 		currentTime := server.handler.QueryLastSynt(id)
 		timeVec, dataMat, err := server.handler.ReadRange(id, lastTime, currentTime)
@@ -186,8 +189,8 @@ func (server *Stream) wsHandler(ctx *sgo.Context) error {
 	// 		fmt.Println("received from js:", pkt)
 	// 	}
 	// }()
-
-	go server.Publish(uint16(dataID))
+	publishCloseSig := false
+	go server.Publish(uint16(dataID), &publishCloseSig)
 
 	// // send
 
@@ -199,6 +202,7 @@ func (server *Stream) wsHandler(ctx *sgo.Context) error {
 				continue
 			}
 		case <-closeSig:
+			publishCloseSig = true
 			return nil
 		}
 	}
