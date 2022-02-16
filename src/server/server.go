@@ -237,7 +237,12 @@ func (server *Server) send(dst uint8, types uint8, priority uint8, synt uint32, 
 	pkt.SimulinkTime = synt
 
 	pkt.Row = uint8(len(dataMap))
-	pkt.Col = uint8(len(dataMap[0]))
+	if len(dataMap) == 0 {
+		pkt.Col = uint8(0)
+	} else {
+		pkt.Col = uint8(len(dataMap[0]))
+	}
+
 	pkt.Length = uint16(pkt.Row * pkt.Col)
 
 	pkt.Opt = uint16(opt)
@@ -305,7 +310,6 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, opt uint16
 }
 
 func (server *Server) listen(addr *net.UDPAddr, procnums int) error {
-
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
 		fmt.Println("Failed to bind client", addr, err)

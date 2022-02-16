@@ -371,7 +371,7 @@ func (handler *Handler) QueryLastSynt(id uint16) uint32 {
 	row := handler.DBPointer.QueryRow(query)
 	err := row.Scan(&time)
 	if err != nil {
-		fmt.Println("Failed to retrieve last time stamp")
+		fmt.Println("No data found!")
 	}
 	result, _ := utils.StringToInt(time)
 	return uint32(result)
