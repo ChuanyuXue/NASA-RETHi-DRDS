@@ -23,7 +23,7 @@ services:
       DB_DB: comm
       DB_USER: uu
       DB_PASSWORD: password
-    
+
       ANIMATION_ENABLED: "false"
       CONSOLE_ENABLED: "false"
       DELAY_ENABLED: "false"
@@ -38,6 +38,8 @@ services:
     networks:
       - hms-network
       - comm-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   comm_db:
     image: mariadb
@@ -81,6 +83,8 @@ services:
       - habitat_db
     networks:
       - hms-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   ground_db:
     image: mariadb

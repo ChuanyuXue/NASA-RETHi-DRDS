@@ -110,7 +110,6 @@ class API:
         _data_type = 0
         _priority = priority
         _physical_time = int(time.time())
-        _simulink_time = synt[0]
         _row = 0
         _col = 0
         _length = 0
@@ -123,6 +122,7 @@ class API:
 
             _subparam = 1
             _payload = []
+            _simulink_time = synt
 
             pkt = Packet()
             buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority,
@@ -133,6 +133,7 @@ class API:
         else:
             _subparam = synt[1]
             _payload = []
+            _simulink_time = synt[0]
 
             pkt = Packet()
             buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority,
