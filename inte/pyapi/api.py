@@ -142,12 +142,18 @@ class API:
                               _payload)
             self.out_sock.sendto(buf, (self.ip_server, self.port_server))
 
+        count = 0
         while True:
+            if count > 1e3:
+                print("[!] Request time out")
+                return Packet()
             try:
                 message, _ = self.in_sock.recvfrom(65536)
                 pkt.buf2Pkt(message)
                 return pkt
             except:
+                time.sleep(0.001)
+                count += 1
                 continue
 
     def publish_register(self, id, synt, priority=7):
@@ -188,13 +194,19 @@ class API:
                           _opt, _flag, _param, _subparam, _payload)
         self.out_sock.sendto(buf, (self.ip_server, self.port_server))
 
+        count = 0
         while True:
+            if count > 1e3:
+                print("[!] Request time out")
+                return Packet()
             try:
                 message, _ = self.in_sock.recvfrom(65536)
                 pkt.buf2Pkt(message)
                 return pkt
             except:
-                pass
+                time.sleep(0.001)
+                count += 1
+                continue
 
     def publish(self, id, synt, value, priority=7, type=1):
         """
@@ -280,12 +292,18 @@ class API:
                           _opt, _flag, _param, _subparam, _payload)
         self.out_sock.sendto(buf, (self.ip_server, self.port_server))
 
+        count = 0
         while True:
+            if count > 1e3:
+                print("[!] Request time out")
+                return Packet()
             try:
                 message, _ = self.in_sock.recvfrom(65536)
                 pkt.buf2Pkt(message)
                 return pkt
             except:
+                time.sleep(0.001)
+                count += 1
                 continue
 
     def subscribe(self, id):
@@ -298,12 +316,18 @@ class API:
             ??
         """
         pkt = Packet()
+        count = 0
         while True:
+            if count > 1e3:
+                print("[!] Request time out")
+                return Packet()
             try:
                 message, _ = self.in_sock.recvfrom(65536)
                 pkt.buf2Pkt(message)
                 return pkt
             except:
+                time.sleep(0.001)
+                count += 1
                 continue
 
     def close(self):

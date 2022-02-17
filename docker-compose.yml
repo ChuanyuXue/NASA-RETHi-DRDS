@@ -114,6 +114,11 @@ services:
     networks:
       - hms-network
 
+  visualization:
+    image: hfbzzx/rethi-visualization
+    ports:
+      - "8090:80"
+
 networks:
   comm-network: null
   hms-network: null

@@ -255,19 +255,20 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) ([]float64, error) {
 	row := handler.DBPointer.QueryRow(query)
 	err := row.Scan(scans...)
 	if err != nil {
-		return rawData, err
-	}
-
-	for _, v := range values {
-		data := string(v)
-		s, err := strconv.ParseFloat(data, 64)
-		if err != nil {
-			fmt.Println("Failed to parse scan result from SQL query.")
+		// fmt.Println("No data found!")
+		return rawData, nil
+	} else {
+		for _, v := range values {
+			data := string(v)
+			s, err := strconv.ParseFloat(data, 64)
+			if err != nil {
+				fmt.Println("Failed to parse scan result from SQL query.")
+			}
+			rawData = append(rawData, s)
 		}
-		rawData = append(rawData, s)
+		return rawData, nil
 	}
 
-	return rawData, nil
 }
 
 func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32, [][]float64, error) {
@@ -371,7 +372,8 @@ func (handler *Handler) QueryLastSynt(id uint16) uint32 {
 	row := handler.DBPointer.QueryRow(query)
 	err := row.Scan(&time)
 	if err != nil {
-		fmt.Println("No data found!")
+		// fmt.Println("No data found!")
+		return 0
 	}
 	result, _ := utils.StringToInt(time)
 	return uint32(result)
