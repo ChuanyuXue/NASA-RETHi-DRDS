@@ -41,7 +41,7 @@ class API:
         self.out_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.in_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.in_sock.bind((self.ip_client, self.port_client))
-        self.in_sock.setblocking(False)
+        self.in_sock.setblocking(True)
 
     def send(self, id, synt, value, priority=7, type=1):
         """
@@ -306,7 +306,7 @@ class API:
                 count += 1
                 continue
 
-    def subscribe(self, id):
+    def subscribe(self, ):
         """
         Subscribe for information
 
