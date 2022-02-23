@@ -41,8 +41,6 @@ if __name__ == '__main__':
 
     ## Get data here without blocking
     while True:
-        if q.empty():
-            time.sleep(1)
-        else:
+        if not q.empty():
             data = q.get()
-            print("I got the data", data)
+            print(data)
