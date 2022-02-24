@@ -121,7 +121,7 @@ func main() {
 	// fmt.Println("Ground Server subscribed Habitat server")
 
 	// Let MCVT subscribe Habitat server
-	// habitatServer.Subscribe()
+	habitatServer.Subscribe(9, utils.SRC_AGT, 0, 1000)
 
 	select {}
 
