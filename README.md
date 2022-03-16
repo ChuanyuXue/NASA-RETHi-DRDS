@@ -1,32 +1,24 @@
-# Data Distribution Service for NASA RETHi Project
+# Data Service for NASA RETHi Project
 
-## 1. Project motivation 
-
-This repository contains the source code of Data Service System of NASA-RETHi project. The whole RETHi project aims to develop the Resilient Extra-Terrestrial Habitats for future Moon/Mars expedition, which is divided into three related research thrusts:
-
-1. **System Resilience** develop the techniques needed to establish a control-theoretic paradigm for resilience, and the computational capabilities needed to capture complex behaviors and perform trade studies to weigh different choices regarding habitat architecture and onboard decisions.
-2. **Situational Awareness** develop and validate generic, robust, and scalable methods for detection and diagnosis of anticipated and unanticipated faults that incorporates an automated active learning framework with robots- and humans-in-the-loop.
-3. **Robotic Maintenance** develop and demonstrate the technologies needed to realize teams of independent autonomous robots, incorporating the use of soft materials, that navigate through dynamic environments, use a variety of modular sensors and end-effectors for specific needs, and perform tasks such as collaboratively replacing damaged structural elements using deployable modular hardware.
-
-Please visit https://www.purdue.edu/rethi for more information.
+## 1. Project introduction
 
 ## 2. Current design
 
-### 2.1 DDS - Data flow
-<img src="./img/DDS_INTE.drawio.png">
+### 2.1 DS - Data flow
+<img src="./img/DS_protocol.drawio.svg">
 
-### 2.2 DDS - High-level integration
+### 2.2 DS - High-level integration
 <img src="./img/DDS_INTE_V2.drawio.png">
 
-### 2.2 DDS - Data flow in Data service
-<img src="./img/DDS_FLOW.drawio.png">
+### 2.2 DS - Data flow in Data service
+<img src="./img/DDS_FLOW.drawio.svg">
 
-### 2.3 DDS - Database schema
-<img src="./img/DDS_SCHEMA.drawio.png" style="zoom:33%;"  >
+### 2.3 DS - Database schema
+<img src="./img/DDS_SCHEMA.drawio.svg" style="zoom:33%;"  >
 
 
-### 2.4 DDS - Programming design
-<img src="./img/DDS_UML.drawio.png">
+### 2.4 DS - Programming design
+<img src="./img/DS_UML.drawio.svg">
 
 ## 3. Service Protocol
 - **For Python, please reference [demo.py](./demo.py) and [api.py](./api.py).**
