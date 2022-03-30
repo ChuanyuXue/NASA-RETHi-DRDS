@@ -4,7 +4,7 @@ import json
 import random
 import pandas as pd
 
-with open("db_infov6.json") as f:
+with open("../db_info.json") as f:
     data_discript = json.load(f)
 
 ## Simulation for 600 seconds
