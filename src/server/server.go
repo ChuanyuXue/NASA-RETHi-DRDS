@@ -5,7 +5,6 @@ import (
 	"data-service/src/utils"
 	"errors"
 	"os"
-	"sync"
 	"time"
 
 	// "errors"
@@ -21,9 +20,6 @@ type Server struct {
 	Src  string
 
 	handler *handler.Handler
-
-	Count uint32
-	Mu    sync.Mutex
 
 	LocalSrc     uint8
 	ClientSrc    []uint8
@@ -61,7 +57,6 @@ func (server *Server) Init(src uint8) error {
 	}
 	server.Src = string(src)
 	server.LocalSrc = uint8(src)
-	server.Count = 0
 	server.ClientSrcMap = make(map[uint8]net.UDPAddr)
 
 	server.inboundQueue = make(chan *ServicePacket, utils.BUFFLEN)

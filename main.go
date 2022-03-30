@@ -9,11 +9,11 @@ import (
 )
 
 func init() {
-	err := handler.DatabaseGenerator(0, "db_info.json")
+	err := handler.DatabaseGenerator(0, "db_infov6.json")
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = handler.DatabaseGenerator(1, "db_info.json")
+	err = handler.DatabaseGenerator(1, "db_infov6.json")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -121,7 +121,7 @@ func main() {
 	// fmt.Println("Ground Server subscribed Habitat server")
 
 	// Let MCVT subscribe Habitat server
-	habitatServer.Subscribe(9, utils.SRC_AGT, 0, 1000)
+	// habitatServer.Subscribe(9, utils.SRC_AGT, 0, 1000)
 
 	select {}
 
