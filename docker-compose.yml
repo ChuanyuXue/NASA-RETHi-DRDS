@@ -17,7 +17,8 @@ services:
       ADDR_REMOTE_STR: "host.docker.internal:20002"
       ADDR_REMOTE_PWR: "host.docker.internal:20003"
       ADDR_REMOTE_ECLSS: "host.docker.internal:20004"
-      ADDR_REMOTE_AGT: "host.docker.internal:20005"
+      # ADDR_REMOTE_AGT: "host.docker.internal:20005"
+      ADDR_REMOTE_AGT: "192.168.0.2:10012"
       ADDR_REMOTE_INT: "host.docker.internal:20006"
       ADDR_REMOTE_EXT: "host.docker.internal:20007"
       DB_DB: comm
@@ -59,7 +60,7 @@ services:
       - "20000:20000/udp"
       - "40001:40001/udp"
       - "65530-65531:65530-65531/udp"
-      - "8888:8888"
+      # - "8888:8888"
     environment:
       DS_LOCAL_ADDR_GROUND: ":20000"
       DS_REMOTE_ADDR_GROUND: "comm:10000"
