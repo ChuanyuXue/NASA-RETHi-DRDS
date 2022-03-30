@@ -1,32 +1,28 @@
-# Data Distribution Service for NASA RETHi Project
+# Data Service for NASA RETHi Project
 
-## 1. Project motivation 
+<<<<<<< HEAD
 
-This repository contains the source code of Data Service System of NASA-RETHi project. The whole RETHi project aims to develop the Resilient Extra-Terrestrial Habitats for future Moon/Mars expedition, which is divided into three related research thrusts:
-
-1. **System Resilience** develop the techniques needed to establish a control-theoretic paradigm for resilience, and the computational capabilities needed to capture complex behaviors and perform trade studies to weigh different choices regarding habitat architecture and onboard decisions.
-2. **Situational Awareness** develop and validate generic, robust, and scalable methods for detection and diagnosis of anticipated and unanticipated faults that incorporates an automated active learning framework with robots- and humans-in-the-loop.
-3. **Robotic Maintenance** develop and demonstrate the technologies needed to realize teams of independent autonomous robots, incorporating the use of soft materials, that navigate through dynamic environments, use a variety of modular sensors and end-effectors for specific needs, and perform tasks such as collaboratively replacing damaged structural elements using deployable modular hardware.
-
-Please visit https://www.purdue.edu/rethi for more information.
+=======
+## 1. Project introduction
+>>>>>>> 20453a8230dd99b4d309c2ec20eab2ef59fdc161
 
 ## 2. Current design
 
-### 2.1 DDS - Data flow
-<img src="./img/DDS_INTE.drawio.png">
+### 2.1 DS - Data flow for MCVT
+<img src="./img/DS_protocol.drawio.svg">
 
-### 2.2 DDS - High-level integration
-<img src="./img/DDS_INTE_V2.drawio.png">
+### 2.2 DS - Data flow for CPT
+<img src="./img/DDS_INTE_V3.drawio.svg">
 
-### 2.2 DDS - Data flow in Data service
-<img src="./img/DDS_FLOW.drawio.png">
+### 2.2 DS - Data flow in Data service
+<img src="./img/DDS_FLOW.drawio.svg">
 
-### 2.3 DDS - Database schema
-<img src="./img/DDS_SCHEMA.drawio.png" style="zoom:33%;"  >
+### 2.3 DS - Database schema
+<img src="./img/DDS_SCHEMA.drawio.svg" style="zoom:80%;"  >
 
 
-### 2.4 DDS - Programming design
-<img src="./img/DDS_UML.drawio.png">
+### 2.4 DS - Programming design
+<img src="./img/DS_UML.drawio.svg">
 
 ## 3. Service Protocol
 - **For Python, please reference [demo.py](./demo.py) and [api.py](./api.py).**
@@ -36,52 +32,78 @@ Please visit https://www.purdue.edu/rethi for more information.
 - **For other Language, please implement by following standards:**
 
 
-### 3.1 Packet
+### 3.1 Packet Format
 
 Data packet is the basic form to send data and also to implement service API:
 
-![dds_packet](./img/packet.png)
+![dds_packet](./img/Packet.drawio.svg)
+
+**Src and Dst**
+
+| **Field** | **Name** | **Value** | **Description**                               |
+| --------- | -------- | --------- | --------------------------------------------- |
+| Src (Dst) | GCC      | 0x00      | Ground Command and Control Subsystem          |
+| Src (Dst) | CC       | 0x01      | Command and Control                           |
+| Src (Dst) | STR      | 0x02      | Structural System                             |
+| Src (Dst) | PWR      | 0x03      | Power System                                  |
+| Src (Dst) | ECLSS    | 0x04      | Environmental Control and Life Support System |
+| Src (Dst) | AGT      | 0x05      | Agent System                                  |
+| Src (Dst) | ING      | 0x06      | Interior Environment                          |
+| Src (Dst) | DST      | 0x07      | Disturbance                                   |
+| Src (Dst) | SPL      | 0x08      | Structural Protective Layer                   |
+
+**Message Type**
+
+| **Field**   | **Name** | **Value** | **Description**                                        |
+| ----------- | -------- | --------- | ------------------------------------------------------ |
+| MessageType | PKT      | 0x00      | Communication packet defined by communication network  |
+| MessageType | SPKT     | 0x01      | Service packet defined by data service through network |
+| MessageType | JPKT     | 0x02      | Service JSON struct defined by data service            |
+
+**Data Type**
+
+| **Field** | **Name** | **Value** | **Description**      |
+| --------- | -------- | --------- | -------------------- |
+| DataType  | Null     | 0x00      | No data              |
+| DataType  | FDD      | 0x01      | Fault detection data |
+| DataType  | SD       | 0x02      | Cyber sensor data    |
+| DataType  | AD       | 0x03      | Agent data           |
+| DataType  | PSD      | 0x04      | Physical sensor data |
+| DataType  | Other    | 0x05      | Undefined data       |
+
+**Priority**
+
+Priority(priority): Quality of Service (QoS) prioritizes network traffic and manages available bandwidth so that the most important traffic goes first.
+
+| **Field** | **Name**        | **Value**  | **Description**                            |
+| --------- | --------------- | ---------- | ------------------------------------------ |
+| Priority  | Low priority    | 0x00, 0x01 | Best effort data as back ground flow       |
+| Priority  | Normal priority | 0x02, 0x03 | Audio vedio data to maximum throughput     |
+| Priority  | Medium priority | 0x04, 0x05 | Sensor data to minimize latency            |
+| Priority  | High Priority   | 0x06, 0x07 | FDD or agent data as time critical message |
+
+**Option (Service selection)**
+
+| **Field** | **Name**  | **Value** | **Description**                        |
+| --------- | --------- | --------- | -------------------------------------- |
+| Opt       | Send      | 0x0000    | Send data record to data server        |
+| Opt       | Request   | 0x0001    | Request data record from data server   |
+| Opt       | Publish   | 0x0002    | Publish data stream to data server     |
+| Opt       | Subscribe | 0x0003    | Subscribe data stream from data server |
+| Opt       | Response  | 0x000A    | Response from data server              |
+
+**Flag**
+
+| **Field** | **Name** | **Value** | **Description**                                  |
+| --------- | -------- | --------- | ------------------------------------------------ |
+| Flag      | Data     | 0x0000    | Completed signal or data in payload              |
+| Flag      | Segment  | 0x0001    | Signal or data segment requires rearrange        |
+| Flag      | Warning  | 0x0002    | Abnormal operation needs to be verified          |
+| Flag      | Error    | 0x0003    | Invalidate operation may lead to system collapse |
+
+**Others**
 
 
-- Src: Source address
-
-  - 0x00: GCC
-  - 0x01: HMS
-  - 0x02: STR
-  - 0x03: PWR
-  - 0x04: ECLSS
-  - 0x05: AGT
-  - 0x06: ING
-  - 0x07: EXT
-
-- Dst: Destination address
-- MessageType(messaage_type): Types of packet
-  - 0x00: Packet defined by Communication network
-  - 0x01: Packet defined Data Service
-  - 0x02: Json struct defined Data Service
-- DataType(data_type): Types of data from 0 to 255
-  - 0x00: No data
-  - 0x01: FDD data
-  - 0x02: Sensor data [from MCVT]
-  - 0x03: Agent data
-  - 0x04: Sensor data [from Physical Sensor]
-  - 0x05: Other data
-- Priority(priority): Quality of Service (QoS) prioritizes network traffic and manages available bandwidth so that the most important traffic goes first.
-  - 0x00, 0x01: Low Priority e.g. Best Effort Flow as back ground
-  - 0x02, 0x03: Normal Priority e.g. Audio Vedio Flow to maximum throughput
-  - 0x04, 0x05: Medium Priority e.g. Sensor Flow to minimize latency
-  - 0x06, 0x07: High Priority e.g. FDD flow as time critical message
-- Opt(opt): Options from 0 to 65535
-  - 0x0000: Send operation
-  - 0x0001: Request operation
-  - 0x0002: Publish operation
-  - 0x0003: Subscribe operation
-  - 0x000A: Response
-- Flag(flag):
-  - 0x0000: Single message
-  - 0x0001: Streaming message
-  - 0xFFFE: Warning
-  - 0xFFFF: Error
 - SimulinkTime(simulink_time): Simulink time from 0 to 4294967295
 - PhysicalTime(physical_time): Physical Unix time from 0 to 4294967295
 - Row(raw): Length of data
@@ -89,9 +111,7 @@ Data packet is the basic form to send data and also to implement service API:
 - Length(length): Flatten length of data (Row * Col)
 - Param(param): Depends on Opt
 - SubParam(subparam): Depends on Opt
-- Data(data): Data in bytes
-
-*Name in bracket is for JSON structure.*
+- Data(data): Data in bytes (only exists in Json message)
 
 ### 3.2 Send
 
@@ -103,19 +123,11 @@ Before use the API, please make sure:
 
 To send asynchronous data, first set up headers:
 
-- Src = ID of client
-- Des = 0
-- Message_Type = 1
-- Data_Type = Depends on data
-- Priority_Type = 7
-- Physical_Time = Message sending time
-- Simulink_Time = Simulink time of data
-- [Row, Col, Length] depend on the data
-- Opt = 0
-- Flag = 0
-- Param = ID of data will be sent
-- Subparam = 0
-- Data = One row of sending data in C_Double
+| **Src**   | **Dst**   | **MsgType** | **DataType** | **Priority** | **PhyTime** | **SiTime**   |
+| --------- | --------- | ----------- | ------------ | ------------ | ----------- | ------------ |
+| Client ID | Server ID | 0x01        | -            | -            | -           | -            |
+| **Row**   | **Col**   | **Length**  | **Opt**      | **Flag**     | **Param**   | **Subparam** |
+| -         | -         | -           | 0x00         | 0x00         | Data ID     | 0x00         |
 
 Finally send this packet by UDP channel to server.
 
@@ -127,41 +139,17 @@ Finally send this packet by UDP channel to server.
 
 To require asynchronous data, first set up headers:
 
-- Src = ID of client
-- Des = 0
-- Message_Type = 1
-- Data_Type = 0
-- Priority_Type = 7
-- Physical_Time = Message sending time
-- Simulink_Time = Simulink time of data
-- [Row, Col, Length]  = [0, 0, 0]
-- Opt = 1
-- Flag = 0
-- Param = ID of data requested
-- Subparam = Request time interval length from start time.
-- Data = Empty
+| **Src**   | **Dst**   | **MsgType** | **DataType** | **Priority** | **PhyTime** | **SiTime**             |
+| --------- | --------- | ----------- | ------------ | ------------ | ----------- | ---------------------- |
+| Client ID | Server ID | 0x01 / 0x02 | 0x00         | -            | -           | Start time of request  |
+| **Row**   | **Col**   | **Length**  | **Opt**      | **Flag**     | **Param**   | **Subparam**           |
+| 0         | 0         | 0           | 0x01         | 0x00         | Data ID     | Time length of request |
 
 Then send this packet by UDP channel to server.
 
 *If Simulink_Time == 0xffffffff, it returns the last record. If Simulink_Time < 0xffffffff and Subparam == 0xffff, it returns the data from Simulink_Time to the last data*
 
-Next keep listening from server, a packet will be send back with following headers:
-
-- Src = 0
-- Des = ID of Client
-- Message_Type = 1
-- Data_Type = Depend on data
-- Priority_Type = 7
-- Physical_Time = Message sending time
-- Simulink_Time = Start time of data
-- [Row, Col, Length]  = Depend on data
-- Opt = 1
-- Flag = 0
-- Param = ID of data requested
-- Subparam = None
-- Data = Requested data
-
-Finally decode payload by its shape [Row * Col]
+Next keep listening from server, a packet followd by `send` service API will send back. Please note the length of returned data should be decoded by its shape [Row * Col].
 
 *⚠️ Note - Both request operation and response data can be lost*
 
@@ -169,75 +157,25 @@ Finally decode payload by its shape [Row * Col]
 
 ### 3.4 Publish
 
-To publish data synchronously, set up headers for registering publish first:
+To publish data synchronously, set up headers and send to server for registering publish first:
 
-- Src = ID of client
-- Des = 0
-- Message_Type = 1
-- Data_Type = 0
-- Priority_Type = 7
-- Physical_Time = Message sending time
-- Simulink_Time = Start Simulink time of Publishing
-- [Row, Col, Length]  = [0, 0, 0]
-- Opt = 2
-- Flag = 0
-- Param = ID of data published
-- Subparam = 0
-- Data = Empty
+| **Src**   | **Dst**   | **MsgType** | **DataType** | **Priority** | **PhyTime** | **SiTime**            |
+| --------- | --------- | ----------- | ------------ | ------------ | ----------- | --------------------- |
+| Client ID | Server ID | 0x01 / 0x02 | 0x00         | -            | -           | Start time of publish |
+| **Row**   | **Col**   | **Length**  | **Opt**      | **Flag**     | **Param**   | **Subparam**          |
+| 0         | 0         | 0           | 0x02         | 0x00         | Data ID     | Data rate             |
 
-Then send this packet by UDP channel to server.
+Keep listening from server, a **same** packet will be send back which means the client is successully registered for publish.
 
-Keep listening from server, a packet will be send back with following headers:
+Then start continuously pushing streaming to server by `send` api with required frequency. 
 
-- Src = 0
-- Des = ID of client
-- Message_Type = 1
-- Data_Type = Depend on data
-- Priority_Type = 7
-- Physical_Time = Message sending time
-- Simulink_Time = Start Simulink time of Publishing
-- [Row, Col, Length]  = [0, 0, 0]
-- Opt = 2
-- Flag = 0
-- Param = ID of data published
-- Subparam = Rate of data published
-- Data = Empty
+To terminate publishing, send to server:
 
-When receive the above packet, start continuously pushing streaming to server with following headers setting. Decide the shape[Row and Col] of data based on the estimated latency of network and data frequency:
-
-- Src = ID of client
-- Des = 0
-- Message_Type = 1
-- Data_Type = Depend on data
-- Priority_Type = 7
-- Physical_Time = Message sending time
-- Simulink_Time = Start Simulink time of Publishing
-- [Row, Col, Length]  = Depend on data
-- Opt = 2
-- Flag = 1
-- Param = ID of data published
-- Subparam = 0
-- Payload = Data publishing to server
-
-To terminate publishing, send
-
-- Src = ID of client
-- Des = 0
-- Message_Type = 1
-- Data_Type = 0
-- Priority_Type = 7
-- Physical_Time = Message sending time
-- Simulink_Time = Start Simulink time of 
-- [Row, Col, Length]  = [0, 0, 0]
-- Opt = 2
-- Flag = 0
-- Param = ID of data published
-- Subparam = 0
-- Data = Empty
-
-\[ Same as register\]
-
-~~Once server finds data missing or latency it will send warning or error packet back.~~
+| **Src**   | **Dst**   | **MsgType** | **DataType** | **Priority** | **PhyTime** | **SiTime**            |
+| --------- | --------- | ----------- | ------------ | ------------ | ----------- | --------------------- |
+| Client ID | Server ID | 0x01 / 0x02 | 0x00         | -            | -           | Start time of publish |
+| **Row**   | **Col**   | **Length**  | **Opt**      | **Flag**     | **Param**   | **Subparam**          |
+| 0         | 0         | 0           | 0x02         | 0x00         | Data ID     | 0                     |
 
 
 
@@ -245,55 +183,21 @@ To terminate publishing, send
 
 To subscribe data synchronously, set up headers for registering subscribe first:
 
-- Src = ID of client
-- Des = 0
-- Message_Type = 1
-- Data_Type = 0
-- Priority_Type = 7
-- Physical_Time = Message sending time
-- Simulink_Time = Start Simulink time of Subscribe
-- [Row, Col, Length]  = [0, 0, 0]
-- Opt = 3
-- Flag = 0
-- Param = ID of data subscribed
-- Subparam = Rate of data subscribed
-- Data = Empty
+| **Src**   | **Dst**   | **MsgType** | **DataType** | **Priority** | **PhyTime** | **SiTime**              |
+| --------- | --------- | ----------- | ------------ | ------------ | ----------- | ----------------------- |
+| Client ID | Server ID | 0x01 / 0x02 | 0x00         | -            | -           | Start time of subscribe |
+| **Row**   | **Col**   | **Length**  | **Opt**      | **Flag**     | **Param**   | **Subparam**            |
+| 0         | 0         | 0           | 0x03         | 0x00         | Data ID     | Data rate               |
 
-Then keep listening from server, a stream will be continuously send back with following headers:
-
-- Src = 0
-- Des = ID of client
-- Message_Type = 1
-- Data_Type = Depend on data
-- Priority_Type = 7
-- Physical_Time = Message sending time
-- Simulink_Time = Start Simulink time of Subscribe
-- [Row, Col, Length] = Depend on data
-- Opt = 3
-- Flag = 1
-- Param = ID of data subscribed
-- Subparam = 0
-- Data = Data subscribing from server
-
-~~Once client finds data missing it need to send a subscribe from the missing data again.~~
+Next keep listening from server, a continous packet flow followd by `send` service API will send back with required data rate. Please note the length of returned data should be decoded by its shape [Row * Col].
 
 To terminate Subscribe function, send
 
-- Src = ID of client
-- Des = 0
-- Message_Type = 1
-- Data_Type = 0
-- Priority_Type = 7
-- Physical_Time = Message sending time
-- Simulink_Time = Start Simulink time of Subscribe
-- [Row, Col, Length]  = [0, 0, 0]
-- Opt = 3
-- Flag = 0
-- Param = ID of data subscribed
-- Subparam = 0
-- Data = Empty
-
-\[ Same as register\]
+| **Src**   | **Dst**   | **MsgType** | **DataType** | **Priority** | **PhyTime** | **SiTime**            |
+| --------- | --------- | ----------- | ------------ | ------------ | ----------- | --------------------- |
+| Client ID | Server ID | 0x01 / 0x02 | 0x00         | -            | -           | Start time of publish |
+| **Row**   | **Col**   | **Length**  | **Opt**      | **Flag**     | **Param**   | **Subparam**          |
+| 0         | 0         | 0           | 0x03         | 0x00         | Data ID     | 0                     |
 
 
 

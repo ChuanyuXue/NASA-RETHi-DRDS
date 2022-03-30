@@ -1,0 +1,35 @@
+data_service:
+  image: xuechuanyu/rethi-ds
+  ports:
+    - "20000:20000/udp"
+    - "40001:40001/udp"
+    - "65530-65531:65530-65531/udp"
+    - "8888:8888"
+  environment:
+    DS_LOCAL_ADDR_GROUND: ":20000"
+    DS_REMOTE_ADDR_GROUND: "comm:10000"
+
+    DS_LOCAL_ADDR_HABITAT: ":40001"
+    DS_REMOTE_ADDR_HABITAT: "comm:10001"
+
+    DS_LOCAL_LOOP_GROUND: ":65530"
+    DS_REMOTE_LOOP_GROUND: "host.docker.internal:65532"
+
+    DS_LOCAL_LOOP_HABITAT: ":65531"
+    # DS_REMOTE_LOOP_HABITAT: "host.docker.internal:65533"
+    DS_REMOTE_LOOP_HABITAT: "rethi-c2:65533"
+
+    DB_NAME_GROUND: ground
+    DB_USER_GROUND: uu
+    DB_PASSWORD_GROUND: password
+    DB_NAME_HABITAT: habitat
+    DB_USER_HABITAT: uu
+    DB_PASSWORD_HABITAT: password
+  depends_on:
+    - ground_db
+    - habitat_db
+  networks:
+    - comm-network
+    - hms-network
+  extra_hosts:
+    - "host.docker.internal:host-gateway"

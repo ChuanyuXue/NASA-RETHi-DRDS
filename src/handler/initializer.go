@@ -11,6 +11,7 @@ import (
 )
 
 type TableInfo struct {
+	utils.JsonStandard
 	Id         uint16 `json:"data_id"`
 	Name       string `json:"data_name"`
 	Type       uint16 `json:"data_type"`

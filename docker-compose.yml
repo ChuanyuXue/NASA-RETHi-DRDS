@@ -118,24 +118,24 @@ services:
     networks:
       - hms-network
 
-  visualization:
-    image: hfbzzx/rethi-visualization
-    ports:
-      - "8090:80"
+  # visualization:
+  #   image: hfbzzx/rethi-visualization
+  #   ports:
+  #     - "8090:80"
 
-  rethi-c2:
-    # image: rethi-c2
-    image: mrajase1994/rethi-c2
-    environment:
-      DELAY: 5
-    ports:
-      - "65533:65533/udp"
-    depends_on:
-      - data_service
-    networks:
-      - hms-network
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+  # rethi-c2:
+  #   # image: rethi-c2
+  #   image: mrajase1994/rethi-c2
+  #   environment:
+  #     DELAY: 5
+  #   ports:
+  #     - "65533:65533/udp"
+  #   depends_on:
+  #     - data_service
+  #   networks:
+  #     - hms-network
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
 
 networks:
   comm-network: null

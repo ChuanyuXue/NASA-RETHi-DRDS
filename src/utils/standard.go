@@ -35,7 +35,8 @@ const (
 	TYPE_FDD    uint8 = 1
 	TYPE_SENSOR uint8 = 2
 	TYPE_AGENT  uint8 = 3
-	TYPE_OTHER  uint8 = 4
+	TYPE_TEST   uint8 = 4
+	TYPE_OTHER  uint8 = 255
 )
 
 //------------ Priority
