@@ -1,25 +1,44 @@
 package main
 
-import (
-	"data-service/src/handler"
-	"data-service/src/server"
-	"data-service/src/utils"
-	"fmt"
-	"time"
-)
-
 func init() {
-	err := handler.DatabaseGenerator(0, "db_info.json")
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = handler.DatabaseGenerator(1, "db_info.json")
-	if err != nil {
-		fmt.Println(err)
-	}
+	// 	err := handler.DatabaseGenerator(0, "db_info.json")
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 	}
+	// 	err = handler.DatabaseGenerator(1, "db_info.json")
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 	}
 }
 
 func main() {
+	// --------------------- Test for packet V6 --------------------------
+
+	// b := [...]byte{0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04, 0x00, 0x00}
+
+	// pkt := server.Packet{1, 2, 3, 4, 5, 6, 3294967290, 3294967291, 65530, 65531, b[:], nil}
+
+	// buf := pkt.ToBuf()
+	// fmt.Println(server.FromBuf(buf))
+
+	// id := [...]uint16{1, 2, 3, 4}
+	// timed := [...]uint16{1000, 2000, 3000, 4000}
+	// row := [...]uint8{1, 2, 3, 4}
+	// col := [...]uint8{4, 3, 2, 1}
+	// length := [...]uint16{4, 4, 4, 4}
+
+	// test := [...]float64{1, 2, 3, 4}
+	// testbuf := server.PayloadFloat2Buf(test[:])
+	// var multipayload [][]byte
+	// multipayload = append(multipayload, testbuf)
+	// multipayload = append(multipayload, testbuf)
+	// multipayload = append(multipayload, testbuf)
+	// multipayload = append(multipayload, testbuf)
+	// pkt2 := server.ServicePacket{pkt, 11, 12, 13, 14, 4, id[:], timed[:], row[:], col[:], length[:], multipayload}
+	// buf2 := pkt2.ToServiceBuf()
+	// fmt.Println(server.FromServiceBuf(buf2))
+	// fmt.Println(server.PayloadBuf2Float(server.FromServiceBuf(buf2).PayloadArr[0]))
+
 	// --------------------- Test for packet --------------------------
 	// b := [...]byte{0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04, 0x00, 0x00}
 	// pkt := server.Packet{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, b[:]}
@@ -91,19 +110,19 @@ func main() {
 	// }
 	// --------------- Test for Ground <-- Habitat <--> Subsystem ------------------------
 	// Start Habitat server
-	habitatServer := server.Server{}
-	err := habitatServer.Init(utils.SRC_HMS)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println("Habitat Server Started")
-	time.Sleep(2 * time.Second)
+	// habitatServer := server.Server{}
+	// err := habitatServer.Init(utils.SRC_HMS)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println("Habitat Server Started")
+	// time.Sleep(2 * time.Second)
 
-	// Start Habitat http service
-	habitatStream := server.Stream{}
-	go habitatStream.Init(utils.SRC_HMS)
-	fmt.Println("Habitat Stream Started")
-	time.Sleep(2 * time.Second)
+	// // Start Habitat http service
+	// habitatStream := server.Stream{}
+	// go habitatStream.Init(utils.SRC_HMS)
+	// fmt.Println("Habitat Stream Started")
+	// time.Sleep(2 * time.Second)
 
 	// Start Ground server
 	// groundServer := server.Server{}
@@ -123,6 +142,6 @@ func main() {
 	// Let MCVT subscribe Habitat server
 	// habitatServer.Subscribe(9, utils.SRC_AGT, 0, 1000)
 
-	select {}
+	// select {}
 
 }
