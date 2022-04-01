@@ -116,19 +116,24 @@ func Float64frombytes(bytes []byte) float64 {
 // |            LENGTH             |             DATA...
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
+type SubPacket struct {
+	DataID   uint16
+	TimeDiff uint16
+	Row      uint8
+	Col      uint8
+	Length   uint16
+	Payload  []byte
+}
+
 type ServicePacket struct {
 	Packet
-	Service     uint8    `json:service`
-	Flag        uint8    `json:flag`
-	Option1     uint8    `json:option1`
-	Option2     uint8    `json:option2`
-	SubframeNum uint16   `json:subframe_num`
-	DataIDArr   []uint16 `json:data_id`
-	TimeDiffArr []uint16
-	RowArr      []uint8  `json:row`
-	ColArr      []uint8  `json:col`
-	LengthArr   []uint16 `json:length`
-	PayloadArr  [][]byte `json:"-"`
+	Service     uint8
+	Flag        uint8
+	Option1     uint8
+	Option2     uint8
+	SubframeNum uint16
+
+	Subpackets []*SubPacket
 }
 
 func (pkt *ServicePacket) ToServiceBuf() []byte {
@@ -153,14 +158,14 @@ func (pkt *ServicePacket) ToServiceBuf() []byte {
 	payload := make([]byte, 2)
 	binary.BigEndian.PutUint16(payload, pkt.SubframeNum)
 
-	for i, dataID := range pkt.DataIDArr {
+	for _, subpacket := range pkt.Subpackets {
 		temp := make([]byte, 8)
-		binary.BigEndian.PutUint16(temp[:2], dataID)
-		binary.BigEndian.PutUint16(temp[2:4], uint16(pkt.TimeDiffArr[i]))
-		temp[4] = byte(pkt.RowArr[i])
-		temp[5] = byte(pkt.ColArr[i])
-		binary.BigEndian.PutUint16(temp[6:8], uint16(pkt.LengthArr[i]))
-		temp = append(temp, pkt.PayloadArr[i]...)
+		binary.BigEndian.PutUint16(temp[:2], subpacket.DataID)
+		binary.BigEndian.PutUint16(temp[2:4], subpacket.TimeDiff)
+		temp[4] = byte(subpacket.Row)
+		temp[5] = byte(subpacket.Col)
+		binary.BigEndian.PutUint16(temp[6:8], uint16(subpacket.Length))
+		temp = append(temp, subpacket.Payload...)
 		payload = append(payload, temp...)
 	}
 
@@ -178,12 +183,16 @@ func FromServiceBuf(buf []byte) ServicePacket {
 
 	pkt.Payload = pkt.Payload[6:]
 	for i := 0; i != int(servicePkt.SubframeNum); i++ {
-		servicePkt.DataIDArr = append(servicePkt.DataIDArr, binary.BigEndian.Uint16(pkt.Payload[:2]))
-		servicePkt.TimeDiffArr = append(servicePkt.TimeDiffArr, binary.BigEndian.Uint16(pkt.Payload[2:4]))
-		servicePkt.RowArr = append(servicePkt.RowArr, uint8(pkt.Payload[4]))
-		servicePkt.ColArr = append(servicePkt.ColArr, uint8(pkt.Payload[5]))
-		servicePkt.LengthArr = append(servicePkt.LengthArr, binary.BigEndian.Uint16(pkt.Payload[6:8]))
-		servicePkt.PayloadArr = append(servicePkt.PayloadArr, pkt.Payload[8:8+8*binary.BigEndian.Uint16(pkt.Payload[6:8])])
+		var subpacket SubPacket
+
+		subpacket.DataID = binary.BigEndian.Uint16(pkt.Payload[:2])
+		subpacket.TimeDiff = binary.BigEndian.Uint16(pkt.Payload[2:4])
+		subpacket.Row = uint8(pkt.Payload[4])
+		subpacket.Col = uint8(pkt.Payload[5])
+		subpacket.Length = binary.BigEndian.Uint16(pkt.Payload[6:8])
+		subpacket.Payload = pkt.Payload[8 : 8+8*binary.BigEndian.Uint16(pkt.Payload[6:8])]
+		servicePkt.Subpackets = append(servicePkt.Subpackets, &subpacket)
+
 		pkt.Payload = pkt.Payload[8+8*binary.BigEndian.Uint16(pkt.Payload[6:8]):]
 	}
 	servicePkt.Packet = pkt
