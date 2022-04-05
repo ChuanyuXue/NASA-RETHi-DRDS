@@ -20,6 +20,7 @@ SUB_HEADER_LEN = 8
 
 
 class Header(Structure):
+    _pack_ = 1
     _fields_ = [
         ("src", c_uint8),
         ("dst", c_uint8),
@@ -38,6 +39,7 @@ class Header(Structure):
 
 
 class SubHeader(Structure):
+    _pack_ = 1
     _fields_ = [
         ("data_id", c_uint16),
         ("time_diff", c_uint16),
@@ -114,12 +116,12 @@ class Packet:
 
 if __name__ == '__main__':
     ## ------------------- TEST FOR SINGLE SUBPACKET
-    subpkt = SubPacket()
-    subpkt.init(150, 0, 3, 1, 3, [1, 2, 3])
+    # subpkt = SubPacket()
+    # subpkt.init(150, 0, 3, 1, 3, [1, 2, 3])
 
-    buf = subpkt.pkt2Buf()
-    subpkt_2 = SubPacket()
-    subpkt_2.buf2Pkt(buf)
+    # buf = subpkt.pkt2Buf()
+    # subpkt_2 = SubPacket()
+    # subpkt_2.buf2Pkt(buf)
 
     # print(subpkt.header.data_id)
     # print(subpkt_2.header.data_id)
@@ -132,26 +134,26 @@ if __name__ == '__main__':
 
     ## --------------------- TEST FOR ALL PACKETS
 
-    subpkt2 = SubPacket()
-    subpkt2.init(151, 0, 2, 2, 4, [1, 2, 3.5])
+    # subpkt2 = SubPacket()
+    # subpkt2.init(151, 0, 2, 2, 4, [1, 2, 3.5])
 
-    pkt = Packet()
-    pkt.init(0, 1, 0, 4, 0, 0, 123456, 654312, 0, 15, 0, 0, 0, 0, 2,
-             [subpkt, subpkt2])
+    # pkt = Packet()
+    # pkt.init(0, 1, 0, 4, 0, 0, 123456, 654312, 0, 15, 0, 0, 0, 0, 2,
+    #          [subpkt, subpkt2])
 
-    buff = pkt.pkt2Buf()
+    # buff = pkt.pkt2Buf()
 
-    pkt2 = Packet()
-    pkt2.buf2Pkt(buff)
+    # pkt2 = Packet()
+    # pkt2.buf2Pkt(buff)
 
-    print(pkt.header.physical_time)
-    print(pkt2.header.physical_time)
+    # print(pkt.header.physical_time)
+    # print(pkt2.header.physical_time)
 
-    print(pkt.subpackets[0].header.data_id)
-    print(pkt2.subpackets[0].header.data_id)
+    # print(pkt.subpackets[0].header.data_id)
+    # print(pkt2.subpackets[0].header.data_id)
 
-    print(pkt.subpackets[0].header.length)
-    print(pkt2.subpackets[0].header.length)
+    # print(pkt.subpackets[0].header.length)
+    # print(pkt2.subpackets[0].header.length)
 
-    print(pkt.subpackets[0].payload)
-    print(list(pkt2.subpackets[0].payload))
+    # print(pkt.subpackets[0].payload)
+    # print(list(pkt2.subpackets[0].payload))
