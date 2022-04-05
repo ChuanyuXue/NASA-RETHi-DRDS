@@ -5,7 +5,7 @@ import random
 import pandas as pd
 import json, random
 
-with open("../db_info.json") as f:
+with open("../db_info_press.json") as f:
     data_discript = json.load(f)
 
     # Simulation for 600 seconds
@@ -18,7 +18,8 @@ with open("../db_info.json") as f:
                     to_ip="0.0.0.0",
                     # to_port=10000 + int(data['data_notes']),
                     # to_port=65533, # for local testing
-                    to_port=65531,  # for data service testing
+                    to_port=10000 +
+                    int(data["data_notes"]),  # for data service testing
                     client_id=int(data["data_notes"]),
                     server_id=1,
                     # set_blocking=
