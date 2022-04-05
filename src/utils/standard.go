@@ -71,10 +71,10 @@ const (
 
 //------------ FLAG
 const (
-	FLAG_SINGLE  uint16 = 0
-	FLAG_STREAM  uint16 = 1
-	FLAG_WARNING uint16 = 0xFFFE
-	FLAG_ERROR   uint16 = 0xFFFF
+	FLAG_SINGLE  uint8 = 0
+	FLAG_STREAM  uint8 = 1
+	FLAG_WARNING uint8 = 0xFE
+	FLAG_ERROR   uint8 = 0xFF
 )
 
 //------------ SIMU TIME

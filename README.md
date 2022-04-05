@@ -82,24 +82,24 @@ Priority(priority): Quality of Service (QoS) prioritizes network traffic and man
 | Priority  | Medium priority | 0x04, 0x05 | Sensor data to minimize latency            |
 | Priority  | High Priority   | 0x06, 0x07 | FDD or agent data as time critical message |
 
-**Option (Service selection)**
+**Service (Service selection)**
 
 | **Field** | **Name**  | **Value** | **Description**                        |
 | --------- | --------- | --------- | -------------------------------------- |
-| Opt       | Send      | 0x0000    | Send data record to data server        |
-| Opt       | Request   | 0x0001    | Request data record from data server   |
-| Opt       | Publish   | 0x0002    | Publish data stream to data server     |
-| Opt       | Subscribe | 0x0003    | Subscribe data stream from data server |
-| Opt       | Response  | 0x000A    | Response from data server              |
+| Opt       | Send      | 0x00      | Send data record to data server        |
+| Opt       | Request   | 0x01      | Request data record from data server   |
+| Opt       | Publish   | 0x02      | Publish data stream to data server     |
+| Opt       | Subscribe | 0x03      | Subscribe data stream from data server |
+| Opt       | Response  | 0x0A      | Response from data server              |
 
 **Flag**
 
 | **Field** | **Name** | **Value** | **Description**                                  |
 | --------- | -------- | --------- | ------------------------------------------------ |
-| Flag      | Data     | 0x0000    | Completed signal or data in payload              |
-| Flag      | Segment  | 0x0001    | Signal or data segment requires rearrange        |
-| Flag      | Warning  | 0x0002    | Abnormal operation needs to be verified          |
-| Flag      | Error    | 0x0003    | Invalidate operation may lead to system collapse |
+| Flag      | Complete | 0x00      | Completed signal or data in payload              |
+| Flag      | Segment  | 0x01      | Signal or data segment requires rearrange        |
+| Flag      | Warning  | 0x02      | Abnormal operation needs to be verified          |
+| Flag      | Error    | 0x03      | Invalidate operation may lead to system collapse |
 
 **Others**
 
@@ -109,8 +109,8 @@ Priority(priority): Quality of Service (QoS) prioritizes network traffic and man
 - Row(raw): Length of data
 - Col(col): Width of data
 - Length(length): Flatten length of data (Row * Col)
-- Param(param): Depends on Opt
-- SubParam(subparam): Depends on Opt
+- Option1(opt1): Depends on Service
+- Option2(opt): Depends on Service
 - Data(data): Data in bytes (only exists in Json message)
 
 ### 3.2 Send
@@ -123,11 +123,15 @@ Before use the API, please make sure:
 
 To send asynchronous data, first set up headers:
 
-| **Src**   | **Dst**   | **MsgType** | **DataType** | **Priority** | **PhyTime** | **SiTime**   |
-| --------- | --------- | ----------- | ------------ | ------------ | ----------- | ------------ |
-| Client ID | Server ID | 0x01        | -            | -            | -           | -            |
-| **Row**   | **Col**   | **Length**  | **Opt**      | **Flag**     | **Param**   | **Subparam** |
-| -         | -         | -           | 0x00         | 0x00         | Data ID     | 0x00         |
+| **Src**      | **Dst**    | Type        | **Priority** | **Version** | **Reserved** | **PhyTime**  | **SiTime** |
+| ------------ | ---------- | ----------- | ------------ | ----------- | ------------ | ------------ | ---------- |
+| Client ID    | Server ID  | 0x01        | -            | 0x00        | 0x00         | -            | -          |
+| **Sequence** | **Length** | **Service** | **Flag**     | **Opt1**    | **Opt2**     | **Subframe** |            |
+| -            | -          | 0x00        | 0x00         | 0x00        | 0x00         | -            |            |
+
+| Data ID | Time Diff | Row  | Col  | Length | Data |
+| ------- | --------- | ---- | ---- | ------ | ---- |
+| -       | -         | -    | -    | -      | -    |
 
 Finally send this packet by UDP channel to server.
 
@@ -139,15 +143,19 @@ Finally send this packet by UDP channel to server.
 
 To require asynchronous data, first set up headers:
 
-| **Src**   | **Dst**   | **MsgType** | **DataType** | **Priority** | **PhyTime** | **SiTime**             |
-| --------- | --------- | ----------- | ------------ | ------------ | ----------- | ---------------------- |
-| Client ID | Server ID | 0x01 / 0x02 | 0x00         | -            | -           | Start time of request  |
-| **Row**   | **Col**   | **Length**  | **Opt**      | **Flag**     | **Param**   | **Subparam**           |
-| 0         | 0         | 0           | 0x01         | 0x00         | Data ID     | Time length of request |
+| **Src**      | **Dst**    | Type        | **Priority** | **Version** | **Reserved** | **PhyTime**  | **SiTime**         |
+| ------------ | ---------- | ----------- | ------------ | ----------- | ------------ | ------------ | ------------------ |
+| Client ID    | Server ID  | 0x01        | -            | 0x00        | 0x00         | -            | Request Start Time |
+| **Sequence** | **Length** | **Service** | **Flag**     | **Opt1**    | **Opt2**     | **Subframe** |                    |
+| -            | -          | 0x01        | 0x00         | 0x00        | 0x00         | -            |                    |
+
+| Data ID | Time Diff        | Row  | Col  | Length | Data |
+| ------- | ---------------- | ---- | ---- | ------ | ---- |
+| Data ID | Request Duration | -    | -    | -      | -    |
 
 Then send this packet by UDP channel to server.
 
-*If Simulink_Time == 0xffffffff, it returns the last record. If Simulink_Time < 0xffffffff and Subparam == 0xffff, it returns the data from Simulink_Time to the last data*
+*If Time_diff == 0xffffffff, it returns the last record. If Simulink_Time < 0xffffffff and Time_diff == 0xffff, it returns the data from Simulink_Time to the last data*
 
 Next keep listening from server, a packet followd by `send` service API will send back. Please note the length of returned data should be decoded by its shape [Row * Col].
 
@@ -159,11 +167,15 @@ Next keep listening from server, a packet followd by `send` service API will sen
 
 To publish data synchronously, set up headers and send to server for registering publish first:
 
-| **Src**   | **Dst**   | **MsgType** | **DataType** | **Priority** | **PhyTime** | **SiTime**            |
-| --------- | --------- | ----------- | ------------ | ------------ | ----------- | --------------------- |
-| Client ID | Server ID | 0x01 / 0x02 | 0x00         | -            | -           | Start time of publish |
-| **Row**   | **Col**   | **Length**  | **Opt**      | **Flag**     | **Param**   | **Subparam**          |
-| 0         | 0         | 0           | 0x02         | 0x00         | Data ID     | Data rate             |
+| **Src**      | **Dst**    | Type        | **Priority** | **Version** | **Reserved** | **PhyTime**  | **SiTime**            |
+| ------------ | ---------- | ----------- | ------------ | ----------- | ------------ | ------------ | --------------------- |
+| Client ID    | Server ID  | 0x01        | -            | 0x00        | 0x00         | -            | Start time of publish |
+| **Sequence** | **Length** | **Service** | **Flag**     | **Opt1**    | **Opt2**     | **Subframe** |                       |
+| -            | -          | 0x02        | 0x00         | 0x00        | 0x00         | -            |                       |
+
+| Data ID | Time Diff | Row  | Col  | Length | Data |
+| ------- | --------- | ---- | ---- | ------ | ---- |
+| Data ID | Data Rate | -    | -    | -      | -    |
 
 Keep listening from server, a **same** packet will be send back which means the client is successully registered for publish.
 
@@ -171,11 +183,15 @@ Then start continuously pushing streaming to server by `send` api with required 
 
 To terminate publishing, send to server:
 
-| **Src**   | **Dst**   | **MsgType** | **DataType** | **Priority** | **PhyTime** | **SiTime**            |
-| --------- | --------- | ----------- | ------------ | ------------ | ----------- | --------------------- |
-| Client ID | Server ID | 0x01 / 0x02 | 0x00         | -            | -           | Start time of publish |
-| **Row**   | **Col**   | **Length**  | **Opt**      | **Flag**     | **Param**   | **Subparam**          |
-| 0         | 0         | 0           | 0x02         | 0x00         | Data ID     | 0                     |
+| **Src**      | **Dst**    | Type        | **Priority** | **Version** | **Reserved** | **PhyTime**  | **SiTime**          |
+| ------------ | ---------- | ----------- | ------------ | ----------- | ------------ | ------------ | ------------------- |
+| Client ID    | Server ID  | 0x01        | -            | 0x00        | 0x00         | -            | End time of publish |
+| **Sequence** | **Length** | **Service** | **Flag**     | **Opt1**    | **Opt2**     | **Subframe** |                     |
+| -            | -          | 0x02        | 0x00         | 0x00        | 0x00         | -            |                     |
+
+| Data ID | Time Diff | Row  | Col  | Length | Data |
+| ------- | --------- | ---- | ---- | ------ | ---- |
+| Data ID | 0         | -    | -    | -      | -    |
 
 
 
@@ -183,23 +199,31 @@ To terminate publishing, send to server:
 
 To subscribe data synchronously, set up headers for registering subscribe first:
 
-| **Src**   | **Dst**   | **MsgType** | **DataType** | **Priority** | **PhyTime** | **SiTime**              |
-| --------- | --------- | ----------- | ------------ | ------------ | ----------- | ----------------------- |
-| Client ID | Server ID | 0x01 / 0x02 | 0x00         | -            | -           | Start time of subscribe |
-| **Row**   | **Col**   | **Length**  | **Opt**      | **Flag**     | **Param**   | **Subparam**            |
-| 0         | 0         | 0           | 0x03         | 0x00         | Data ID     | Data rate               |
+
+
+| **Src**      | **Dst**    | Type        | **Priority** | **Version** | **Reserved** | **PhyTime**  | **SiTime**              |
+| ------------ | ---------- | ----------- | ------------ | ----------- | ------------ | ------------ | ----------------------- |
+| Client ID    | Server ID  | 0x01        | -            | 0x00        | 0x00         | -            | Start time of Subscribe |
+| **Sequence** | **Length** | **Service** | **Flag**     | **Opt1**    | **Opt2**     | **Subframe** |                         |
+| -            | -          | 0x03        | 0x00         | 0x00        | 0x00         | -            |                         |
+
+| Data ID | Time Diff | Row  | Col  | Length | Data |
+| ------- | --------- | ---- | ---- | ------ | ---- |
+| Data ID | Data rate | -    | -    | -      | -    |
 
 Next keep listening from server, a continous packet flow followd by `send` service API will send back with required data rate. Please note the length of returned data should be decoded by its shape [Row * Col].
 
 To terminate Subscribe function, send
 
-| **Src**   | **Dst**   | **MsgType** | **DataType** | **Priority** | **PhyTime** | **SiTime**            |
-| --------- | --------- | ----------- | ------------ | ------------ | ----------- | --------------------- |
-| Client ID | Server ID | 0x01 / 0x02 | 0x00         | -            | -           | Start time of publish |
-| **Row**   | **Col**   | **Length**  | **Opt**      | **Flag**     | **Param**   | **Subparam**          |
-| 0         | 0         | 0           | 0x03         | 0x00         | Data ID     | 0                     |
+| **Src**      | **Dst**    | Type        | **Priority** | **Version** | **Reserved** | **PhyTime**  | **SiTime**            |
+| ------------ | ---------- | ----------- | ------------ | ----------- | ------------ | ------------ | --------------------- |
+| Client ID    | Server ID  | 0x01        | -            | 0x00        | 0x00         | -            | End time of Subscribe |
+| **Sequence** | **Length** | **Service** | **Flag**     | **Opt1**    | **Opt2**     | **Subframe** |                       |
+| -            | -          | 0x03        | 0x00         | 0x00        | 0x00         | -            |                       |
 
-
+| Data ID | Time Diff | Row  | Col  | Length | Data |
+| ------- | --------- | ---- | ---- | ------ | ---- |
+| Data ID | 0         | -    | -    | -      | -    |
 
 ## 4. Integration Guide
 

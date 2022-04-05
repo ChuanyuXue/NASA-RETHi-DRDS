@@ -115,7 +115,7 @@ func (server *Server) Send(id uint16, time uint32, physical_time uint32, rawData
 	return nil
 }
 
-func (server *Server) Request(id uint16, synt uint32, dst uint8) error {
+func (server *Server) Request(id uint16, synt uint32, dst uint8, priority uint8) error {
 	// for request last data
 	if synt == utils.TIME_SIMU_LAST {
 		synt = server.handler.QueryLastSynt(id)
@@ -125,29 +125,23 @@ func (server *Server) Request(id uint16, synt uint32, dst uint8) error {
 	if err != nil {
 		return err
 	}
-	data_type, err := server.handler.QueryInfo(id, "data_type")
 	if err != nil {
 
 		return err
 	}
 	var dataMat [][]float64
 	dataMat = append(dataMat, data)
-	// opt = 0, types = 0, priority = 7
-	err = server.send(dst, uint8(data_type), utils.PRIORITY_HIGHT,
-		synt, utils.OPT_REQUEST, utils.FLAG_SINGLE, id, utils.PARAMTER_EMPTY, dataMat)
+	err = server.send(dst, priority, synt, utils.FLAG_SINGLE, id, dataMat)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16, dst uint8) error {
+func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16, dst uint8, priority uint8) error {
 	var dataMat [][]float64
+	var err error
 
-	data_type, err := server.handler.QueryInfo(id, "data_type")
-	if err != nil {
-		return err
-	}
 	if timeDiff == utils.PARAMTER_REQUEST_LAST {
 		_, dataMat, err = server.handler.ReadRange(id, timeStart, server.handler.QueryLastSynt(id))
 		if err != nil {
@@ -162,8 +156,8 @@ func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16,
 		}
 	}
 
-	err = server.send(dst, uint8(data_type), utils.PRIORITY_HIGHT,
-		timeStart, utils.OPT_REQUEST, utils.FLAG_SINGLE, id, timeDiff, dataMat)
+	err = server.send(dst, utils.PRIORITY_HIGHT,
+		timeStart, utils.FLAG_SINGLE, id, dataMat)
 
 	if err != nil {
 		return err
@@ -177,9 +171,8 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 		lastSynt := server.handler.QueryLastSynt(id)
 		if synt < lastSynt {
 			// Send error back to dst
-			server.sendOpt(dst, utils.PRIORITY_HIGHT, synt, utils.OPT_RESPONSE,
-				utils.FLAG_ERROR, id, utils.PARAMTER_EMPTY)
-			return errors.New("published data not synchronous")
+			server.sendOpt(dst, utils.PRIORITY_HIGHT, synt, utils.SER_RESPONSE, utils.FLAG_ERROR, utils.RESERVED, utils.RESERVED)
+			return errors.New("Published data are not synchronized with current DataBase")
 		}
 
 		col := int(cols)
@@ -191,13 +184,10 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 			)
 		}
 	} else {
-		rate, err := server.handler.QueryInfo(id, "data_rate")
-		if err != nil {
-			return err
-		}
 		server.publisherRegister[id] = append(server.publisherRegister[id], dst)
-		server.sendOpt(dst, utils.PRIORITY_HIGHT, synt, utils.OPT_RESPONSE,
-			utils.FLAG_SINGLE, id, uint16(rate))
+
+		server.sendOpt(dst, utils.PRIORITY_HIGHT, synt, utils.SER_RESPONSE,
+			utils.FLAG_SINGLE, utils.RESERVED, utils.RESERVED)
 	}
 
 	return nil
@@ -206,26 +196,24 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) error {
 	if utils.Uint8Contains(server.subscriberRegister[id], dst) { // if subscriber registered
 		lastSynt := server.handler.QueryLastSynt(id)
-		dataType, _ := server.handler.QueryInfo(id, "data_type")
 		if synt <= lastSynt {
 			dataMap := make([][]float64, 0)
 			for i := synt; i <= lastSynt; i++ {
 				row, _ := server.handler.ReadSynt(id, i)
 				dataMap = append(dataMap, row)
 			}
-			server.send(dst, uint8(dataType), utils.PRIORITY_HIGHT, synt,
-				utils.OPT_SEND, utils.FLAG_SINGLE, id, utils.PARAMTER_EMPTY, dataMap)
+			server.send(dst, utils.PRIORITY_MEDIUM, synt, utils.FLAG_SINGLE, id, dataMap)
 		}
 
 	} else {
 		server.subscriberRegister[id] = append(server.subscriberRegister[id], dst)
 		server.sendOpt(dst, utils.PRIORITY_HIGHT, synt,
-			utils.OPT_RESPONSE, utils.FLAG_SINGLE, id, rate)
+			utils.SER_RESPONSE, utils.FLAG_SINGLE, utils.RESERVED, utils.RESERVED)
 	}
 	return nil
 }
 
-func (server *Server) send(dst uint8, types uint8, priority uint8, synt uint32, flag uint8, data_id uint16, dataMap [][]float64) error {
+func (server *Server) send(dst uint8, priority uint8, synt uint32, flag uint8, data_id uint16, dataMap [][]float64) error {
 	var pkt ServicePacket
 	pkt.Src = server.LocalSrc
 	pkt.Dst = dst
@@ -289,24 +277,27 @@ func (server *Server) send(dst uint8, types uint8, priority uint8, synt uint32, 
 	return nil
 }
 
-func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, opt uint16, flag uint16, para uint16, para2 uint16) error {
+func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, service uint8, flag uint8, opt1 uint8, opt2 uint8) error {
 	var pkt ServicePacket
 	pkt.Src = server.LocalSrc
 	pkt.Dst = dst
 	pkt.MessageType = utils.MSG_OUTER
-	pkt.DataType = utils.TYPE_FDD
 	pkt.Priority = priority
+	pkt.Version = utils.VERSION_V0
+	pkt.Reserved = utils.RESERVED
 	pkt.PhysicalTime = uint32(time.Now().Unix())
 	pkt.SimulinkTime = synt
+	server.mu.Lock()
+	pkt.Sequence = server.Sequence
+	server.Sequence += 1
+	server.mu.Unlock()
+	pkt.Length = uint16(utils.SERVICE_HEADER_LEN)
 
-	pkt.Row = 0
-	pkt.Col = 0
-	pkt.Length = 0
-
-	pkt.Opt = uint16(opt)
-	pkt.Flag = uint16(flag)
-	pkt.Param = uint16(para)
-	pkt.Subparam = uint16(para2)
+	pkt.Service = service
+	pkt.Flag = flag
+	pkt.Option1 = opt1
+	pkt.Option2 = opt2
+	pkt.SubframeNum = 0
 
 	dstAddr := server.ClientSrcMap[dst]
 	conn, err := net.DialUDP("udp", nil, &dstAddr)
@@ -373,71 +364,76 @@ func (server *Server) handle(pkt *ServicePacket) error {
 	// server.Mu.Unlock()
 	// // ----------------------------------
 
-	switch pkt.Opt {
-	case utils.OPT_SEND: //Send (data packet)
+	switch pkt.Service {
+	case utils.SER_SEND: //Send (data packet)
+		for _, subpkt := range pkt.Subpackets {
+			rawData := PayloadBuf2Float(subpkt.Payload)
+			err := server.Send(subpkt.DataID, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
+			if err != nil {
+				return err
+			}
+			for _, dst := range server.subscriberRegister[subpkt.DataID] {
+				var dataMat [][]float64
+				for i := 0; i < int(subpkt.Row); i++ {
+					dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
+				}
+				err = server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
+				if err != nil {
+					fmt.Println("failed to forward data:  ", err)
+					return err
+				}
+			}
+		}
+
+	case utils.SER_REQUEST: //Request (operation packet)
+		// Time diff used to tell the end time of request
+		for _, subpkt := range pkt.Subpackets {
+			if subpkt.TimeDiff == 0 {
+				err := server.Request(subpkt.DataID, pkt.SimulinkTime, pkt.Src, pkt.Priority)
+				if err != nil {
+					return err
+				}
+			} else if subpkt.TimeDiff > 0 {
+				err := server.RequestRange(subpkt.DataID, pkt.SimulinkTime, subpkt.TimeDiff, pkt.Src, pkt.Priority)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+	case utils.SER_PUBLISH: // Publish (opeartion packet / data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)
-		err := server.Send(pkt.Param, pkt.SimulinkTime, pkt.PhysicalTime, rawData)
-		if err != nil {
-			return err
-		}
-
-		// forward incoming data
-		for _, dst := range server.subscriberRegister[pkt.Param] {
-			var dataMat [][]float64
-			for i := 0; i < int(pkt.Row); i++ {
-				dataMat = append(dataMat, rawData[i*int(pkt.Col):(i+1)*int(pkt.Col)])
-			}
-			err = server.send(dst, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
-				utils.OPT_SEND, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
-			if err != nil {
-				fmt.Println("failed to forward data:  ", err)
-				return err
-			}
-		}
-
-	case utils.OPT_REQUEST: //Request (operation packet)
-		if pkt.Subparam == 1 {
-			err := server.Request(pkt.Param, pkt.SimulinkTime, pkt.Src)
+		for _, subpkt := range pkt.Subpackets {
+			err := server.Publish(subpkt.DataID, pkt.Src, subpkt.Row, subpkt.Col, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
 			if err != nil {
 				return err
 			}
-		} else if pkt.Subparam > 1 {
-			err := server.RequestRange(pkt.Param, pkt.SimulinkTime, pkt.Subparam, pkt.Src)
-			if err != nil {
-				return err
-			}
-		}
 
-	case utils.OPT_PUBLISH: // Publish (opeartion packet / data packet)
-		rawData := PayloadBuf2Float(pkt.Payload)
-		err := server.Publish(pkt.Param, pkt.Src, pkt.Row, pkt.Col, pkt.SimulinkTime, pkt.PhysicalTime, rawData)
-		if err != nil {
-			return err
+			if subpkt.Length == 0 {
+				return nil
+			}
+			for _, dst := range server.subscriberRegister[subpkt.DataID] {
+				var dataMat [][]float64
+				for i := 0; i < int(subpkt.Row); i++ {
+					dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
+				}
+				err = server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
+				if err != nil {
+					fmt.Println("failed to forward data:  ", err)
+					return err
+				}
+			}
+
 		}
 
 		// forward if not publish regiester
-		if pkt.Length == 0 {
-			return nil
-		}
 
-		for _, dst := range server.subscriberRegister[pkt.Param] {
-			var dataMat [][]float64
-			for i := 0; i < int(pkt.Row); i++ {
-				dataMat = append(dataMat, rawData[i*int(pkt.Col):(i+1)*int(pkt.Col)])
-			}
-			err = server.send(dst, pkt.DataType, pkt.Priority, pkt.SimulinkTime,
-				utils.OPT_SEND, pkt.Flag, pkt.Param, pkt.Subparam, dataMat)
+	case utils.SER_SUBSCRIBE: // Subscribe (operation packet)
+		for _, subpkt := range pkt.Subpackets {
+			err := server.Subscribe(subpkt.DataID, pkt.Src, pkt.SimulinkTime, subpkt.TimeDiff)
 			if err != nil {
-				fmt.Println("failed to forward data:  ", err)
 				return err
 			}
-
-		}
-
-	case utils.OPT_SUBSCRIBE: // Subscribe (operation packet)
-		err := server.Subscribe(pkt.Param, pkt.Src, pkt.SimulinkTime, pkt.Subparam)
-		if err != nil {
-			return err
 		}
 
 	}
