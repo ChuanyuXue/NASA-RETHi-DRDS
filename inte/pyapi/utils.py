@@ -12,6 +12,11 @@ Date:
 
 from calendar import c
 from ctypes import *
+from curses.ascii import SUB
+
+HEADER_LEN = 24
+SERVICE_HEADER_LEN = 6
+SUB_HEADER_LEN = 8
 
 
 class Header(LittleEndianStructure):
@@ -33,14 +38,26 @@ class Header(LittleEndianStructure):
 
 
 class SubHeader(LittleEndianStructure):
-    _field_ = [("data_id", c_uint16), ("time_diff", c_uint16),
-               ("row", c_uint8), ("col", c_uint8), ("length", c_uint16)]
+    _field_ = [
+        ("data_id", c_uint16),
+        ("time_diff", c_uint16),
+        ("row", c_uint8),
+        ("col", c_uint8),
+        ("length", c_uint16),
+    ]
 
 
 class SubPacket:
 
-    def __init__(self):
-        pass
+    def __init__(self, _data_id, _time_diff, _row, _col, _length, _payload):
+        self.header = SubHeader(
+            _data_id,
+            _time_diff,
+            _row,
+            _col,
+            _length,
+        )
+        self.payload = _payload
 
     def pkt2Buf(self, _data_id, _time_diff, _row, _col, _length, _payload):
         header_buf = SubHeader(
@@ -56,17 +73,25 @@ class SubPacket:
         return buf
 
     def buf2Pkt(self, buffer):
-        self.header = SubHeader.from_buffer_copy(buffer[:8])
+        self.header = SubHeader.from_buffer_copy(buffer[:SUB_HEADER_LEN])
         double_arr = c_double * self.header.length
         self.payload = double_arr.from_buffer_copy(
-            buffer[8:8 + 8 * self.header.length])
-        return self.header._fields_
+            buffer[SUB_HEADER_LEN:SUB_HEADER_LEN + 8 * self.header.length])
+        return (self.header._fields_, SUB_HEADER_LEN + 8 * self.header.length)
 
 
 class Packet:
 
-    def __init__(self):
-        pass
+    def __init__(self, _src, _dst, _type, _prio, _version, _reserved,
+                 _physical_time, _simulink_time, _sequence, _length, _service,
+                 _flag, _option1, _option2, _subframe_num, _subpackets):
+        _type_prio = _type << 4 + _prio
+        _ver_res = _version << 4 + _reserved
+        self.header = Header(_src, _dst, _type_prio, _ver_res, _version,
+                             _reserved, _physical_time, _simulink_time,
+                             _sequence, _length, _service, _flag, _option1,
+                             _option2, _subframe_num)
+        self.subpackets = _subpackets
 
     # payload is a double list
     def pkt2Buf(self, _src, _dst, _type, _prio, _version, _reserved,
@@ -79,31 +104,35 @@ class Packet:
                             _reserved, _physical_time, _simulink_time,
                             _sequence, _length, _service, _flag, _option1,
                             _option2, _subframe_num)
-        _
+        buf = bytes(header_buf)
+
+        for subpkt in _subpackets:
+            buf += subpkt.pkt2Buf()
+
         return buf
 
     def buf2Pkt(self, buffer):
-        self.header = Header.from_buffer_copy(buffer[:24])
-        double_arr = c_double * self.header.length
-        self.payload = double_arr.from_buffer_copy(
-            buffer[24:24 + 8 * self.header.length])
-        return self.header._fields_
+        self.header = Header.from_buffer_copy(buffer[:HEADER_LEN +
+                                                     SERVICE_HEADER_LEN])
+        self.subpackets = []
+        index = HEADER_LEN + SERVICE_HEADER_LEN
 
-        # def pkt2dict(self, ):
-        #     data = {}
+        for i in self.subframe_num:
+            subpkt = SubPacket()
+            _, index = subpkt.buf2Pkt(buffer[index:])
+            self.subpackets.append(subpkt)
 
-        #     data["src"] = self.header.src
-        #     data["dst"] = self.header.dst
-        #     data["type"] = self.header.type
-        #     data["physical_time"] = self.header.physical_time
-        #     data["simulink_time"] = self.header.simulink_time
-        #     data["row"] = self.header.row
-        #     data["col"] = self.header.col
-        #     data["length"] = self.header.length
-        #     data["option"] = self.header.option
-        #     data["flag"] = self.header.flag
-        #     data["param"] = self.header.param
-        #     data["subparam"] = self.header.subparam
-        #     data["data"] = list(self.payload)
+        return (self.header._fields_, index)
 
-        return data
+
+if __name__ == '__main__':
+    subpkt = SubPacket(150, 0, 3, 1, 3, [1, 2, 3])
+    subpkt2 = SubPacket(151, 0, 2, 2, 4, [1, 2, 3.5])
+
+    pkt = Packet(0, 1, 0, 4, 0, 0, 123456, 654312, 0, 15, 0, 0, 0, 0, 2,
+                 [subpkt, subpkt2])
+
+    buff = pkt.pkt2Buf()
+
+    pkt = pkt.buf2Pkt(buff)
+    print(pkt)
