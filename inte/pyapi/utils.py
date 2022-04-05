@@ -115,6 +115,7 @@ class Packet:
 
 
 if __name__ == '__main__':
+    pass
     ## ------------------- TEST FOR SINGLE SUBPACKET
     # subpkt = SubPacket()
     # subpkt.init(150, 0, 3, 1, 3, [1, 2, 3])
