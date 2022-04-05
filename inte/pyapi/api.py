@@ -43,7 +43,7 @@ class API:
         self.in_sock.bind((self.ip_client, self.port_client))
         self.in_sock.setblocking(True)
 
-    def send(self, id, synt, value, priority=7, type=1):
+    def send(self, id, synt, value, priority=7):
         """
         Send packets (??)
 
@@ -64,7 +64,6 @@ class API:
         _src = self.id_client
         _dst = self.id_server
         _message_type = 1
-        _data_type = type
         _priority = priority
         _physical_time = int(time.time())
         _simulink_time = synt
