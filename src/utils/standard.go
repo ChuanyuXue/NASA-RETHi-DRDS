@@ -1,15 +1,17 @@
 package utils
 
-
 //---------- Basic configuraitons ---------- SEQ
 const (
-	BUFFLEN    uint32 = 65536
-	QUEUELELN  uint32 = 65536
-	PROCNUMS   uint8  = 64
-	FRENQUENCE uint32 = 10000
-	SUBSNUMS   uint8  = 10
-	TABLENUMS  uint32 = 65536
-	MTU        uint16 = 1500
+	BUFFLEN            uint32 = 65536
+	QUEUELELN          uint32 = 65536
+	PROCNUMS           uint8  = 64
+	FRENQUENCE         uint32 = 10000
+	SUBSNUMS           uint8  = 10
+	TABLENUMS          uint32 = 65536
+	HEADER_LEN         uint8  = 24
+	SERVICE_HEADER_LEN uint8  = 6
+	SUB_HEADER_LEN     uint8  = 8
+	MTU                uint16 = 1500
 )
 
 //---------- Source_address
@@ -48,13 +50,23 @@ const (
 	PRIORITY_HIGHT  uint8 = 7
 )
 
+//------------ Version
+const (
+	VERSION_V0 uint8 = 0
+)
+
+//------------ Reserved
+const (
+	RESERVED uint8 = 0
+)
+
 //------------ OPTION
 const (
-	OPT_SEND      uint16 = 0
-	OPT_REQUEST   uint16 = 1
-	OPT_PUBLISH   uint16 = 2
-	OPT_SUBSCRIBE uint16 = 3
-	OPT_RESPONSE  uint16 = 0x000A
+	SER_SEND      uint8 = 0
+	SER_REQUEST   uint8 = 1
+	SER_PUBLISH   uint8 = 2
+	SER_SUBSCRIBE uint8 = 3
+	SER_RESPONSE  uint8 = 0x0A
 )
 
 //------------ FLAG
