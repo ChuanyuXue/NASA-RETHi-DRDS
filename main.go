@@ -1,55 +1,58 @@
 package main
 
 import (
+	"data-service/src/handler"
 	"data-service/src/server"
+	"data-service/src/utils"
 	"fmt"
+	"time"
 )
 
 func init() {
-	// 	err := handler.DatabaseGenerator(0, "db_info.json")
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 	}
-	// 	err = handler.DatabaseGenerator(1, "db_info.json")
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 	}
+	err := handler.DatabaseGenerator(0, "db_info.json")
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = handler.DatabaseGenerator(1, "db_info.json")
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func main() {
 	// --------------------- Test for packet V6 --------------------------
 
-	b := [...]byte{0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04, 0x00, 0x00}
+	// b := [...]byte{0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04, 0x00, 0x00}
 
-	pkt := server.Packet{1, 2, 3, 4, 5, 6, 3294967290, 3294967291, 65530, 65531, b[:], nil}
+	// pkt := server.Packet{1, 2, 3, 4, 5, 6, 3294967290, 3294967291, 65530, 65531, b[:], nil}
 
-	buf := pkt.ToBuf()
-	fmt.Println(server.FromBuf(buf))
+	// buf := pkt.ToBuf()
+	// fmt.Println(server.FromBuf(buf))
 
-	test := [...]float64{1, 2, 3, 4}
-	testbuf := server.PayloadFloat2Buf(test[:])
+	// test := [...]float64{1, 2, 3, 4}
+	// testbuf := server.PayloadFloat2Buf(test[:])
 
-	test2 := [...]float64{1, 2, 3, 4, 5, 6}
-	testbuf2 := server.PayloadFloat2Buf(test2[:])
+	// test2 := [...]float64{1, 2, 3, 4, 5, 6}
+	// testbuf2 := server.PayloadFloat2Buf(test2[:])
 
-	subpkt0 := server.SubPacket{1, 1000, 1, 4, 4, testbuf}
-	subpkt1 := server.SubPacket{1, 1000, 2, 3, 6, testbuf2}
-	subpkt2 := server.SubPacket{1, 1000, 3, 2, 6, testbuf2}
-	subpkt3 := server.SubPacket{1, 1000, 4, 1, 4, testbuf}
+	// subpkt0 := server.SubPacket{1, 1000, 1, 4, 4, testbuf}
+	// subpkt1 := server.SubPacket{1, 1000, 2, 3, 6, testbuf2}
+	// subpkt2 := server.SubPacket{1, 1000, 3, 2, 6, testbuf2}
+	// subpkt3 := server.SubPacket{1, 1000, 4, 1, 4, testbuf}
 
-	subpackets := make([]*server.SubPacket, 4)
-	subpackets[0] = &subpkt0
-	subpackets[1] = &subpkt1
-	subpackets[2] = &subpkt2
-	subpackets[3] = &subpkt3
+	// subpackets := make([]*server.SubPacket, 4)
+	// subpackets[0] = &subpkt0
+	// subpackets[1] = &subpkt1
+	// subpackets[2] = &subpkt2
+	// subpackets[3] = &subpkt3
 
-	pkt2 := server.ServicePacket{pkt, 11, 12, 13, 14, 4, subpackets}
-	buf2 := pkt2.ToServiceBuf()
-	fmt.Println(server.FromServiceBuf(buf2))
-	for _, v := range pkt2.Subpackets {
-		fmt.Println(v)
-		fmt.Println(server.PayloadBuf2Float(v.Payload))
-	}
+	// pkt2 := server.ServicePacket{pkt, 11, 12, 13, 14, 4, subpackets}
+	// buf2 := pkt2.ToServiceBuf()
+	// fmt.Println(server.FromServiceBuf(buf2))
+	// for _, v := range pkt2.Subpackets {
+	// 	fmt.Println(v)
+	// 	fmt.Println(server.PayloadBuf2Float(v.Payload))
+	// }
 
 	// id := [...]uint16{1, 2, 3, 4}
 	// timed := [...]uint16{1000, 2000, 3000, 4000}
@@ -137,13 +140,13 @@ func main() {
 	// }
 	// --------------- Test for Ground <-- Habitat <--> Subsystem ------------------------
 	// Start Habitat server
-	// habitatServer := server.Server{}
-	// err := habitatServer.Init(utils.SRC_HMS)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println("Habitat Server Started")
-	// time.Sleep(2 * time.Second)
+	habitatServer := server.Server{}
+	err := habitatServer.Init(utils.SRC_HMS)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("Habitat Server Started")
+	time.Sleep(2 * time.Second)
 
 	// // Start Habitat http service
 	// habitatStream := server.Stream{}
@@ -169,6 +172,6 @@ func main() {
 	// Let MCVT subscribe Habitat server
 	// habitatServer.Subscribe(9, utils.SRC_AGT, 0, 1000)
 
-	// select {}
+	select {}
 
 }

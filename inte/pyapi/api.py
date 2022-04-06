@@ -93,7 +93,12 @@ class API:
             _col = len(value[0])
             _length = _row * _col
 
-        pkt = Packet(
+        subpkt = SubPacket()
+        subpkt.init(_data_id, _timediff, _row, _col, _length, _payload)
+
+        pkt = Packet()
+
+        pkt.init(
             _src,
             _dst,
             _message_type,
@@ -109,7 +114,7 @@ class API:
             _opt1,
             _opt2,
             _subframe,
-            [SubPacket(_data_id, _timediff, _row, _col, _length, _payload)],
+            [subpkt],
         )
 
         buf = pkt.pkt2Buf()

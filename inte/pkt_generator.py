@@ -15,10 +15,10 @@ with open("../db_info.json") as f:
                 ins = api.API(
                     local_ip="0.0.0.0",
                     local_port=61234,
-                    to_ip="0.0.0.0",
-                    # to_port=10000 + int(data['data_notes']),
+                    to_ip="localhost",
+                    to_port=10000 + int(data['data_notes']),
                     # to_port=65533, # for local testing
-                    to_port=65531,  # for data service testing
+                    # to_port=65531,  # for data service testing
                     client_id=int(data["data_notes"]),
                     server_id=1,
                     # set_blocking=
@@ -26,11 +26,12 @@ with open("../db_info.json") as f:
                 )
 
                 value = [random.random() for i in range(data["data_size"])]
-                ins.send(synt=synt,
-                         id=data["data_id"],
-                         value=value,
-                         priority=3,
-                         type=1)
+                ins.send(
+                    synt=synt,
+                    id=data["data_id"],
+                    value=value,
+                    priority=3,
+                )
                 time.sleep(1e-3)
                 ins.close()
                 time.sleep(1e-6)

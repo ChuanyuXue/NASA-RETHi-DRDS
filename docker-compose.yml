@@ -60,7 +60,7 @@ services:
       - "20000:20000/udp"
       - "40001:40001/udp"
       - "65530-65531:65530-65531/udp"
-      # - "8888:8888"
+      - "8888:8888"
     environment:
       DS_LOCAL_ADDR_GROUND: ":20000"
       DS_REMOTE_ADDR_GROUND: "comm:10000"
@@ -72,8 +72,8 @@ services:
       DS_REMOTE_LOOP_GROUND: "host.docker.internal:65532"
 
       DS_LOCAL_LOOP_HABITAT: ":65531"
-      # DS_REMOTE_LOOP_HABITAT: "host.docker.internal:65533"
-      DS_REMOTE_LOOP_HABITAT: "rethi-c2:65533"
+      DS_REMOTE_LOOP_HABITAT: "host.docker.internal:65533"
+      # DS_REMOTE_LOOP_HABITAT: "rethi-c2:65533"
 
       DB_NAME_GROUND: ground
       DB_USER_GROUND: uu
