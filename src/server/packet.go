@@ -190,10 +190,10 @@ func FromServiceBuf(buf []byte) ServicePacket {
 		subpacket.Row = uint8(pkt.Payload[4])
 		subpacket.Col = uint8(pkt.Payload[5])
 		subpacket.Length = binary.LittleEndian.Uint16(pkt.Payload[6:8])
-		subpacket.Payload = pkt.Payload[8 : 8+8*binary.LittleEndian.Uint16(pkt.Payload[6:8])]
+		subpacket.Payload = pkt.Payload[8 : 8+8*subpacket.Length]
 		servicePkt.Subpackets = append(servicePkt.Subpackets, &subpacket)
 
-		pkt.Payload = pkt.Payload[8+8*binary.LittleEndian.Uint16(pkt.Payload[6:8]):]
+		pkt.Payload = pkt.Payload[8+8*subpacket.Length:]
 	}
 	servicePkt.Packet = pkt
 
