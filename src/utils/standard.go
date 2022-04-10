@@ -24,6 +24,8 @@ const (
 	SRC_AGT   uint8 = 5
 	SRC_ING   uint8 = 6
 	SRC_EXT   uint8 = 7
+	SRC_SPL   uint8 = 8
+	SRC_DTB   uint8 = 9
 )
 
 //----------- Message Type
