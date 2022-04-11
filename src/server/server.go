@@ -364,6 +364,11 @@ func (server *Server) handle(pkt *ServicePacket) error {
 	// server.Mu.Unlock()
 	// // ----------------------------------
 
+	// fmt.Println("Receive data -> ", pkt.SubframeNum)
+	// for _, subpkt := range pkt.Subpackets {
+	// 	fmt.Println(subpkt.DataID, subpkt.Row, subpkt.Col, subpkt.Length)
+	// }
+
 	switch pkt.Service {
 	case utils.SER_SEND: //Send (data packet)
 		for _, subpkt := range pkt.Subpackets {

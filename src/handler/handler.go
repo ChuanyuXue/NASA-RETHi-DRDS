@@ -3,6 +3,7 @@ package handler
 import (
 	"data-service/src/utils"
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -201,6 +202,13 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 	// Need to fix int64 -> unsigned int32?
 	columnFillin = append(columnFillin, strconv.Itoa(int(phyt)))
 	columnFillin = append(columnFillin, strconv.Itoa(int(time.Now().Unix())))
+
+	if int(handler.DataShapes[id]) != len(value) {
+		fmt.Println("[!] Data Error: Input data ", id, " has shape ", len(value),
+			" which is different from the DataBase configuration file as ", int(handler.DataShapes[id]))
+		return errors.New("wrong input data shape")
+	}
+
 	for i := 0; i != int(handler.DataShapes[id]); i++ {
 		columnFillin = append(columnFillin, fmt.Sprintf("%f", value[i]))
 	}

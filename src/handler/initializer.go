@@ -101,14 +101,14 @@ func DatabaseGenerator(src uint8, path string) error {
 	}
 	action := fmt.Sprintf(`CREATE TABLE %s.%s (
             data_id INT(16) UNSIGNED NOT NULL,
-            data_name VARCHAR(45) NULL,
+            data_name VARCHAR(128) NULL,
             data_type INT(8) UNSIGNED NOT NULL,
             data_subtype1 INT(8) UNSIGNED NULL,
             data_subtype2 INT(8) UNSIGNED NULL,
             data_rate INT(16) UNSIGNED NULL,
             data_size INT(16) UNSIGNED NULL,
             data_unit VARCHAR(45) NULL,
-            data_notes VARCHAR(45) NULL,
+            data_notes VARCHAR(128) NULL,
             PRIMARY KEY (data_id),
             UNIQUE INDEX data_id_UNIQUE (data_id ASC) VISIBLE);`, dbName, tableName)
 
