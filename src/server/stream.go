@@ -120,7 +120,7 @@ func (server *Stream) Publish(id uint16, closeSig *bool) error {
 
 }
 
-func (server *Stream) send(dst uint8, priority uint8, synt uint32, option2 uint8, dataMap []float64) error {
+func (server *Stream) send(dst uint8, dataID uint16, priority uint8, synt uint32, option2 uint8, dataMap []float64) error {
 	var pkt ServicePacket
 	pkt.Src = server.LocalSrc
 	pkt.Dst = dst
@@ -131,6 +131,7 @@ func (server *Stream) send(dst uint8, priority uint8, synt uint32, option2 uint8
 
 	var subpkt SubPacket
 
+	subpkt.DataID = dataID
 	subpkt.Row = 1
 	subpkt.Col = uint8(len(dataMap))
 	subpkt.Length = uint16(subpkt.Row * subpkt.Col)
