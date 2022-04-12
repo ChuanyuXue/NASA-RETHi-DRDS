@@ -117,8 +117,11 @@ func (server *Server) Send(id uint16, time uint32, physical_time uint32, rawData
 
 func (server *Server) Request(id uint16, synt uint32, dst uint8, priority uint8) error {
 	// for request last data
+	// fmt.Println("[2]Test: Last time stamp", synt, utils.TIME_SIMU_LAST)
 	if synt == utils.TIME_SIMU_LAST {
+		// fmt.Println("[1]Test: Last time stamp", synt, utils.TIME_SIMU_LAST)
 		synt = server.handler.QueryLastSynt(id)
+		// fmt.Println("[3]Test: Last time stamp", synt, utils.TIME_SIMU_LAST)
 	}
 
 	data, err := server.handler.ReadSynt(id, synt)
@@ -392,8 +395,10 @@ func (server *Server) handle(pkt *ServicePacket) error {
 
 	case utils.SER_REQUEST: //Request (operation packet)
 		// Time diff used to tell the end time of request
+		// fmt.Println("[-]Test4", pkt.Service)
 		for _, subpkt := range pkt.Subpackets {
 			if subpkt.TimeDiff == 0 {
+
 				err := server.Request(subpkt.DataID, pkt.SimulinkTime, pkt.Src, pkt.Priority)
 				if err != nil {
 					return err
@@ -407,6 +412,7 @@ func (server *Server) handle(pkt *ServicePacket) error {
 		}
 
 	case utils.SER_PUBLISH: // Publish (opeartion packet / data packet)
+
 		rawData := PayloadBuf2Float(pkt.Payload)
 		for _, subpkt := range pkt.Subpackets {
 			err := server.Publish(subpkt.DataID, pkt.Src, subpkt.Row, subpkt.Col, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)

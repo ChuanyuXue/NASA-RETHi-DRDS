@@ -5,7 +5,7 @@ import random
 import pandas as pd
 import json, random
 
-with open("../db_info.json") as f:
+with open("../db_info_v6.json") as f:
     data_discript = json.load(f)
 
     # Simulation for 600 seconds
@@ -16,10 +16,10 @@ with open("../db_info.json") as f:
                     local_ip="0.0.0.0",
                     local_port=61234,
                     to_ip="localhost",
-                    to_port=10000 + int(data['data_notes']),
+                    to_port=10000 + int(data['data_subtype1']),
                     # to_port=65533, # for local testing
                     # to_port=65531,  # for data service testing
-                    client_id=int(data["data_notes"]),
+                    client_id=int(data["data_subtype1"]),
                     server_id=1,
                     # set_blocking=
                     # False,  # Setting it to "True" causes issues when testing

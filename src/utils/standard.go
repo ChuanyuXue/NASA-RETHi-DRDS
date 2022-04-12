@@ -86,8 +86,8 @@ const (
 
 //----------- PARAMTER
 const (
-	PARAMTER_REQUEST_LAST uint16 = 0xFFFF
-	PARAMTER_EMPTY        uint16 = 0
+	PARAMTER_REQUEST_LAST  uint16 = 0xFFFF
+	PARAMTER_EMPTY         uint16 = 0
 )
 
 type JsonStandard interface {
