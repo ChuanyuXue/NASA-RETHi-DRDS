@@ -90,6 +90,7 @@ func (server *Stream) Publish(id uint16, closeSig *bool) error {
 			utils.SRC_HMS,
 			utils.PRIORITY_HIGHT,
 			t,
+			255,
 			dataMat[i],
 		)
 	}
@@ -110,6 +111,7 @@ func (server *Stream) Publish(id uint16, closeSig *bool) error {
 				utils.SRC_HMS,
 				utils.PRIORITY_HIGHT,
 				t,
+				utils.RESERVED,
 				dataMat[i],
 			)
 		}
@@ -118,7 +120,7 @@ func (server *Stream) Publish(id uint16, closeSig *bool) error {
 
 }
 
-func (server *Stream) send(dst uint8, priority uint8, synt uint32, dataMap []float64) error {
+func (server *Stream) send(dst uint8, priority uint8, synt uint32, option2 uint8, dataMap []float64) error {
 	var pkt ServicePacket
 	pkt.Src = server.LocalSrc
 	pkt.Dst = dst
@@ -136,7 +138,7 @@ func (server *Stream) send(dst uint8, priority uint8, synt uint32, dataMap []flo
 	pkt.Service = utils.SER_SEND
 	pkt.Flag = utils.FLAG_SINGLE
 	pkt.Option1 = utils.RESERVED
-	pkt.Option2 = utils.RESERVED
+	pkt.Option2 = option2
 	pkt.Data = dataMap
 
 	server.wsPktChMap[int(subpkt.DataID)] <- &pkt
