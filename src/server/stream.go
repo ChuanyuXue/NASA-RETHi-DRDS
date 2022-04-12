@@ -88,6 +88,7 @@ func (server *Stream) Publish(id uint16, closeSig *bool) error {
 	for i, t := range timeVec {
 		server.send(
 			utils.SRC_HMS,
+			id,
 			utils.PRIORITY_HIGHT,
 			t,
 			255,
@@ -109,6 +110,7 @@ func (server *Stream) Publish(id uint16, closeSig *bool) error {
 		for i, t := range timeVec {
 			server.send(
 				utils.SRC_HMS,
+				id,
 				utils.PRIORITY_HIGHT,
 				t,
 				utils.RESERVED,
