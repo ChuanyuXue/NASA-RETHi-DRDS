@@ -44,6 +44,15 @@ func Uint8Contains(s []uint8, i uint8) bool {
 	return false
 }
 
+func Uint16Contains(s []uint16, i uint16) bool {
+	for _, v := range s {
+		if v == i {
+			return true
+		}
+	}
+	return false
+}
+
 func Uint32Contains(s []uint32, i uint32) bool {
 	for _, v := range s {
 		if v == i {

@@ -1,12 +1,23 @@
 {
-    "ECLSS/ECLSS Exterior/Radiator Panels/Dust Accumulation": {
+    "ECLSS/ECLSS Exterior/Radiator Panels/Dust Accumulation-2": {
         "data_id": 129,
         "data_name": "ECLSS/ECLSS Exterior/Radiator Panels/Dust Accumulation",
         "data_type": 1,
         "data_subtype1": 4,
         "data_subtype2": 255,
         "data_rate": 1,
-        "data_size": 50,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "Dust Accumulation,Paint Degradation"
+    },
+    "ECLSS/ECLSS Exterior/Radiator Panels/Dust Accumulation": {
+        "data_id": 5001,
+        "data_name": "ECLSS/ECLSS Exterior/Radiator Panels/Dust Accumulation",
+        "data_type": 1,
+        "data_subtype1": 4,
+        "data_subtype2": 255,
+        "data_rate": 1,
+        "data_size": 100,
         "data_unit": "n/a",
         "data_notes": "Dust Accumulation,Paint Degradation"
     },
@@ -17,11 +28,11 @@
         "data_subtype1": 4,
         "data_subtype2": 255,
         "data_rate": 1,
-        "data_size": 50,
+        "data_size": 1,
         "data_unit": "n/a",
         "data_notes": "Dust Accumulation,Paint Degradation"
     },
-    "ECLSS/ECLSS_Pressure/Fan/Fan's filter failure": {
+    "ECLSS/ECLSS_Pressure/Fan/Fan's filter failure - 2": {
         "data_id": 131,
         "data_name": "ECLSS/ECLSS_Pressure/Fan/Fan's filter failure",
         "data_type": 1,
@@ -29,6 +40,17 @@
         "data_subtype2": 255,
         "data_rate": 1,
         "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "Fan's filter failure,Tank leak,Malfunction/Stuck,Extra power consumption (Pressure System)"
+    },
+    "ECLSS/ECLSS_Pressure/Fan/Fan's filter failure": {
+        "data_id": 5002,
+        "data_name": "ECLSS/ECLSS_Pressure/Fan/Fan's filter failure",
+        "data_type": 1,
+        "data_subtype1": 4,
+        "data_subtype2": 255,
+        "data_rate": 1,
+        "data_size": 4,
         "data_unit": "n/a",
         "data_notes": "Fan's filter failure,Tank leak,Malfunction/Stuck,Extra power consumption (Pressure System)"
     },
@@ -65,7 +87,7 @@
         "data_unit": "n/a",
         "data_notes": "Fan's filter failure,Tank leak,Malfunction/Stuck,Extra power consumption (Pressure System)"
     },
-    "ECLSS/ECLSS_Thermal/Compressor/Degradation": {
+    "ECLSS/ECLSS_Thermal/Compressor/Degradation - 2": {
         "data_id": 135,
         "data_name": "ECLSS/ECLSS_Thermal/Compressor/Degradation",
         "data_type": 1,
@@ -73,6 +95,17 @@
         "data_subtype2": 255,
         "data_rate": 1,
         "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "Degradation,Air side leak,Degradation,Extra power consumption (Thermal System)"
+    },
+    "ECLSS/ECLSS_Thermal/Compressor/Degradation": {
+        "data_id": 5003,
+        "data_name": "ECLSS/ECLSS_Thermal/Compressor/Degradation",
+        "data_type": 1,
+        "data_subtype1": 4,
+        "data_subtype2": 255,
+        "data_rate": 1,
+        "data_size": 4,
         "data_unit": "n/a",
         "data_notes": "Degradation,Air side leak,Degradation,Extra power consumption (Thermal System)"
     },
@@ -98,7 +131,7 @@
         "data_unit": "n/a",
         "data_notes": "Degradation,Air side leak,Degradation,Extra power consumption (Thermal System)"
     },
-    "ECLSS/ECLSS_Thermal/Power_Consumption/Extra power consumption (Thermal System)": {
+    "nan": {
         "data_id": 138,
         "data_name": "ECLSS/ECLSS_Thermal/Power_Consumption/Extra power consumption (Thermal System)",
         "data_type": 1,
@@ -108,6 +141,39 @@
         "data_size": 1,
         "data_unit": "n/a",
         "data_notes": "Degradation,Air side leak,Degradation,Extra power consumption (Thermal System)"
+    },
+    "nan-2": {
+        "data_id": 139,
+        "data_name": "ECLSS/ECLSS_Thermal/Power_Consumption/Extra power consumption (Thermal System)",
+        "data_type": 1,
+        "data_subtype1": 4,
+        "data_subtype2": 255,
+        "data_rate": 1,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "Degradation,Air side leak,Degradation,Extra power consumption (Thermal System)"
+    },
+    "nan-3": {
+        "data_id": 140,
+        "data_name": "ECLSS/ECLSS_Thermal/Power_Consumption/Extra power consumption (Thermal System)",
+        "data_type": 1,
+        "data_subtype1": 4,
+        "data_subtype2": 255,
+        "data_rate": 1,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "Degradation,Air side leak,Degradation,Extra power consumption (Thermal System)"
+    },
+    "ECLSS/Sensor/Radiator_Panel_Temperature_Sensor_1": {
+        "data_id": 5004,
+        "data_name": "ECLSS/Sensor/Radiator_Panel_Temperature_Sensor_1",
+        "data_type": 2,
+        "data_subtype1": 4,
+        "data_subtype2": 255,
+        "data_rate": 1,
+        "data_size": 3,
+        "data_unit": "n/a",
+        "data_notes": "Sensor Drift Failure requiring repair,Sensor Failure requiring repair,Sensor Drift/Failing requiring replacement"
     },
     "ECLSS/Sensor/Radiator_Panel_Temperature_Sensor_1": {
         "data_id": 5004,

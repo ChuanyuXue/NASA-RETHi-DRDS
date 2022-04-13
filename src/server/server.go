@@ -367,7 +367,7 @@ func (server *Server) handle(pkt *ServicePacket) error {
 	// server.Mu.Unlock()
 	// // ----------------------------------
 
-	// fmt.Println("Receive data -> ", pkt.SubframeNum)
+	fmt.Printf("[ Simulink Time %d ] Receive %d data from subsystem %d \n", pkt.SimulinkTime, pkt.SubframeNum, pkt.Src)
 	// for _, subpkt := range pkt.Subpackets {
 	// 	fmt.Println(subpkt.DataID, subpkt.Row, subpkt.Col, subpkt.Length)
 	// }
