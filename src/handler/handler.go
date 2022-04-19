@@ -184,7 +184,7 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 	// }
 	// // 3. The new time stamp must bigger than the last one
 	if !utils.Uint16Contains(handler.RecordTables, id) {
-		// fmt.Println("[!] Data Error: Unknown data ", id, " is received")
+		fmt.Println("[!] Data Error: Unknown data ", id, " is received")
 		return nil
 	}
 

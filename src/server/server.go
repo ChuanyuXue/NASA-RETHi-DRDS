@@ -375,6 +375,10 @@ func (server *Server) handle(pkt *ServicePacket) error {
 	switch pkt.Service {
 	case utils.SER_SEND: //Send (data packet)
 		for _, subpkt := range pkt.Subpackets {
+			if subpkt.DataID == 0 {
+				fmt.Println(subpkt)
+			}
+
 			rawData := PayloadBuf2Float(subpkt.Payload)
 			err := server.Send(subpkt.DataID, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
 			if err != nil {

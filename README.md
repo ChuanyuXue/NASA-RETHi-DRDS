@@ -158,18 +158,18 @@ Priority(priority): Quality of Service (QoS) prioritizes network traffic and man
 Before use the API, please make sure:
 
 - Understand IP and Port of server 
-- Understand IP, Port and ID of client: ID should be unique from 0 to 255, ID 0 is saved for habitat db, ID 1 is saved for ground db.
+- Understand IP, Port and ID of client: ID should be unique from 0 to 255, ID 0 is saved for habitat db, ID 1 is saved for ground db.
 - Client information must be registered in server configuration files.
 
 To send asynchronous data, first set up headers:
 
-| **Src**      | **Dst**    | Type        | **Priority** | **Version** | **Reserved** | **PhyTime**  | **SiTime** |
-| ------------ | ---------- | ----------- | ------------ | ----------- | ------------ | ------------ | ---------- |
-| Client ID    | Server ID  | 0x01        | -            | 0x00        | 0x00         | -            | -          |
-| **Sequence** | **Length** | **Service** | **Flag**     | **Opt1**    | **Opt2**     | **Subframe** |            |
-| -            | -          | 0x00        | 0x00         | 0x00        | 0x00         | -            |            |
+| **SRC**      | **DST**    | TYPE        | **PRIORITY** | **VERSION**  | **RESERVED** | **PHYTIME**  | **SIMU_TIME** |
+| ------------ | ---------- | ----------- | ------------ | ------------ | ------------ | ------------ | ------------- |
+| Client ID    | Server ID  | 0x01        | -            | 0x00         | 0x00         | -            | -             |
+| **SEQUENCE** | **LENGTH** | **SERVICE** | **FLAG**     | **OPTION_1** | **OPTION_2** | **SUBFRAME** |               |
+| -            | -          | 0x00        | 0x00         | 0x00         | 0x00         | -            |               |
 
-| Data ID | Time Diff | Row  | Col  | Length | Data |
+| DATA_ID | TIME_DIFF | ROW  | COL  | LENGTH | DATA |
 | ------- | --------- | ---- | ---- | ------ | ---- |
 | -       | -         | -    | -    | -      | -    |
 

@@ -36,12 +36,13 @@ const (
 
 //----------- Data Type
 const (
-	TYPE_NODATA uint8 = 0
-	TYPE_FDD    uint8 = 1
-	TYPE_SENSOR uint8 = 2
-	TYPE_AGENT  uint8 = 3
-	TYPE_TEST   uint8 = 4
-	TYPE_OTHER  uint8 = 255
+	TYPE_NODATA        uint8 = 0
+	TYPE_SENSOR        uint8 = 1
+	TYPE_FDD           uint8 = 2
+	TYPE_FDD_COMPONENT uint8 = 3
+	TYPE_FDD_MEASURE   uint8 = 4
+	TYPE_AGENT         uint8 = 5
+	TYPE_OTHER         uint8 = 255
 )
 
 //------------ Priority
@@ -86,8 +87,8 @@ const (
 
 //----------- PARAMTER
 const (
-	PARAMTER_REQUEST_LAST  uint16 = 0xFFFF
-	PARAMTER_EMPTY         uint16 = 0
+	PARAMTER_REQUEST_LAST uint16 = 0xFFFF
+	PARAMTER_EMPTY        uint16 = 0
 )
 
 type JsonStandard interface {
