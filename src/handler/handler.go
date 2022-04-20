@@ -278,12 +278,12 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint32, []float64, err
 				s, err := strconv.ParseInt(data, 10, 32)
 				timePhy = uint32(s)
 				if err != nil {
-					fmt.Println("Failed to parse scan result from SQL query.")
+					fmt.Println("[!]Element0: Failed to parse scan result from SQL query.")
 				}
 			default:
 				s, err := strconv.ParseFloat(data, 64)
 				if err != nil {
-					fmt.Println("Failed to parse scan result from SQL query.")
+					fmt.Println("[!]Element1: Failed to parse scan result from SQL query.")
 				}
 				rawData = append(rawData, s)
 			}
@@ -346,20 +346,20 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 				s, err := strconv.ParseInt(data, 10, 32)
 				timePhyVec = append(timePhyVec, uint32(s))
 				if err != nil {
-					fmt.Println("Failed to parse scan result from SQL query.")
+					fmt.Println("[!]Element0 Range:  Failed to parse scan result from SQL query.")
 				}
 
 			case 1:
 				s, err := strconv.ParseInt(data, 10, 32)
 				timeSimuVec = append(timeSimuVec, uint32(s))
 				if err != nil {
-					fmt.Println("Failed to parse scan result from SQL query.")
+					fmt.Println("[!]Element1 Range: Failed to parse scan result from SQL query.")
 				}
 			default:
 				s, err := strconv.ParseFloat(data, 64)
 				rawData = append(rawData, s)
 				if err != nil {
-					fmt.Println("Failed to parse scan result from SQL query.")
+					fmt.Println("[!]Element2 Range: Failed to parse scan result from SQL query.")
 				}
 			}
 		}
