@@ -124,7 +124,7 @@ func (server *Server) Request(id uint16, synt uint32, dst uint8, priority uint8)
 		// fmt.Println("[3]Test: Last time stamp", synt, utils.TIME_SIMU_LAST)
 	}
 
-	data, err := server.handler.ReadSynt(id, synt)
+	_, data, err := server.handler.ReadSynt(id, synt)
 	if err != nil {
 		return err
 	}
@@ -146,13 +146,13 @@ func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16,
 	var err error
 
 	if timeDiff == utils.PARAMTER_REQUEST_LAST {
-		_, dataMat, err = server.handler.ReadRange(id, timeStart, server.handler.QueryLastSynt(id))
+		_, _, dataMat, err = server.handler.ReadRange(id, timeStart, server.handler.QueryLastSynt(id))
 		if err != nil {
 			fmt.Println(err)
 			return err
 		}
 	} else {
-		_, dataMat, err = server.handler.ReadRange(id, timeStart, timeStart+uint32(timeDiff))
+		_, _, dataMat, err = server.handler.ReadRange(id, timeStart, timeStart+uint32(timeDiff))
 		if err != nil {
 			fmt.Println(err)
 			return err
@@ -202,7 +202,7 @@ func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) 
 		if synt <= lastSynt {
 			dataMap := make([][]float64, 0)
 			for i := synt; i <= lastSynt; i++ {
-				row, _ := server.handler.ReadSynt(id, i)
+				_, row, _ := server.handler.ReadSynt(id, i)
 				dataMap = append(dataMap, row)
 			}
 			server.send(dst, utils.PRIORITY_MEDIUM, synt, utils.FLAG_SINGLE, id, dataMap)

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/AmyangXYZ/sgo"
+	"github.com/AmyangXYZ/sgo/middlewares"
 	"github.com/gorilla/websocket"
 )
 
@@ -77,6 +78,7 @@ func (server *Stream) Init(src uint8) error {
 	}
 
 	app := sgo.New()
+	app.USE(middlewares.CORS(middlewares.CORSOpt{}))
 	app.GET("/ws", server.wsRealTime)
 	app.GET("/history", server.wsHistory)
 	app.Run(":8888")
@@ -84,26 +86,27 @@ func (server *Stream) Init(src uint8) error {
 	return nil
 }
 
-func (server *Stream) RequestRange(id uint16, timeStart uint32, timeDiff uint16) ([]uint32, [][]float64, error) {
+func (server *Stream) RequestRange(id uint16, timeStart uint32, timeDiff uint16) ([]uint32, []uint32, [][]float64, error) {
 	var dataMat [][]float64
-	var timeVec []uint32
+	var timeSimuVec []uint32
+	var timePhyVec []uint32
 	var err error
 
 	if timeDiff == utils.PARAMTER_REQUEST_LAST {
-		timeVec, dataMat, err = server.handler.ReadRange(id, timeStart, server.handler.QueryLastSynt(id))
+		timeSimuVec, timePhyVec, dataMat, err = server.handler.ReadRange(id, timeStart, server.handler.QueryLastSynt(id))
 		if err != nil {
 			fmt.Println(err)
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 	} else {
-		timeVec, dataMat, err = server.handler.ReadRange(id, timeStart, timeStart+uint32(timeDiff))
+		timeSimuVec, timePhyVec, dataMat, err = server.handler.ReadRange(id, timeStart, timeStart+uint32(timeDiff))
 		if err != nil {
 			fmt.Println(err)
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 	}
 
-	return timeVec, dataMat, nil
+	return timeSimuVec, timePhyVec, dataMat, nil
 }
 
 func (server *Stream) Subscribe(id uint16, closeSig *bool) error {
@@ -139,7 +142,7 @@ func (server *Stream) Subscribe(id uint16, closeSig *bool) error {
 		}
 		time.Sleep(1 * time.Second)
 		currentTime := server.handler.QueryLastSynt(id)
-		timeVec, dataMat, err := server.handler.ReadRange(id, lastTime, currentTime)
+		_, timeVec, dataMat, err := server.handler.ReadRange(id, lastTime, currentTime)
 		if err != nil {
 			fmt.Println(err)
 			return err
@@ -236,7 +239,7 @@ func (server *Stream) wsHistory(ctx *sgo.Context) error {
 	var dlist []Data
 
 	for _, dataID := range server.handler.RecordTables {
-		tVec, vMat, err := server.RequestRange(dataID, 0, utils.PARAMTER_REQUEST_LAST)
+		_, tVec, vMat, err := server.RequestRange(dataID, 0, utils.PARAMTER_REQUEST_LAST)
 		if err != nil {
 			fmt.Println(err)
 			return err
