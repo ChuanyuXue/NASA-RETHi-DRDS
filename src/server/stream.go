@@ -18,7 +18,7 @@ const (
 )
 
 type Data struct {
-	Timestamp uint32  `json:"timestamp"`
+	Timestamp uint64  `json:"timestamp"`
 	Value     float64 `json:"value"`
 	ID        string  `json:"id"`
 }
@@ -79,32 +79,25 @@ func (server *Stream) Init(src uint8) error {
 
 	app := sgo.New()
 	app.USE(middlewares.CORS(middlewares.CORSOpt{}))
+
 	app.GET("/ws", server.wsRealTime)
-	app.GET("/history", server.wsHistory)
+	app.GET("/history/:id", server.wsHistory)
 	app.Run(":8888")
 
 	return nil
 }
 
-func (server *Stream) RequestRange(id uint16, timeStart uint32, timeDiff uint16) ([]uint32, []uint32, [][]float64, error) {
+func (server *Stream) RequestRange(id uint16, timeStart uint32, timeEnd uint32) ([]uint32, []uint32, [][]float64, error) {
 	// fmt.Println("[2] Debug: RequestRange")
 	var dataMat [][]float64
 	var timeSimuVec []uint32
 	var timePhyVec []uint32
 	var err error
 
-	if timeDiff == utils.PARAMTER_REQUEST_LAST {
-		timeSimuVec, timePhyVec, dataMat, err = server.handler.ReadRange(id, timeStart, server.handler.QueryLastSynt(id))
-		if err != nil {
-			fmt.Println(err)
-			return nil, nil, nil, err
-		}
-	} else {
-		timeSimuVec, timePhyVec, dataMat, err = server.handler.ReadRange(id, timeStart, timeStart+uint32(timeDiff))
-		if err != nil {
-			fmt.Println(err)
-			return nil, nil, nil, err
-		}
+	timeSimuVec, timePhyVec, dataMat, err = server.handler.ReadRange(id, timeStart, timeEnd)
+	if err != nil {
+		fmt.Println(err)
+		return nil, nil, nil, err
 	}
 
 	return timeSimuVec, timePhyVec, dataMat, nil
@@ -188,6 +181,8 @@ func (server *Stream) send(dst uint8, dataID uint16, priority uint8, synt uint32
 	pkt.Option1 = utils.RESERVED
 	pkt.Option2 = option2
 	pkt.Data = dataMap
+	pkt.Subpackets = make([]*SubPacket, 0)
+	pkt.Subpackets = append(pkt.Subpackets, &subpkt)
 
 	channel <- &pkt
 	// server.wsPktChMap[int(subpkt.DataID)] <- &pkt
@@ -228,7 +223,7 @@ func (server *Stream) wsRealTime(ctx *sgo.Context) error {
 	for {
 		select {
 		case pkt := <-server.wsPktChMapRT:
-			data := Data{Timestamp: pkt.SimulinkTime, Value: pkt.Data[0], ID: strconv.Itoa(int(pkt.Subpackets[0].DataID))}
+			data := Data{Timestamp: uint64(pkt.SimulinkTime) * 1000, Value: pkt.Data[0], ID: strconv.Itoa(int(pkt.Subpackets[0].DataID))}
 			// fmt.Println("[6] Debug: WriteJson")
 			if err = ws.WriteJSON(data); err != nil {
 				fmt.Println(err)
@@ -243,19 +238,24 @@ func (server *Stream) wsRealTime(ctx *sgo.Context) error {
 
 func (server *Stream) wsHistory(ctx *sgo.Context) error {
 	var dlist []Data
+
+	id, _ := strconv.ParseUint(ctx.Param("id"), 10, 16)
+	// start, _ := strconv.ParseUint(ctx.Param("start"), 10, 32)
+	// end, _ := strconv.ParseUint(ctx.Param("end"), 10, 32)
+
 	// fmt.Println("[5] Debug: wsHistory")
 
-	for _, dataID := range server.handler.RecordTables {
-		_, tVec, vMat, err := server.RequestRange(dataID, 0, utils.PARAMTER_REQUEST_LAST)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		for i, t := range tVec {
-			d := Data{Timestamp: t, Value: vMat[i][0], ID: strconv.Itoa(int(dataID))}
-			dlist = append(dlist, d)
-		}
+	_, tVec, vMat, err := server.RequestRange(uint16(id), 0, server.handler.QueryLastSynt(uint16(id)))
+	// _, tVec, vMat, err := server.RequestRange(uint16(id), uint32(start), uint16(uint32(end)-uint32(start)))
+	if err != nil {
+		fmt.Println(err)
+		return err
 	}
+	for i, t := range tVec {
+		d := Data{Timestamp: uint64(t) * 1000, Value: vMat[i][0], ID: strconv.Itoa(int(id))}
+		dlist = append(dlist, d)
+	}
+
 	return ctx.JSON(200, 1, "success", dlist)
 }
 
