@@ -258,8 +258,8 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint32, []float64, err
 		strconv.Itoa(int(synt)),
 	)
 
-	scans := make([]interface{}, columnSize)
-	values := make([][]byte, columnSize)
+	scans := make([]interface{}, columnSize+1)
+	values := make([][]byte, columnSize+1)
 	for i := range values {
 		scans[i] = &values[i]
 	}
@@ -324,8 +324,8 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 		strconv.Itoa(int(end)),
 	)
 
-	scans := make([]interface{}, dataSize+1)
-	values := make([][]byte, dataSize+1)
+	scans := make([]interface{}, dataSize+2)
+	values := make([][]byte, dataSize+2)
 	for i := range values {
 		scans[i] = &values[i]
 	}

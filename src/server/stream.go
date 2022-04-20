@@ -87,7 +87,7 @@ func (server *Stream) Init(src uint8) error {
 }
 
 func (server *Stream) RequestRange(id uint16, timeStart uint32, timeDiff uint16) ([]uint32, []uint32, [][]float64, error) {
-	fmt.Println("[2] Debug: RequestRange")
+	// fmt.Println("[2] Debug: RequestRange")
 	var dataMat [][]float64
 	var timeSimuVec []uint32
 	var timePhyVec []uint32
@@ -111,7 +111,8 @@ func (server *Stream) RequestRange(id uint16, timeStart uint32, timeDiff uint16)
 }
 
 func (server *Stream) Subscribe(id uint16, closeSig *bool) error {
-	fmt.Println("[1] Debug: Subscribe")
+	// fmt.Println("[1] Debug: Subscribe")
+
 	/* 	------------ CHUANYU APR 19 2022 MODIFICATION-------------------------
 	   	No history data for Visualization in the real time part anymore,
 	   	History data are handled by Request function now
@@ -166,7 +167,7 @@ func (server *Stream) Subscribe(id uint16, closeSig *bool) error {
 }
 
 func (server *Stream) send(dst uint8, dataID uint16, priority uint8, synt uint32, option2 uint8, dataMap []float64, channel chan *ServicePacket) error {
-	fmt.Println("[3] Debug: send")
+	// fmt.Println("[3] Debug: send")
 	var pkt ServicePacket
 	pkt.Src = server.LocalSrc
 	pkt.Dst = dst
@@ -194,7 +195,7 @@ func (server *Stream) send(dst uint8, dataID uint16, priority uint8, synt uint32
 }
 
 func (server *Stream) wsRealTime(ctx *sgo.Context) error {
-	fmt.Println("[4] Debug: wsReadTime")
+	// fmt.Println("[4] Debug: wsReadTime")
 	SubscribeCloseSig := false
 
 	ws, err := server.upgrader.Upgrade(ctx.Resp, ctx.Req, nil)
@@ -204,7 +205,7 @@ func (server *Stream) wsRealTime(ctx *sgo.Context) error {
 	}
 	defer func() {
 		ws.Close()
-		fmt.Println("ws/client closed")
+		fmt.Println("ws/Client closed")
 	}()
 
 	// Subscribe all of the data
@@ -228,7 +229,7 @@ func (server *Stream) wsRealTime(ctx *sgo.Context) error {
 		select {
 		case pkt := <-server.wsPktChMapRT:
 			data := Data{Timestamp: pkt.SimulinkTime, Value: pkt.Data[0], ID: strconv.Itoa(int(pkt.Subpackets[0].DataID))}
-			fmt.Println("[6] Debug: WriteJson")
+			// fmt.Println("[6] Debug: WriteJson")
 			if err = ws.WriteJSON(data); err != nil {
 				fmt.Println(err)
 				continue
@@ -242,7 +243,7 @@ func (server *Stream) wsRealTime(ctx *sgo.Context) error {
 
 func (server *Stream) wsHistory(ctx *sgo.Context) error {
 	var dlist []Data
-	fmt.Println("[5] Debug: wsHistory")
+	// fmt.Println("[5] Debug: wsHistory")
 
 	for _, dataID := range server.handler.RecordTables {
 		_, tVec, vMat, err := server.RequestRange(dataID, 0, utils.PARAMTER_REQUEST_LAST)
