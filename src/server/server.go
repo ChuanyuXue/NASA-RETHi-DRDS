@@ -267,13 +267,13 @@ func (server *Server) send(dst uint8, priority uint8, synt uint32, flag uint8, d
 	conn, err := net.DialUDP("udp", nil, &dstAddr)
 
 	if err != nil {
-		fmt.Println("Failed to dial clients")
+		fmt.Println("[!] Failed to dial clients")
 		return err
 	}
 	defer conn.Close()
 	_, err = conn.Write(pkt.ToServiceBuf())
 	if err != nil {
-		fmt.Println("Failed to send data to clients")
+		fmt.Println("[!] Failed to send data to clients")
 		return err
 	}
 
@@ -380,20 +380,14 @@ func (server *Server) handle(pkt *ServicePacket) error {
 			}
 
 			rawData := PayloadBuf2Float(subpkt.Payload)
-			err := server.Send(subpkt.DataID, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
-			if err != nil {
-				return err
-			}
+			go server.Send(subpkt.DataID, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
+
 			for _, dst := range server.subscriberRegister[subpkt.DataID] {
 				var dataMat [][]float64
 				for i := 0; i < int(subpkt.Row); i++ {
 					dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
 				}
-				err = server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
-				if err != nil {
-					fmt.Println("failed to forward data:  ", err)
-					return err
-				}
+				go server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
 			}
 		}
 
@@ -432,11 +426,7 @@ func (server *Server) handle(pkt *ServicePacket) error {
 				for i := 0; i < int(subpkt.Row); i++ {
 					dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
 				}
-				err = server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
-				if err != nil {
-					fmt.Println("failed to forward data:  ", err)
-					return err
-				}
+				go server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
 			}
 
 		}
