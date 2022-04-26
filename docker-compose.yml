@@ -8,19 +8,19 @@ services:
       ADDR_LOCAL_HMS: ":10001"
       ADDR_LOCAL_STR: ":10002"
       ADDR_LOCAL_PWR: ":10003"
-      ADDR_LOCAL_ECLSS: ":10004"
-      ADDR_LOCAL_AGT: ":10005"
-      ADDR_LOCAL_INT: ":10006"
-      ADDR_LOCAL_EXT: ":10007"
+      ADDR_LOCAL_ECLSS: ":10005"
+      ADDR_LOCAL_AGT: ":10006"
+      ADDR_LOCAL_INT: ":10008"
+      ADDR_LOCAL_EXT: ":10011"
       ADDR_REMOTE_GCC: "data_service:20000" # refer to host's localhosdockt
       ADDR_REMOTE_HMS: "data_service:40001"
       ADDR_REMOTE_STR: "host.docker.internal:20002"
       ADDR_REMOTE_PWR: "host.docker.internal:20003"
-      ADDR_REMOTE_ECLSS: "host.docker.internal:20004"
-      # ADDR_REMOTE_AGT: "host.docker.internal:20005"
-      ADDR_REMOTE_AGT: "192.168.0.2:10012"
-      ADDR_REMOTE_INT: "host.docker.internal:20006"
-      ADDR_REMOTE_EXT: "host.docker.internal:20007"
+      ADDR_REMOTE_ECLSS: "host.docker.internal:20005"
+      ADDR_REMOTE_AGT: "host.docker.internal:20005"
+      # ADDR_REMOTE_AGT: "192.168.0.2:10006"
+      ADDR_REMOTE_INT: "host.docker.internal:20008"
+      ADDR_REMOTE_EXT: "host.docker.internal:20011"
       DB_DB: comm
       DB_USER: uu
       DB_PASSWORD: password
@@ -33,7 +33,7 @@ services:
       JITTER: "0"
     ports:
       - "8000:8000"
-      - "10000-10007:10000-10007/udp"
+      - "10000-10011:10000-10011/udp"
     depends_on:
       - comm_db
     networks:
@@ -117,7 +117,6 @@ services:
       - "3308:3306"
     networks:
       - hms-network
-
   # visualization:
   #   image: hfbzzx/rethi-visualization
   #   ports:
