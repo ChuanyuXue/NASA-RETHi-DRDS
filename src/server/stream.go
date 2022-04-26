@@ -223,12 +223,16 @@ func (server *Stream) wsRealTime(ctx *sgo.Context) error {
 	for {
 		select {
 		case pkt := <-server.wsPktChMapRT:
-			data := Data{Timestamp: uint64(pkt.SimulinkTime) * 1000, Value: pkt.Data[0], ID: strconv.Itoa(int(pkt.Subpackets[0].DataID))}
-			// fmt.Println("[6] Debug: WriteJson")
-			if err = ws.WriteJSON(data); err != nil {
-				fmt.Println(err)
-				continue
+			for j, k := range pkt.Data {
+				data := Data{Timestamp: uint64(pkt.SimulinkTime) * 1000, Value: k,
+					ID: strconv.Itoa(int(pkt.Subpackets[0].DataID)) + "." + strconv.Itoa(int(j))}
+				// fmt.Println("[6] Debug: WriteJson")
+				if err = ws.WriteJSON(data); err != nil {
+					fmt.Println(err)
+					continue
+				}
 			}
+
 		case <-closeSig:
 			SubscribeCloseSig = true
 			return nil
@@ -252,8 +256,10 @@ func (server *Stream) wsHistory(ctx *sgo.Context) error {
 		return err
 	}
 	for i, t := range tVec {
-		d := Data{Timestamp: uint64(t) * 1000, Value: vMat[i][0], ID: strconv.Itoa(int(id))}
-		dlist = append(dlist, d)
+		for j, k := range vMat[i] {
+			d := Data{Timestamp: uint64(t) * 1000, Value: k, ID: strconv.Itoa(int(id)) + "." + strconv.Itoa(int(j))}
+			dlist = append(dlist, d)
+		}
 	}
 
 	return ctx.JSON(200, 1, "success", dlist)
