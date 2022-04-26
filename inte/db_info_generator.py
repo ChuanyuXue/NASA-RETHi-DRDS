@@ -33,8 +33,6 @@ for i in range(5004, 5017):
         generate_info(i, "meas (signal %d)" % i, TYPE_FDD, TYPE_OTHER,
                       TYPE_OTHER, 1, 3, 'n/a', SRC_ECLSS))
 
-
-
 json_string = json.dumps(data)
 with open('db_info_v6.json', 'w') as outfile:
     outfile.write(json_string)

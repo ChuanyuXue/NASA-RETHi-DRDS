@@ -2,7 +2,6 @@ import pyapi.api as api
 import time
 import json
 import random
-import pandas as pd
 import json, random
 
 with open("../db_info_v6.json") as f:

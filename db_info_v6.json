@@ -1,15 +1,4 @@
 {
-    "ECLSS/PowerRequest_toSys3-5063": {
-        "data_id": 5063,
-        "data_name": "ECLSS/PowerRequest_toSys3-5063",
-        "data_type": 1,
-        "data_subtype1": 5,
-        "data_subtype2": 0,
-        "data_rate": 1,
-        "data_size": 1,
-        "data_unit": "n/a",
-        "data_notes": "N/A"
-    },
     "ECLSS/ECLSS Exterior/Radiator Panels-5001": {
         "data_id": 5001,
         "data_name": "ECLSS/ECLSS Exterior/Radiator Panels-5001",
