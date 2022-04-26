@@ -43,7 +43,7 @@ func (server *Server) Init(src uint8) error {
 			utils.SRC_ECLSS,
 			utils.SRC_EXT,
 			utils.SRC_HMS,
-			utils.SRC_ING,
+			utils.SRC_IE,
 			utils.SRC_PWR,
 			utils.SRC_STR}
 
@@ -54,7 +54,7 @@ func (server *Server) Init(src uint8) error {
 			utils.SRC_ECLSS,
 			utils.SRC_EXT,
 			utils.SRC_GCC,
-			utils.SRC_ING,
+			utils.SRC_IE,
 			utils.SRC_PWR,
 			utils.SRC_STR}
 	}

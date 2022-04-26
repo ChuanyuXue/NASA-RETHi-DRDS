@@ -15,17 +15,30 @@ const (
 )
 
 //---------- Source_address
+// const (
+// 	SRC_GCC   uint8 = 0
+// 	SRC_HMS   uint8 = 1
+// 	SRC_STR   uint8 = 2
+// 	SRC_PWR   uint8 = 3
+// 	SRC_ECLSS uint8 = 4
+// 	SRC_AGT   uint8 = 5
+// 	SRC_ING   uint8 = 6
+// 	SRC_EXT   uint8 = 7
+// 	SRC_SPL   uint8 = 8
+// 	SRC_DTB   uint8 = 9
+// )
+
 const (
 	SRC_GCC   uint8 = 0
 	SRC_HMS   uint8 = 1
 	SRC_STR   uint8 = 2
+	SRC_SPL   uint8 = 11
+	SRC_ECLSS uint8 = 5
 	SRC_PWR   uint8 = 3
-	SRC_ECLSS uint8 = 4
-	SRC_AGT   uint8 = 5
-	SRC_ING   uint8 = 6
-	SRC_EXT   uint8 = 7
-	SRC_SPL   uint8 = 8
+	SRC_AGT   uint8 = 6
+	SRC_IE    uint8 = 8
 	SRC_DTB   uint8 = 9
+	SRC_EXT   uint8 = 7
 )
 
 //----------- Message Type
