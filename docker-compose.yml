@@ -61,7 +61,7 @@ services:
       - comm-network
 
   data_service:
-    image: xuechuanyu/rethi-ds
+    image: xuechuanyu/rethi-ds:beta
     ports:
       - "20000-20001:20000-20001/udp"
       - "65530-65531:65530-65531/udp"

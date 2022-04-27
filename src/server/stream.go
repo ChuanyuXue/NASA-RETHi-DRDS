@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/AmyangXYZ/sgo"
@@ -242,8 +243,12 @@ func (server *Stream) wsRealTime(ctx *sgo.Context) error {
 
 func (server *Stream) wsHistory(ctx *sgo.Context) error {
 	var dlist []Data
+	var d Data
 
-	id, _ := strconv.ParseUint(ctx.Param("id"), 10, 16)
+	reqs := strings.Split(ctx.Param("id"), ".")
+	id, _ := strconv.ParseUint(reqs[0], 10, 16)
+	col, _ := strconv.Atoi(reqs[1])
+
 	// start, _ := strconv.ParseUint(ctx.Param("start"), 10, 32)
 	// end, _ := strconv.ParseUint(ctx.Param("end"), 10, 32)
 
@@ -256,10 +261,8 @@ func (server *Stream) wsHistory(ctx *sgo.Context) error {
 		return err
 	}
 	for i, t := range tVec {
-		for j, k := range vMat[i] {
-			d := Data{Timestamp: uint64(t) * 1000, Value: k, ID: strconv.Itoa(int(id)) + "." + strconv.Itoa(int(j))}
-			dlist = append(dlist, d)
-		}
+		d = Data{Timestamp: uint64(t) * 1000, Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." + reqs[1]}
+		dlist = append(dlist, d)
 	}
 
 	return ctx.JSON(200, 1, "success", dlist)
