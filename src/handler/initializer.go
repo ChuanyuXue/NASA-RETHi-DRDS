@@ -12,15 +12,15 @@ import (
 
 type TableInfo struct {
 	utils.JsonStandard
-	Id         uint16 `json:"data_id"`
-	Name       string `json:"data_name"`
-	Type       uint16 `json:"data_type"`
-	Subtype    uint16 `json:"data_subtype1"`
-	Subsubtype uint16 `json:"data_subtype2"`
-	Rate       uint16 `json:"data_rate"`
-	Size       uint16 `json:"data_size"`
-	Unit       string `json:"data_unit"`
-	Notes      string `json:"data_notes"`
+	Id       uint16 `json:"data_id"`
+	Name     string `json:"data_name"`
+	Type     uint16 `json:"data_type"`
+	Subtype1 uint16 `json:"data_subtype1"`
+	Subtype2 uint16 `json:"data_subtype2"`
+	Rate     uint16 `json:"data_rate"`
+	Size     uint16 `json:"data_size"`
+	Unit     string `json:"data_unit"`
+	Notes    string `json:"data_notes"`
 }
 
 func ReadDataInfo(path string) ([]TableInfo, error) {
@@ -128,8 +128,8 @@ func DatabaseGenerator(src uint8, path string) error {
 	// ---------------------- Insert info
 
 	for _, info := range dataList {
-		act := fmt.Sprintf(`INSERT INTO %s.%s (data_id, data_name, data_type, data_rate, data_size) VALUES
-				("%d", "%s", "%d", "%d", "%d");`, dbName, tableName, info.Id, info.Name, info.Type, info.Rate, info.Size)
+		act := fmt.Sprintf(`INSERT INTO %s.%s (data_id, data_name, data_type, data_subtype1, data_subtype2, data_rate, data_size) VALUES
+				("%d", "%s", "%d", "%d","%d","%d", "%d");`, dbName, tableName, info.Id, info.Name, info.Type, info.Subtype1, info.Subtype2, info.Rate, info.Size)
 		_, err = db.Exec(act)
 		if err != nil {
 			fmt.Println(err)
