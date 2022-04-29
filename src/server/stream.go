@@ -225,7 +225,7 @@ func (server *Stream) wsRealTime(ctx *sgo.Context) error {
 		select {
 		case pkt := <-server.wsPktChMapRT:
 			for j, k := range pkt.Data {
-				data := Data{Timestamp: uint64(pkt.SimulinkTime)*1000 + 60*60*1000*4, Value: k,
+				data := Data{Timestamp: uint64(pkt.SimulinkTime) + 60*60*4, Value: k,
 					ID: strconv.Itoa(int(pkt.Subpackets[0].DataID)) + "." + strconv.Itoa(int(j))}
 
 				if err = ws.WriteJSON(data); err != nil {
@@ -261,7 +261,7 @@ func (server *Stream) wsHistory(ctx *sgo.Context) error {
 		return err
 	}
 	for i, t := range tVec {
-		d = Data{Timestamp: uint64(t)*1000 + 60*60*1000*4, Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." + reqs[1]}
+		d = Data{Timestamp: uint64(t) + 60*60*4, Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." + reqs[1]}
 		dlist = append(dlist, d)
 	}
 

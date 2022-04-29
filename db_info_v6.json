@@ -1088,6 +1088,17 @@
         "data_unit": "n/a",
         "data_notes": "-"
     },
+    "Power/Total_Power_Storage-3058": {
+        "data_id": 3058,
+        "data_name": "Power/Total_Power_Storage-3058",
+        "data_type": 1,
+        "data_subtype1": 3,
+        "data_subtype2": 3002,
+        "data_rate": 1000,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "N/A"
+    },
     "Power/Solar_PV/PV_Arrays-3001": {
         "data_id": 3001,
         "data_name": "Power/Solar_PV/PV_Arrays-3001",
@@ -1714,5 +1725,115 @@
         "data_size": 1,
         "data_unit": "n/a",
         "data_notes": "3014003"
+    },
+    "Diagnostic Tests-6001": {
+        "data_id": 6001,
+        "data_name": "Diagnostic Tests-6001",
+        "data_type": 2,
+        "data_subtype1": 6,
+        "data_subtype2": 6001,
+        "data_rate": 1,
+        "data_size": 117,
+        "data_unit": "n/a",
+        "data_notes": "N/A"
+    },
+    "Heuristic Scheduler-6002": {
+        "data_id": 6002,
+        "data_name": "Heuristic Scheduler-6002",
+        "data_type": 2,
+        "data_subtype1": 6,
+        "data_subtype2": 6002,
+        "data_rate": 1,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "N/A"
+    },
+    "Heuristic Scheduler-6003": {
+        "data_id": 6003,
+        "data_name": "Heuristic Scheduler-6003",
+        "data_type": 2,
+        "data_subtype1": 6,
+        "data_subtype2": 6002,
+        "data_rate": 1,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "N/A"
+    },
+    "Intervention Agent Model-6004": {
+        "data_id": 6004,
+        "data_name": "Intervention Agent Model-6004",
+        "data_type": 2,
+        "data_subtype1": 6,
+        "data_subtype2": 6003,
+        "data_rate": 1,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "N/A"
+    },
+    "Intervention Agent Model-6005": {
+        "data_id": 6005,
+        "data_name": "Intervention Agent Model-6005",
+        "data_type": 2,
+        "data_subtype1": 6,
+        "data_subtype2": 6003,
+        "data_rate": 1,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "N/A"
+    },
+    "Intervention Agent Model-6006": {
+        "data_id": 6006,
+        "data_name": "Intervention Agent Model-6006",
+        "data_type": 2,
+        "data_subtype1": 6,
+        "data_subtype2": 6003,
+        "data_rate": 1,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "N/A"
+    },
+    "Intervention Agent Model-6007": {
+        "data_id": 6007,
+        "data_name": "Intervention Agent Model-6007",
+        "data_type": 2,
+        "data_subtype1": 6,
+        "data_subtype2": 6003,
+        "data_rate": 1,
+        "data_size": 10,
+        "data_unit": "n/a",
+        "data_notes": "N/A"
+    },
+    "Intervention Agent Model-6008": {
+        "data_id": 6008,
+        "data_name": "Intervention Agent Model-6008",
+        "data_type": 2,
+        "data_subtype1": 6,
+        "data_subtype2": 6003,
+        "data_rate": 1,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "N/A"
+    },
+    "Intervention Agent Model-6009": {
+        "data_id": 6009,
+        "data_name": "Intervention Agent Model-6009",
+        "data_type": 2,
+        "data_subtype1": 6,
+        "data_subtype2": 6003,
+        "data_rate": 1,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "N/A"
+    },
+    "Intervention Agent Model-6010": {
+        "data_id": 6010,
+        "data_name": "Intervention Agent Model-6010",
+        "data_type": 2,
+        "data_subtype1": 6,
+        "data_subtype2": 6003,
+        "data_rate": 1,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "N/A"
     }
 }

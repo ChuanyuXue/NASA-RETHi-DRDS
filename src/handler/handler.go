@@ -205,7 +205,7 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 	columnFillin = append(columnFillin, strconv.Itoa(int(synt)))
 	// Need to fix int64 -> unsigned int32?
 	columnFillin = append(columnFillin, strconv.Itoa(int(phyt)))
-	columnFillin = append(columnFillin, strconv.Itoa(int(time.Now().Unix())))
+	columnFillin = append(columnFillin, strconv.FormatUint(uint64(time.Now().UnixMilli()), 10))
 
 	if int(handler.DataShapes[id]) != len(value) {
 		fmt.Println("[!] Data Error: Input data ", id, " has shape ", len(value),
@@ -251,7 +251,7 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint32, []float64, err
 	}
 
 	query := fmt.Sprintf(
-		"SELECT physical_time, %s FROM %s.%s WHERE simulink_time = %s;",
+		"SELECT physical_time_2, %s FROM %s.%s WHERE simulink_time = %s;",
 		columnPattern,
 		handler.DBName,
 		tableName,
@@ -316,7 +316,7 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 	}
 
 	query := fmt.Sprintf(
-		"SELECT physical_time, simulink_time, %s FROM %s.%s WHERE (simulink_time >= %s) AND (simulink_time < %s);",
+		"SELECT physical_time_2, simulink_time, %s FROM %s.%s WHERE (simulink_time >= %s) AND (simulink_time < %s);",
 		columnPattern,
 		handler.DBName,
 		tableName,
