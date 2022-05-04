@@ -81,7 +81,7 @@ func PayloadFloat2Buf(payload []float64) []byte {
 
 func PayloadBuf2Float(buf []byte) []float64 {
 	var data64 []float64
-	for i, _ := range buf {
+	for i := range buf {
 		if i%8 == 0 {
 			targetBuf := buf[i : i+8]
 			data64 = append(data64, Float64frombytes(targetBuf))

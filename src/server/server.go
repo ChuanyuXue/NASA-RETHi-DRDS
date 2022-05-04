@@ -67,11 +67,11 @@ func (server *Server) Init(src uint8) error {
 
 	localAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_ADDR_"+server.Type))
 	if err != nil {
-		return errors.New(fmt.Sprintf("unable to resolve local address for %s", server.Type))
+		return fmt.Errorf("unable to resolve local address for %s", server.Type)
 	}
 	remoteAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_REMOTE_ADDR_"+server.Type))
 	if err != nil {
-		return errors.New(fmt.Sprintf("unable to resolve remote address for %s", server.Type))
+		return fmt.Errorf("unable to resolve remote address for %s", server.Type)
 	}
 	loopAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_LOOP_"+server.Type))
 	if err != nil {
@@ -107,9 +107,11 @@ func (server *Server) Init(src uint8) error {
 	return nil
 }
 
+// ------- TODO: RENAME SEND TO SENDHANDLER / send TO SEND
 func (server *Server) Send(id uint16, time uint32, physical_time uint32, rawData []float64) error {
 	err := server.handler.WriteSynt(id, time, physical_time, rawData)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	return nil
@@ -175,7 +177,7 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 		if synt < lastSynt {
 			// Send error back to dst
 			server.sendOpt(dst, utils.PRIORITY_HIGHT, synt, utils.SER_RESPONSE, utils.FLAG_ERROR, utils.RESERVED, utils.RESERVED)
-			return errors.New("Published data are not synchronized with current DataBase")
+			return errors.New("published data are not synchronized with current database")
 		}
 
 		col := int(cols)

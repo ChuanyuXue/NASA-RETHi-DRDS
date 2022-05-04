@@ -5,7 +5,6 @@ import (
 	"data-service/src/server"
 	"data-service/src/utils"
 	"fmt"
-	"time"
 )
 
 func init() {
@@ -145,19 +144,17 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("Habitat Server Started")
-	time.Sleep(2 * time.Second)
+	fmt.Println("Habitat Data-Service Started")
 
-	// Start Habitat http service
-	habitatStream := server.Stream{}
-	go habitatStream.Init(utils.SRC_HMS)
-	fmt.Println("Habitat Stream Started")
-	time.Sleep(2 * time.Second)
+	// Start Habitat web service
+	habitatWebServer := server.WebServer{}
+	go habitatWebServer.Init(utils.SRC_HMS)
+	fmt.Println("Habitat Web-Service Started")
 
 	// Start Ground server
 	// groundServer := server.Server{}
 	// go groundServer.Init(utils.SRC_GCC)
-	// fmt.Println("Ground Server Started")
+	// fmt.Println("Ground Data-Service Started")
 	// time.Sleep(2 * time.Second)
 
 	// // Let Ground server subscribe Habitat server

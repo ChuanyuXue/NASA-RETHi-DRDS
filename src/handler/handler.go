@@ -3,7 +3,6 @@ package handler
 import (
 	"data-service/src/utils"
 	"database/sql"
-	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -208,9 +207,7 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 	columnFillin = append(columnFillin, strconv.FormatUint(uint64(time.Now().UnixMilli()), 10))
 
 	if int(handler.DataShapes[id]) != len(value) {
-		fmt.Println("[!] Data Error: Input data ", id, " has shape ", len(value),
-			" which is different from the DataBase configuration file as ", int(handler.DataShapes[id]))
-		return errors.New("wrong input data shape")
+		return fmt.Errorf("[!] Data #%d has inconsistent data shape %d rather than %d", id, len(value), int(handler.DataShapes[id]))
 	}
 
 	for i := 0; i != int(handler.DataShapes[id]); i++ {
@@ -231,7 +228,7 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 	return nil
 }
 
-func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint32, []float64, error) {
+func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint64, []float64, error) {
 	var tableName string
 	var columnSize uint8
 	var columnPattern string
@@ -270,13 +267,13 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint32, []float64, err
 		// fmt.Println("No data found!")
 		return 0, rawData, nil
 	} else {
-		var timePhy uint32
+		var timePhy uint64
 		for i, v := range values {
 			data := string(v)
 			switch i {
 			case 0:
-				s, err := strconv.ParseInt(data, 10, 32)
-				timePhy = uint32(s)
+				s, err := strconv.ParseInt(data, 10, 64)
+				timePhy = uint64(s)
 				if err != nil {
 					fmt.Println("[!]Element0: Failed to parse scan result from SQL query.")
 				}
@@ -294,11 +291,11 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint32, []float64, err
 
 }
 
-func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32, []uint32, [][]float64, error) {
+func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32, []uint64, [][]float64, error) {
 	var tableName string
 	var dataSize uint8
 	var columnPattern string
-	var timePhyVec []uint32
+	var timePhyVec []uint64
 	var timeSimuVec []uint32
 	var dataMat [][]float64
 
@@ -343,14 +340,14 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 			data := string(v)
 			switch i {
 			case 0:
-				s, err := strconv.ParseInt(data, 10, 32)
-				timePhyVec = append(timePhyVec, uint32(s))
+				s, err := strconv.ParseUint(data, 10, 64)
+				timePhyVec = append(timePhyVec, s)
 				if err != nil {
 					fmt.Println("[!]Element0 Range:  Failed to parse scan result from SQL query.")
 				}
 
 			case 1:
-				s, err := strconv.ParseInt(data, 10, 32)
+				s, err := strconv.ParseUint(data, 10, 32)
 				timeSimuVec = append(timeSimuVec, uint32(s))
 				if err != nil {
 					fmt.Println("[!]Element1 Range: Failed to parse scan result from SQL query.")
