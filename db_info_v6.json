@@ -340,6 +340,17 @@
         "data_unit": "n/a",
         "data_notes": "5008003"
     },
+    "ECLSS/Sensor/Radiator_Panel_SurfTemperature_Sensor_6-5031": {
+        "data_id": 5031,
+        "data_name": "ECLSS/Sensor/Radiator_Panel_SurfTemperature_Sensor_6-5031",
+        "data_type": 1,
+        "data_subtype1": 5,
+        "data_subtype2": 5009,
+        "data_rate": 200,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "N/A"
+    },
     "ECLSS/Sensor/Radiator_Panel_SurfTemperature_Sensor_6-5032": {
         "data_id": 5032,
         "data_name": "ECLSS/Sensor/Radiator_Panel_SurfTemperature_Sensor_6-5032",
@@ -549,6 +560,17 @@
         "data_unit": "n/a",
         "data_notes": "5013003"
     },
+    "ECLSS/Sensor/HTF_Temperature_Sensor_5-5051": {
+        "data_id": 5051,
+        "data_name": "ECLSS/Sensor/HTF_Temperature_Sensor_5-5051",
+        "data_type": 1,
+        "data_subtype1": 5,
+        "data_subtype2": 5014,
+        "data_rate": 200,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "N/A"
+    },
     "ECLSS/Sensor/HTF_Temperature_Sensor_5-5052": {
         "data_id": 5052,
         "data_name": "ECLSS/Sensor/HTF_Temperature_Sensor_5-5052",
@@ -625,6 +647,17 @@
         "data_size": 1,
         "data_unit": "n/a",
         "data_notes": "5015003"
+    },
+    "ECLSS/Sensor/Flow_meter-5059": {
+        "data_id": 5059,
+        "data_name": "ECLSS/Sensor/Flow_meter-5059",
+        "data_type": 1,
+        "data_subtype1": 5,
+        "data_subtype2": 5016,
+        "data_rate": 200,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "N/A"
     },
     "ECLSS/Sensor/Flow_meter-5060": {
         "data_id": 5060,
@@ -967,6 +1000,17 @@
         "data_unit": "n/a",
         "data_notes": "N/A"
     },
+    "Structure_Protective_Layer-11001": {
+        "data_id": 11001,
+        "data_name": "Structure_Protective_Layer-11001",
+        "data_type": 2,
+        "data_subtype1": 11,
+        "data_subtype2": 11001,
+        "data_rate": 1000,
+        "data_size": 1,
+        "data_unit": "n/a",
+        "data_notes": "11001001"
+    },
     "Interior Environment/Power Request-8011": {
         "data_id": 8011,
         "data_name": "Interior Environment/Power Request-8011",
@@ -1117,7 +1161,7 @@
         "data_subtype1": 3,
         "data_subtype2": 3001,
         "data_rate": 1000,
-        "data_size": 1,
+        "data_size": 4,
         "data_unit": "n/a",
         "data_notes": "3001002"
     },
