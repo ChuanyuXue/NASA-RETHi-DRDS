@@ -5,21 +5,69 @@ import (
 	"data-service/src/server"
 	"data-service/src/utils"
 	"fmt"
-	"time"
 )
 
 func init() {
-	err := handler.DatabaseGenerator(0, "db_info_press.json")
+	err := handler.DatabaseGenerator(0, "db_info_v6.json")
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = handler.DatabaseGenerator(1, "db_info_press.json")
+	err = handler.DatabaseGenerator(1, "db_info_v6.json")
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
 func main() {
+	// --------------------- Test for packet V6 --------------------------
+
+	// b := [...]byte{0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04, 0x00, 0x00}
+
+	// pkt := server.Packet{1, 2, 3, 4, 5, 6, 3294967290, 3294967291, 65530, 65531, b[:], nil}
+
+	// buf := pkt.ToBuf()
+	// fmt.Println(server.FromBuf(buf))
+
+	// test := [...]float64{1, 2, 3, 4}
+	// testbuf := server.PayloadFloat2Buf(test[:])
+
+	// test2 := [...]float64{1, 2, 3, 4, 5, 6}
+	// testbuf2 := server.PayloadFloat2Buf(test2[:])
+
+	// subpkt0 := server.SubPacket{1, 1000, 1, 4, 4, testbuf}
+	// subpkt1 := server.SubPacket{1, 1000, 2, 3, 6, testbuf2}
+	// subpkt2 := server.SubPacket{1, 1000, 3, 2, 6, testbuf2}
+	// subpkt3 := server.SubPacket{1, 1000, 4, 1, 4, testbuf}
+
+	// subpackets := make([]*server.SubPacket, 4)
+	// subpackets[0] = &subpkt0
+	// subpackets[1] = &subpkt1
+	// subpackets[2] = &subpkt2
+	// subpackets[3] = &subpkt3
+
+	// pkt2 := server.ServicePacket{pkt, 11, 12, 13, 14, 4, subpackets}
+	// buf2 := pkt2.ToServiceBuf()
+	// fmt.Println(server.FromServiceBuf(buf2))
+	// for _, v := range pkt2.Subpackets {
+	// 	fmt.Println(v)
+	// 	fmt.Println(server.PayloadBuf2Float(v.Payload))
+	// }
+
+	// id := [...]uint16{1, 2, 3, 4}
+	// timed := [...]uint16{1000, 2000, 3000, 4000}
+	// row := [...]uint8{1, 2, 3, 4}
+	// col := [...]uint8{4, 3, 2, 1}
+	// length := [...]uint16{4, 4, 4, 4}
+
+	// multipayload = append(multipayload, testbuf)
+	// multipayload = append(multipayload, testbuf)
+	// multipayload = append(multipayload, testbuf)
+	// multipayload = append(multipayload, testbuf)
+	// pkt2 := server.ServicePacket{pkt, 11, 12, 13, 14, 4, id[:], timed[:], row[:], col[:], length[:], multipayload}
+	// buf2 := pkt2.ToServiceBuf()
+	// fmt.Println(server.FromServiceBuf(buf2))
+	// fmt.Println(server.PayloadBuf2Float(server.FromServiceBuf(buf2).PayloadArr[0]))
+
 	// --------------------- Test for packet --------------------------
 	// b := [...]byte{0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04, 0x00, 0x00}
 	// pkt := server.Packet{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, b[:]}
@@ -96,19 +144,17 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("Habitat Server Started")
-	time.Sleep(2 * time.Second)
+	fmt.Println("Habitat Data-Service Started")
 
-	// Start Habitat http service
-	habitatStream := server.Stream{}
-	go habitatStream.Init(utils.SRC_HMS)
-	fmt.Println("Habitat Stream Started")
-	time.Sleep(2 * time.Second)
+	// Start Habitat web service
+	habitatWebServer := server.WebServer{}
+	go habitatWebServer.Init(utils.SRC_HMS)
+	fmt.Println("Habitat Web-Service Started")
 
 	// Start Ground server
 	// groundServer := server.Server{}
 	// go groundServer.Init(utils.SRC_GCC)
-	// fmt.Println("Ground Server Started")
+	// fmt.Println("Ground Data-Service Started")
 	// time.Sleep(2 * time.Second)
 
 	// // Let Ground server subscribe Habitat server

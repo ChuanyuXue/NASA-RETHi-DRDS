@@ -182,6 +182,10 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 	// 	panic("insert data length not equal to data description table")
 	// }
 	// // 3. The new time stamp must bigger than the last one
+	if !utils.Uint16Contains(handler.RecordTables, id) {
+		fmt.Println("[!] Data Error: Unknown data ", id, " is received")
+		return nil
+	}
 
 	tableName := "record" + strconv.Itoa(int(id))
 
@@ -200,7 +204,12 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 	columnFillin = append(columnFillin, strconv.Itoa(int(synt)))
 	// Need to fix int64 -> unsigned int32?
 	columnFillin = append(columnFillin, strconv.Itoa(int(phyt)))
-	columnFillin = append(columnFillin, strconv.Itoa(int(time.Now().Unix())))
+	columnFillin = append(columnFillin, strconv.FormatUint(uint64(time.Now().UnixMilli()), 10))
+
+	if int(handler.DataShapes[id]) != len(value) {
+		return fmt.Errorf("[!] Data #%d has inconsistent data shape %d rather than %d", id, len(value), int(handler.DataShapes[id]))
+	}
+
 	for i := 0; i != int(handler.DataShapes[id]); i++ {
 		columnFillin = append(columnFillin, fmt.Sprintf("%f", value[i]))
 	}
@@ -219,7 +228,7 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 	return nil
 }
 
-func (handler *Handler) ReadSynt(id uint16, synt uint32) ([]float64, error) {
+func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint64, []float64, error) {
 	var tableName string
 	var columnSize uint8
 	var columnPattern string
@@ -239,15 +248,15 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) ([]float64, error) {
 	}
 
 	query := fmt.Sprintf(
-		"SELECT %s FROM %s.%s WHERE simulink_time = %s;",
+		"SELECT physical_time_2, %s FROM %s.%s WHERE simulink_time = %s;",
 		columnPattern,
 		handler.DBName,
 		tableName,
 		strconv.Itoa(int(synt)),
 	)
 
-	scans := make([]interface{}, columnSize)
-	values := make([][]byte, columnSize)
+	scans := make([]interface{}, columnSize+1)
+	values := make([][]byte, columnSize+1)
 	for i := range values {
 		scans[i] = &values[i]
 	}
@@ -256,26 +265,38 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) ([]float64, error) {
 	err := row.Scan(scans...)
 	if err != nil {
 		// fmt.Println("No data found!")
-		return rawData, nil
+		return 0, rawData, nil
 	} else {
-		for _, v := range values {
+		var timePhy uint64
+		for i, v := range values {
 			data := string(v)
-			s, err := strconv.ParseFloat(data, 64)
-			if err != nil {
-				fmt.Println("Failed to parse scan result from SQL query.")
+			switch i {
+			case 0:
+				s, err := strconv.ParseInt(data, 10, 64)
+				timePhy = uint64(s)
+				if err != nil {
+					fmt.Println("[!]Element0: Failed to parse scan result from SQL query.")
+				}
+			default:
+				s, err := strconv.ParseFloat(data, 64)
+				if err != nil {
+					fmt.Println("[!]Element1: Failed to parse scan result from SQL query.")
+				}
+				rawData = append(rawData, s)
 			}
-			rawData = append(rawData, s)
+
 		}
-		return rawData, nil
+		return timePhy, rawData, nil
 	}
 
 }
 
-func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32, [][]float64, error) {
+func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32, []uint64, [][]float64, error) {
 	var tableName string
 	var dataSize uint8
 	var columnPattern string
-	var timeVec []uint32
+	var timePhyVec []uint64
+	var timeSimuVec []uint32
 	var dataMat [][]float64
 
 	tableName = "record" + strconv.Itoa(int(id))
@@ -292,7 +313,7 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 	}
 
 	query := fmt.Sprintf(
-		"SELECT simulink_time,%s FROM %s.%s WHERE (simulink_time >= %s) AND (simulink_time < %s);",
+		"SELECT physical_time_2, simulink_time, %s FROM %s.%s WHERE (simulink_time >= %s) AND (simulink_time < %s);",
 		columnPattern,
 		handler.DBName,
 		tableName,
@@ -300,8 +321,8 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 		strconv.Itoa(int(end)),
 	)
 
-	scans := make([]interface{}, dataSize+1)
-	values := make([][]byte, dataSize+1)
+	scans := make([]interface{}, dataSize+2)
+	values := make([][]byte, dataSize+2)
 	for i := range values {
 		scans[i] = &values[i]
 	}
@@ -309,7 +330,7 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 	rows, err := handler.DBPointer.Query(query)
 	if err != nil {
 		fmt.Println(err)
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	for rows.Next() {
@@ -317,26 +338,31 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 		var rawData []float64
 		for i, v := range values {
 			data := string(v)
-
-			if i == 0 {
-				s, err := strconv.ParseInt(data, 10, 32)
-				timeVec = append(timeVec, uint32(s))
+			switch i {
+			case 0:
+				s, err := strconv.ParseUint(data, 10, 64)
+				timePhyVec = append(timePhyVec, s)
 				if err != nil {
-					fmt.Println("Failed to parse scan result from SQL query.")
+					fmt.Println("[!]Element0 Range:  Failed to parse scan result from SQL query.")
 				}
 
-			} else {
+			case 1:
+				s, err := strconv.ParseUint(data, 10, 32)
+				timeSimuVec = append(timeSimuVec, uint32(s))
+				if err != nil {
+					fmt.Println("[!]Element1 Range: Failed to parse scan result from SQL query.")
+				}
+			default:
 				s, err := strconv.ParseFloat(data, 64)
 				rawData = append(rawData, s)
 				if err != nil {
-					fmt.Println("Failed to parse scan result from SQL query.")
+					fmt.Println("[!]Element2 Range: Failed to parse scan result from SQL query.")
 				}
-
 			}
 		}
 		dataMat = append(dataMat, rawData)
 	}
-	return timeVec, dataMat, nil
+	return timeSimuVec, timePhyVec, dataMat, nil
 }
 
 func (handler *Handler) QueryInfo(id uint16, column string) (int, error) {

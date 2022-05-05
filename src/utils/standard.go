@@ -1,59 +1,43 @@
 package utils
 
-//                     1                   2                   3
-// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |      SRC      |       DST     | TYPE  | PRIO  |  VER  |  RES  |
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |                     PHYSICAL_TIMESTAMP                        |
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |                     SIMULINK_TIMESTAMP                        |
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |            SEQUENCE           |              LEN              |
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |      DATA…
-// +-+-+-+-+-+-+-+-+
-
-//                     1                   2                   3
-// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |      SRC      |       DST     | TYPE  | PRIO  |  VER  |  RES  |
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |                     PHYSICAL_TIMESTAMP                        |
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |                     SIMULINK_TIMESTAMP                        |
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |            SEQUENCE           |              LEN              |
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |    SERVICE    |     FLAG      |    OPTION1    |    OPTION2    |
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |          SUBFRAME_NUM         |            DATA_ID            |
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |           TIME_DIFF           |      ROW      |      COL      |
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |            LENGTH             |             DATA...
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 //---------- Basic configuraitons ---------- SEQ
 const (
-	BUFFLEN    uint32 = 65536
-	QUEUELELN  uint32 = 65536
-	PROCNUMS   uint8  = 64
-	FRENQUENCE uint32 = 10000
-	SUBSNUMS   uint8  = 10
-	TABLENUMS  uint32 = 65536
-	MTU        uint16 = 1500
+	BUFFLEN            uint32 = 65536
+	QUEUELELN          uint32 = 65536
+	PROCNUMS           uint8  = 64
+	FRENQUENCE         uint32 = 10000
+	SUBSNUMS           uint8  = 10
+	TABLENUMS          uint32 = 65536
+	HEADER_LEN         uint8  = 24
+	SERVICE_HEADER_LEN uint8  = 6
+	SUB_HEADER_LEN     uint8  = 8
+	MTU                uint16 = 1500
 )
 
 //---------- Source_address
+// const (
+// 	SRC_GCC   uint8 = 0
+// 	SRC_HMS   uint8 = 1
+// 	SRC_STR   uint8 = 2
+// 	SRC_PWR   uint8 = 3
+// 	SRC_ECLSS uint8 = 4
+// 	SRC_AGT   uint8 = 5
+// 	SRC_ING   uint8 = 6
+// 	SRC_EXT   uint8 = 7
+// 	SRC_SPL   uint8 = 8
+// 	SRC_DTB   uint8 = 9
+// )
+
 const (
 	SRC_GCC   uint8 = 0
 	SRC_HMS   uint8 = 1
 	SRC_STR   uint8 = 2
+	SRC_SPL   uint8 = 11
+	SRC_ECLSS uint8 = 5
 	SRC_PWR   uint8 = 3
-	SRC_ECLSS uint8 = 4
-	SRC_AGT   uint8 = 5
-	SRC_ING   uint8 = 6
+	SRC_AGT   uint8 = 6
+	SRC_IE    uint8 = 8
+	SRC_DTB   uint8 = 9
 	SRC_EXT   uint8 = 7
 )
 
@@ -65,12 +49,13 @@ const (
 
 //----------- Data Type
 const (
-	TYPE_NODATA uint8 = 0
-	TYPE_FDD    uint8 = 1
-	TYPE_SENSOR uint8 = 2
-	TYPE_AGENT  uint8 = 3
-	TYPE_TEST   uint8 = 4
-	TYPE_OTHER  uint8 = 255
+	TYPE_NODATA        uint8 = 0
+	TYPE_SENSOR        uint8 = 1
+	TYPE_FDD           uint8 = 2
+	TYPE_FDD_COMPONENT uint8 = 3
+	TYPE_FDD_MEASURE   uint8 = 4
+	TYPE_AGENT         uint8 = 5
+	TYPE_OTHER         uint8 = 255
 )
 
 //------------ Priority
@@ -81,21 +66,31 @@ const (
 	PRIORITY_HIGHT  uint8 = 7
 )
 
+//------------ Version
+const (
+	VERSION_V0 uint8 = 0
+)
+
+//------------ Reserved
+const (
+	RESERVED uint8 = 0
+)
+
 //------------ OPTION
 const (
-	OPT_SEND      uint16 = 0
-	OPT_REQUEST   uint16 = 1
-	OPT_PUBLISH   uint16 = 2
-	OPT_SUBSCRIBE uint16 = 3
-	OPT_RESPONSE  uint16 = 0x000A
+	SER_SEND      uint8 = 0
+	SER_REQUEST   uint8 = 1
+	SER_PUBLISH   uint8 = 2
+	SER_SUBSCRIBE uint8 = 3
+	SER_RESPONSE  uint8 = 0x0A
 )
 
 //------------ FLAG
 const (
-	FLAG_SINGLE  uint16 = 0
-	FLAG_STREAM  uint16 = 1
-	FLAG_WARNING uint16 = 0xFFFE
-	FLAG_ERROR   uint16 = 0xFFFF
+	FLAG_SINGLE  uint8 = 0
+	FLAG_STREAM  uint8 = 1
+	FLAG_WARNING uint8 = 0xFE
+	FLAG_ERROR   uint8 = 0xFF
 )
 
 //------------ SIMU TIME
