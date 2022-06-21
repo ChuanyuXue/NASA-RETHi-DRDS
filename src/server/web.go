@@ -3,7 +3,9 @@ package server
 import (
 	"data-service/src/handler"
 	"data-service/src/utils"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -81,6 +83,10 @@ func (server *WebServer) Init(src uint8) error {
 
 	app.GET("/ws", server.wsRealTime)
 	app.GET("/history/:id", server.httpHistory)
+
+	app.POST("/api/c2/:id", server.msgHandler)
+	app.OPTIONS("/api/c2/:id", sgo.PreflightHandler)
+
 	app.Run(":8888")
 
 	return nil
@@ -322,3 +328,27 @@ func (server *WebServer) httpHistory(ctx *sgo.Context) error {
 // 		}
 // 	}
 // }
+
+type C2Msg struct {
+	Msg  string `json:"msg"`
+	Test int    `json:"test"`
+	// other fields ...
+}
+
+func (server *WebServer) msgHandler(ctx *sgo.Context) error {
+	id := ctx.Param("id")
+	body, err := ioutil.ReadAll(ctx.Req.Body)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	var msg C2Msg
+	if err = json.Unmarshal(body, &msg); err != nil {
+		return err
+	}
+
+	fmt.Println(id, msg.Msg, msg.Test)
+	return ctx.Text(200, "biu")
+}
+
+// curl -X POST "http://localhost:9999/api/c2/6" -H 'Content-Type: application/json' -d '{"msg":"a dummy message"}'

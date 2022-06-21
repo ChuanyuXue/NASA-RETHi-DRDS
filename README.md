@@ -275,7 +275,7 @@ The guide document is [here](https://docs.google.com/document/d/12J9YN7X1mOZ9V3j
 
 **Step2: ** Copy `docker-compose.yml` to an empty folder and run `docker-compose up` in the same folder. This yml file can be found [here](https://raw.githubusercontent.com/ChuanyuXue/NASA-RETHi-DataService/master/docker-compose.yml). Following outputs from terminal implies the application is running successfully.
 
-```
+                                                                                                                                                                                                                ```
 comm_1          | Start Communication Network
 comm_1          | *SGo* -- Listen on :8000
 data_service_1  | Database has been initialized
@@ -339,3 +339,4 @@ api.send(synt=1000, id=3, value = [0.1, 0.1, 0.1])
 
 
 
+​	
