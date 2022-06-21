@@ -330,8 +330,8 @@ func (server *WebServer) httpHistory(ctx *sgo.Context) error {
 // }
 
 type C2Msg struct {
-	Msg  string `json:"msg"`
-	Test int    `json:"test"`
+	Data  int     `json:"data_id"`
+	Value float64 `json:"value"`
 	// other fields ...
 }
 
@@ -347,7 +347,7 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 		return err
 	}
 
-	fmt.Println(id, msg.Msg, msg.Test)
+	fmt.Println(id, msg.Data, msg.Value)
 	return ctx.Text(200, "biu")
 }
 
