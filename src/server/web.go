@@ -33,7 +33,8 @@ type WebServer struct {
 	Type string
 	Src  string
 
-	handler *handler.Handler
+	handler   *handler.Handler
+	hmsServer *Server
 
 	LocalSrc  uint8
 	ClientSrc []uint8
@@ -44,10 +45,11 @@ type WebServer struct {
 	wsOpenSig  chan bool
 }
 
-func (server *WebServer) Init(src uint8) error {
+func (server *WebServer) Init(src uint8, hmsServer *Server) error {
 	server.LocalSrc = src
 	server.Src = strconv.Itoa(int(src))
 
+	server.hmsServer = hmsServer
 	server.wsOpenSig = make(chan bool)
 	server.wsDataChan = make(chan *VisualData, 65535)
 
@@ -330,13 +332,16 @@ func (server *WebServer) httpHistory(ctx *sgo.Context) error {
 // }
 
 type C2Msg struct {
-	Data  int     `json:"data_id"`
 	Value float64 `json:"value"`
 	// other fields ...
 }
 
 func (server *WebServer) msgHandler(ctx *sgo.Context) error {
-	id := ctx.Param("id")
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 	body, err := ioutil.ReadAll(ctx.Req.Body)
 	if err != nil {
 		fmt.Println(err)
@@ -347,7 +352,27 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 		return err
 	}
 
-	fmt.Println(id, msg.Data, msg.Value)
+	var dataMat [][]float64
+	var rawData []float64
+	rawData = append(rawData, msg.Value)
+	dataMat = append(dataMat, rawData)
+
+	go server.hmsServer.send(
+		utils.SRC_AGT,
+		utils.PRIORITY_NORMAL,
+		0,
+		utils.FLAG_SINGLE,
+		uint16(id),
+		dataMat,
+	)
+
+	go server.hmsServer.Send(
+		uint16(id),
+		0,
+		uint32(time.Now().UnixMilli()),
+		dataMat[0])
+
+	fmt.Println(id, msg.Value)
 	return ctx.Text(200, "biu")
 }
 

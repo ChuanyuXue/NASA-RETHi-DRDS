@@ -433,8 +433,7 @@ func (server *Server) handle(pkt *ServicePacket) error {
 
 		}
 
-		// forward if not publish regiester
-
+	// forward if not publish regiester
 	case utils.SER_SUBSCRIBE: // Subscribe (operation packet)
 		for _, subpkt := range pkt.Subpackets {
 			err := server.Subscribe(subpkt.DataID, pkt.Src, pkt.SimulinkTime, subpkt.TimeDiff)
