@@ -34,9 +34,5 @@ for i in range(5004, 5017):
                       TYPE_OTHER, 1, 3, 'n/a', SRC_ECLSS))
 
 json_string = json.dumps(data)
-<<<<<<< HEAD
-with open('db_info_press.json', 'w') as outfile:
-=======
 with open('db_info_v6.json', 'w') as outfile:
->>>>>>> v6_aggre
     outfile.write(json_string)
