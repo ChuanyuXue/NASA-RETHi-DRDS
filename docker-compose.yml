@@ -1,9 +1,7 @@
 version: "3.9"
 services:
-
   comm:
     image: amyangxyz111/rethi-comm
-    # image: comm_t
     environment:
       ADDR_LOCAL_GCC: ":10000"
       ADDR_LOCAL_HMS: ":10001"
@@ -15,8 +13,9 @@ services:
       ADDR_LOCAL_EXT: ":10007"
       ADDR_LOCAL_IE: ":10008"
       ADDR_LOCAL_DTB: ":10009"
+      ADDR_LOCAL_CORRD: ":10010"
 
-      ADDR_REMOTE_GCC: "host.docker.internal:20000"
+      ADDR_REMOTE_GCC: "host.docker.internal:20000" #
       ADDR_REMOTE_HMS: "host.docker.internal:20001"
       ADDR_REMOTE_STR: "host.docker.internal:20002"
       ADDR_REMOTE_SPL: "host.docker.internal:20011"
@@ -26,20 +25,20 @@ services:
       ADDR_REMOTE_EXT: "host.docker.internal:20007"
       ADDR_REMOTE_IE: "host.docker.internal:20008"
       ADDR_REMOTE_DTB: "host.docker.internal:20009"
-
-      DB_DB: comm
-      DB_USER: uu
-      DB_PASSWORD: password
+      ADDR_REMOTE_CORRD: "host.docker.internal:20010"
 
       ANIMATION_ENABLED: "false"
-      CONSOLE_ENABLED: "false"
+      CONSOLE_ENABLED: "true"
       DELAY_ENABLED: "false"
       FRER_ENABLED: "false"
       RAND_SEED: "123"
-      JITTER: "0"
+      JITTER: "10"
+      DB_DB: comm
+      DB_USER: uu
+      DB_PASSWORD: password
     ports:
       - "8000:8000"
-      - "10000-10011:10000-10011/udp"
+      - "10000-10010:10000-10010/udp"
     depends_on:
       - comm_db
     networks:
