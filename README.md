@@ -274,15 +274,14 @@ The guide document is [here](https://docs.google.com/document/d/12J9YN7X1mOZ9V3j
 **Step1: ** Download Docker Desktop in latest version.
 
 **Step2: ** Copy `docker-compose.yml` to an empty folder and run `docker-compose up` in the same folder. This yml file can be found [here](https://raw.githubusercontent.com/ChuanyuXue/NASA-RETHi-DataService/master/docker-compose.yml). Following outputs from terminal implies the application is running successfully.
+                                                                                                                                                                                                                          
+        comm_1          | Start Communication Network
+        comm_1          | *SGo* -- Listen on :8000
+        data_service_1  | Database has been initialized
+        data_service_1  | Database has been initialized
+        data_service_1  | Database habitat has been connected!
+        data_service_1  | Habitat Server Started
 
-                                                                                                                                                                                                                ```
-comm_1          | Start Communication Network
-comm_1          | *SGo* -- Listen on :8000
-data_service_1  | Database has been initialized
-data_service_1  | Database has been initialized
-data_service_1  | Database habitat has been connected!
-data_service_1  | Habitat Server Started
-```
 
 **Step3:** Go website `http://localhost:8000` , the dashboard of communication network should be running.
 
