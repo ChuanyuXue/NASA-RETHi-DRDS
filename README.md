@@ -1,10 +1,7 @@
 # Data Service for NASA RETHi Project
 
-<<<<<<< HEAD
-
-=======
 ## 1. Project introduction
->>>>>>> 20453a8230dd99b4d309c2ec20eab2ef59fdc161
+Please see https://www.purdue.edu/rethi
 
 ## 2. Current design
 
