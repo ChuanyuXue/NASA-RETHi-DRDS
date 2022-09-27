@@ -80,14 +80,16 @@ Data packet is the basic form to send data and also to implement service API:
 | **Field** | **Name** | **Value** | **Description**                               |
 | --------- | -------- | --------- | --------------------------------------------- |
 | Src (Dst) | GCC      | 0x00      | Ground Command and Control Subsystem          |
-| Src (Dst) | CC       | 0x01      | Command and Control                           |
+| Src (Dst) | HMS      | 0x01      | Health Management System                      |
 | Src (Dst) | STR      | 0x02      | Structural System                             |
 | Src (Dst) | PWR      | 0x03      | Power System                                  |
-| Src (Dst) | ECLSS    | 0x04      | Environmental Control and Life Support System |
-| Src (Dst) | AGT      | 0x05      | Agent System                                  |
-| Src (Dst) | ING      | 0x06      | Interior Environment                          |
-| Src (Dst) | DST      | 0x07      | Disturbance                                   |
-| Src (Dst) | SPL      | 0x08      | Structural Protective Layer                   |
+| Src (Dst) | ECLSS    | 0x05      | Environmental Control and Life Support System |
+| Src (Dst) | AGT      | 0x06      | Agent System                                  |
+| Src (Dst) | EXT      | 0x07      | Exterior Environment                          |
+| Src (Dst) | IE       | 0x08      | Interior Environment                          |
+| Src (Dst) | DTB      | 0x09      | Disturbance                                   |
+| Src (Dst) | CN       | 0x0A      | Communication Network                         |
+| Src (Dst) | SPL      | 0x0B      | Structural Protective Layer                   |
 
 **Message Type**
 
