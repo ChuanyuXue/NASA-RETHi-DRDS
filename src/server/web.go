@@ -80,7 +80,7 @@ func (server *WebServer) Init(src uint8) error {
 	app.USE(middlewares.CORS(middlewares.CORSOpt{}))
 
 	app.GET("/ws", server.wsRealTime)
-	app.GET("/history/:id", server.wsHistory)
+	app.GET("/history/:id", server.httpHistory)
 	app.Run(":9999")
 
 	return nil
@@ -261,7 +261,7 @@ func (server *WebServer) httpHistory(ctx *sgo.Context) error {
 	}
 	for i, t := range tVec {
 		// fmt.Println(uint64(t)*1000, vMat[i][col], strconv.Itoa(int(id))+"."+reqs[1])
-		d = VisualData{Timestamp: uint64(t) * 1000, Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." + reqs[1]}
+		d = VisualData{Timestamp: uint64(t), Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." + reqs[1]}
 		dlist = append(dlist, d)
 	}
 	return ctx.JSON(200, 1, "success", dlist)
