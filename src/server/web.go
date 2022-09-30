@@ -18,13 +18,13 @@ const (
 	DATAPATH = "db_info.json"
 )
 
-type Data struct {
+type VisualData struct {
 	Timestamp uint64  `json:"timestamp"`
 	Value     float64 `json:"value"`
 	ID        string  `json:"id"`
 }
 
-type Stream struct {
+type WebServer struct {
 	utils.JsonStandard
 	utils.ServiceStandard
 
@@ -38,18 +38,16 @@ type Stream struct {
 
 	upgrader websocket.Upgrader
 
-	wsPktChMap   chan *ServicePacket
-	wsPktChMapRT chan *ServicePacket
-	wsOpenSig    chan bool
+	wsDataChan chan *VisualData
+	wsOpenSig  chan bool
 }
 
-func (server *Stream) Init(src uint8) error {
+func (server *WebServer) Init(src uint8) error {
 	server.LocalSrc = src
 	server.Src = strconv.Itoa(int(src))
 
 	server.wsOpenSig = make(chan bool)
-	server.wsPktChMap = make(chan *ServicePacket, 65535)
-	server.wsPktChMapRT = make(chan *ServicePacket, 65535)
+	server.wsDataChan = make(chan *VisualData, 65535)
 
 	//------ init data handler
 
@@ -88,11 +86,11 @@ func (server *Stream) Init(src uint8) error {
 	return nil
 }
 
-func (server *Stream) RequestRange(id uint16, timeStart uint32, timeEnd uint32) ([]uint32, []uint32, [][]float64, error) {
+func (server *WebServer) RequestRange(id uint16, timeStart uint32, timeEnd uint32) ([]uint32, []uint64, [][]float64, error) {
 	// fmt.Println("[2] Debug: RequestRange")
 	var dataMat [][]float64
 	var timeSimuVec []uint32
-	var timePhyVec []uint32
+	var timePhyVec []uint64
 	var err error
 
 	timeSimuVec, timePhyVec, dataMat, err = server.handler.ReadRange(id, timeStart, timeEnd)
@@ -104,7 +102,7 @@ func (server *Stream) RequestRange(id uint16, timeStart uint32, timeEnd uint32) 
 	return timeSimuVec, timePhyVec, dataMat, nil
 }
 
-func (server *Stream) Subscribe(id uint16, closeSig *bool) error {
+func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
 	// fmt.Println("[1] Debug: Subscribe")
 
 	/* 	------------ CHUANYU APR 19 2022 MODIFICATION-------------------------
@@ -146,13 +144,9 @@ func (server *Stream) Subscribe(id uint16, closeSig *bool) error {
 		}
 		for i, t := range timeVec {
 			server.send(
-				utils.SRC_HMS,
 				id,
-				utils.PRIORITY_HIGHT,
 				t,
-				utils.RESERVED,
 				dataMat[i],
-				server.wsPktChMapRT,
 			)
 		}
 		lastTime = currentTime
@@ -160,37 +154,47 @@ func (server *Stream) Subscribe(id uint16, closeSig *bool) error {
 
 }
 
-func (server *Stream) send(dst uint8, dataID uint16, priority uint8, synt uint32, option2 uint8, dataMap []float64, channel chan *ServicePacket) error {
+func (server *WebServer) send(dataID uint16, timestamp uint64, data []float64) error {
+
+	for i, col := range data {
+		data := VisualData{
+			Timestamp: timestamp,
+			Value:     col,
+			ID:        fmt.Sprintf("%d.%d", dataID, i),
+		}
+		server.wsDataChan <- &data
+	}
+
 	// fmt.Println("[3] Debug: send")
-	var pkt ServicePacket
-	pkt.Src = server.LocalSrc
-	pkt.Dst = dst
-	pkt.MessageType = utils.MSG_OUTER
-	pkt.Priority = priority
-	pkt.PhysicalTime = uint32(time.Now().Unix())
-	pkt.SimulinkTime = synt
+	// var pkt ServicePacket
+	// pkt.Src = server.LocalSrc
+	// pkt.Dst = dst
+	// pkt.MessageType = utils.MSG_OUTER
+	// pkt.Priority = priority
+	// pkt.PhysicalTime = uint64(time.Now().UnixMilli())
+	// pkt.SimulinkTime = synt
 
-	var subpkt SubPacket
+	// var subpkt SubPacket
 
-	subpkt.DataID = dataID
-	subpkt.Row = 1
-	subpkt.Col = uint8(len(dataMap))
-	subpkt.Length = uint16(subpkt.Row * subpkt.Col)
+	// subpkt.DataID = dataID
+	// subpkt.Row = 1
+	// subpkt.Col = uint8(len(dataMap))
+	// subpkt.Length = uint16(subpkt.Row * subpkt.Col)
 
-	pkt.Service = utils.SER_SEND
-	pkt.Flag = utils.FLAG_SINGLE
-	pkt.Option1 = utils.RESERVED
-	pkt.Option2 = option2
-	pkt.Data = dataMap
-	pkt.Subpackets = make([]*SubPacket, 0)
-	pkt.Subpackets = append(pkt.Subpackets, &subpkt)
+	// pkt.Service = utils.SER_SEND
+	// pkt.Flag = utils.FLAG_SINGLE
+	// pkt.Option1 = utils.RESERVED
+	// pkt.Option2 = option2
+	// pkt.Data = dataMap
+	// pkt.Subpackets = make([]*SubPacket, 0)
+	// pkt.Subpackets = append(pkt.Subpackets, &subpkt)
 
-	channel <- &pkt
+	// channel <- &pkt
 	// server.wsPktChMap[int(subpkt.DataID)] <- &pkt
 	return nil
 }
 
-func (server *Stream) wsRealTime(ctx *sgo.Context) error {
+func (server *WebServer) wsRealTime(ctx *sgo.Context) error {
 	// fmt.Println("[4] Debug: wsReadTime")
 	SubscribeCloseSig := false
 
@@ -223,16 +227,10 @@ func (server *Stream) wsRealTime(ctx *sgo.Context) error {
 
 	for {
 		select {
-		case pkt := <-server.wsPktChMapRT:
-			for j, k := range pkt.Data {
-				// fmt.Println(uint64(pkt.SimulinkTime)*1000, k, strconv.Itoa(int(pkt.Subpackets[0].DataID)))
-				data := Data{Timestamp: uint64(pkt.SimulinkTime) * 1000, Value: k,
-					ID: strconv.Itoa(int(pkt.Subpackets[0].DataID)) + "." + strconv.Itoa(int(j))}
-				// fmt.Println("[6] Debug: WriteJson")
-				if err = ws.WriteJSON(data); err != nil {
-					fmt.Println(err)
-					continue
-				}
+		case data := <-server.wsDataChan:
+			if err = ws.WriteJSON(data); err != nil {
+				fmt.Println(err)
+				continue
 			}
 
 		case <-closeSig:
@@ -242,9 +240,9 @@ func (server *Stream) wsRealTime(ctx *sgo.Context) error {
 	}
 }
 
-func (server *Stream) wsHistory(ctx *sgo.Context) error {
-	var dlist []Data
-	var d Data
+func (server *WebServer) httpHistory(ctx *sgo.Context) error {
+	var dlist []VisualData
+	var d VisualData
 
 	reqs := strings.Split(ctx.Param("id"), ".")
 	id, _ := strconv.ParseUint(reqs[0], 10, 16)
@@ -263,10 +261,9 @@ func (server *Stream) wsHistory(ctx *sgo.Context) error {
 	}
 	for i, t := range tVec {
 		// fmt.Println(uint64(t)*1000, vMat[i][col], strconv.Itoa(int(id))+"."+reqs[1])
-		d = Data{Timestamp: uint64(t) * 1000, Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." + reqs[1]}
+		d = VisualData{Timestamp: uint64(t) * 1000, Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." + reqs[1]}
 		dlist = append(dlist, d)
 	}
-
 	return ctx.JSON(200, 1, "success", dlist)
 }
 

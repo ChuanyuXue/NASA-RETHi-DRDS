@@ -1,0 +1,151 @@
+version: "3.9"
+services:
+
+  comm:
+    image: amyangxyz111/rethi-comm
+    # image: comm_t
+    environment:
+      ADDR_LOCAL_GCC: ":10000"
+      ADDR_LOCAL_HMS: ":10001"
+      ADDR_LOCAL_STR: ":10002"
+      ADDR_LOCAL_SPL: ":10011"
+      ADDR_LOCAL_PWR: ":10003"
+      ADDR_LOCAL_ECLSS: ":10005"
+      ADDR_LOCAL_AGT: ":10006"
+      ADDR_LOCAL_EXT: ":10007"
+      ADDR_LOCAL_IE: ":10008"
+      ADDR_LOCAL_DTB: ":10009"
+
+      ADDR_REMOTE_GCC: "host.docker.internal:20000"
+      ADDR_REMOTE_HMS: "host.docker.internal:20001"
+      ADDR_REMOTE_STR: "host.docker.internal:20002"
+      ADDR_REMOTE_SPL: "host.docker.internal:20011"
+      ADDR_REMOTE_PWR: "host.docker.internal:20003"
+      ADDR_REMOTE_ECLSS: "host.docker.internal:20005"
+      ADDR_REMOTE_AGT: "host.docker.internal:20006"
+      ADDR_REMOTE_EXT: "host.docker.internal:20007"
+      ADDR_REMOTE_IE: "host.docker.internal:20008"
+      ADDR_REMOTE_DTB: "host.docker.internal:20009"
+
+      DB_DB: comm
+      DB_USER: uu
+      DB_PASSWORD: password
+
+      ANIMATION_ENABLED: "false"
+      CONSOLE_ENABLED: "false"
+      DELAY_ENABLED: "false"
+      FRER_ENABLED: "false"
+      RAND_SEED: "123"
+      JITTER: "0"
+    ports:
+      - "8000:8000"
+      - "10000-10011:10000-10011/udp"
+    depends_on:
+      - comm_db
+    networks:
+      - hms-network
+      - comm-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  comm_db:
+    image: mariadb
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: comm
+      MYSQL_USER: uu
+      MYSQL_PASSWORD: password
+    expose:
+      - "3306"
+    networks:
+      - comm-network
+
+  data_service:
+    image: xuechuanyu/rethi-ds:beta
+    ports:
+      - "20000-20001:20000-20001/udp"
+      - "65530-65531:65530-65531/udp"
+      - "8888:8888"
+    environment:
+      DS_LOCAL_ADDR_GROUND: ":20000"
+      DS_REMOTE_ADDR_GROUND: "host.docker.internal:10000"
+
+      DS_LOCAL_ADDR_HABITAT: ":20001"
+      DS_REMOTE_ADDR_HABITAT: "host.docker.internal:10001"
+
+      DS_LOCAL_LOOP_GROUND: ":65530"
+      DS_REMOTE_LOOP_GROUND: "host.docker.internal:65532"
+
+      DS_LOCAL_LOOP_HABITAT: ":65531"
+      DS_REMOTE_LOOP_HABITAT: "host.docker.internal:65533"
+      # DS_REMOTE_LOOP_HABITAT: "rethi-c2:65533"
+
+      DB_NAME_GROUND: ground
+      DB_USER_GROUND: uu
+      DB_PASSWORD_GROUND: password
+      DB_NAME_HABITAT: habitat
+      DB_USER_HABITAT: uu
+      DB_PASSWORD_HABITAT: password
+    depends_on:
+      - ground_db
+      - habitat_db
+    networks:
+      - comm-network
+      - hms-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  ground_db:
+    image: mariadb
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: ground
+      MYSQL_USER: uu
+      MYSQL_PASSWORD: password
+    expose:
+      - "3306"
+    ports:
+      - "3307:3306"
+    networks:
+      - hms-network
+
+  habitat_db:
+    image: mariadb
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: habitat
+      MYSQL_USER: uu
+      MYSQL_PASSWORD: password
+    expose:
+      - "3306"
+    ports:
+      - "3308:3306"
+    networks:
+      - hms-network
+
+  visualization:
+    image: hfbzzx/rethi-visualization
+    ports:
+      - "8080:8080"
+  # visualization:
+  #   image: hfbzzx/rethi-visualization
+  #   ports:
+  #     - "8090:80"
+
+  # rethi-c2:
+  #   # image: rethi-c2
+  #   image: mrajase1994/rethi-c2
+  #   environment:
+  #     DELAY: 5
+  #   ports:
+  #     - "65533:65533/udp"
+  #   depends_on:
+  #     - data_service
+  #   networks:
+  #     - hms-network
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+
+networks:
+  comm-network: null
+  hms-network: null
