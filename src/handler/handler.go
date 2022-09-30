@@ -316,7 +316,7 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 	}
 
 	query := fmt.Sprintf(
-		"SELECT physical_time, simulink_time, %s FROM %s.%s WHERE (simulink_time >= %s) AND (simulink_time < %s);",
+		"SELECT physical_time_2, simulink_time, %s FROM %s.%s WHERE (simulink_time >= %s) AND (simulink_time < %s);",
 		columnPattern,
 		handler.DBName,
 		tableName,

@@ -83,7 +83,7 @@ func (server *Stream) Init(src uint8) error {
 
 	app.GET("/ws", server.wsRealTime)
 	app.GET("/history/:id", server.wsHistory)
-	app.Run(":8888")
+	app.Run(":9999")
 
 	return nil
 }
@@ -137,7 +137,7 @@ func (server *Stream) Subscribe(id uint16, closeSig *bool) error {
 		if *closeSig {
 			return nil
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(100 * time.Millisecond)
 		currentTime := server.handler.QueryLastSynt(id)
 		_, timeVec, dataMat, err := server.handler.ReadRange(id, lastTime, currentTime)
 		if err != nil {
@@ -225,6 +225,7 @@ func (server *Stream) wsRealTime(ctx *sgo.Context) error {
 		select {
 		case pkt := <-server.wsPktChMapRT:
 			for j, k := range pkt.Data {
+				// fmt.Println(uint64(pkt.SimulinkTime)*1000, k, strconv.Itoa(int(pkt.Subpackets[0].DataID)))
 				data := Data{Timestamp: uint64(pkt.SimulinkTime) * 1000, Value: k,
 					ID: strconv.Itoa(int(pkt.Subpackets[0].DataID)) + "." + strconv.Itoa(int(j))}
 				// fmt.Println("[6] Debug: WriteJson")
@@ -261,6 +262,7 @@ func (server *Stream) wsHistory(ctx *sgo.Context) error {
 		return err
 	}
 	for i, t := range tVec {
+		// fmt.Println(uint64(t)*1000, vMat[i][col], strconv.Itoa(int(id))+"."+reqs[1])
 		d = Data{Timestamp: uint64(t) * 1000, Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." + reqs[1]}
 		dlist = append(dlist, d)
 	}
