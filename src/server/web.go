@@ -89,7 +89,7 @@ func (server *WebServer) Init(src uint8, hmsServer *Server) error {
 	app.POST("/api/c2/:id", server.msgHandler)
 	app.OPTIONS("/api/c2/:id", sgo.PreflightHandler)
 
-	app.Run(":8888")
+	app.Run(":9999")
 
 	return nil
 }
@@ -143,7 +143,7 @@ func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
 		if *closeSig {
 			return nil
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(100 * time.Millisecond)
 		currentTime := server.handler.QueryLastSynt(id)
 		_, timeVec, dataMat, err := server.handler.ReadRange(id, lastTime, currentTime)
 		if err != nil {
@@ -268,8 +268,8 @@ func (server *WebServer) httpHistory(ctx *sgo.Context) error {
 		return err
 	}
 	for i, t := range tVec {
-		// fmt.Println(uint64(t) + 60*60*4)
-		d = VisualData{Timestamp: t, Value: vMat[i][col], ID: ctx.Param("id")}
+		// fmt.Println(uint64(t)*1000, vMat[i][col], strconv.Itoa(int(id))+"."+reqs[1])
+		d = VisualData{Timestamp: uint64(t), Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." + reqs[1]}
 		dlist = append(dlist, d)
 	}
 	return ctx.JSON(200, 1, "success", dlist)
