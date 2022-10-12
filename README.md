@@ -268,6 +268,8 @@ To terminate Subscribe function, send
 
 ### 4.1 Install Data repository & Communication network
 
+
+
 **Step1: ** Download Docker Desktop in latest version.
 
 **Step2: ** Copy `docker-compose.yml` to an empty folder and run `docker-compose up` in the same folder. This yml file can be found [here](docker-compose.yml). Following outputs from terminal implies the application is running successfully.
@@ -292,7 +294,7 @@ To terminate Subscribe function, send
 
  ![setpoint](img/setpoint.png)
 
-**Step4:** Run `pkt_generator.py` to generate fake data for testing. This python script can be found [here](inte/pkt_generator.py). You should observe the data flow in communication network dashboard and data changes in human interface. All data are defined in this online [datasheet](https://docs.google.com/spreadsheets/d/1TneFCrSJujumfb6gYghlOGp2S6lxmde5FNrX20iBUE0/edit#gid=602968348) in Communication-Data-Service tab.
+**Step5:** Run `pkt_generator.py` to generate fake data for testing. This python script can be found [here](inte/pkt_generator.py). You should observe the data flow in communication network dashboard and data changes in human interface. All data are defined in this online [datasheet](https://docs.google.com/spreadsheets/d/1TneFCrSJujumfb6gYghlOGp2S6lxmde5FNrX20iBUE0/edit#gid=602968348) in Communication-Data-Service tab.
 
 Or you can play with the real MCVT v6.2 to interact with HMS application. To make sure you are using the correct MCVT version, the components in Communication Network subsystem should contains Inputs, Outputs, System Outputs, HMS Socket APIs, and HMS UDP Receiver blocks.
 
@@ -300,7 +302,7 @@ Or you can play with the real MCVT v6.2 to interact with HMS application. To mak
 
 
 
-### 4.2 How to use python api for C2
+### 4.2 How to use python api for Command & Control
 
 Put `api.py` and `utils.py` in the same folder with your application first. 
 
