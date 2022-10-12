@@ -30,7 +30,8 @@ if __name__ == '__main__':
                    to_port=65531,
                    client_id=1,
                    server_id=1)
-    ## I want data 3
+
+    ## Tell DataService you want data 5002
     conn.subscribe_register(5002, 0)
 
     print("[0] Subscribed")
