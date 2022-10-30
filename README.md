@@ -22,10 +22,10 @@ Please see https://www.purdue.edu/rethi
 <img src="./img/DS_UML.drawio.svg">
 
 ## 3. Service Protocol
-- **For Python, please reference [demo.py](./demo.py) and [api.py](./api.py).**
-- **For GoLang, please reference [main.go].**
-- **For JavaScript, please reference demo.html** (Currently not stable, please see another branch)
-- **For Simulink, please reference [demo.slx](./demo.slx) and [api.m](./api.m)**
+- **For Python, please reference [demo.py](inte/db_send_habitat.py) and [api.py](inte/pyapi/api.py).**
+- **For GoLang, please reference [main.go](main.go).**
+- **For JavaScript, please reference [demo.html](inte/db_subscribe.html)**
+- **For Simulink, please reference [MCVT_v6_shell.slx](inte/v6_shell/MCVT_v6_shell.slx)**
 - **For other Language, please implement by following standards:**
 
 
@@ -266,14 +266,15 @@ To terminate Subscribe function, send
 
 ## 4. Integration Guide
 
-The guide document is [here](https://docs.google.com/document/d/12J9YN7X1mOZ9V3jyVSI7JLqs4B8RDRLaMuK92zJOCio/edit#heading=h.9qqmtz1fu6lr).
-
 ### 4.1 Install Data repository & Communication network
+
+
 
 **Step1: ** Download Docker Desktop in latest version.
 
-**Step2: ** Copy `docker-compose.yml` to an empty folder and run `docker-compose up` in the same folder. This yml file can be found [here](https://raw.githubusercontent.com/ChuanyuXue/NASA-RETHi-DataService/master/docker-compose.yml). Following outputs from terminal implies the application is running successfully.
-                                                                                                                                                                                                                          
+**Step2: ** Copy `docker-compose.yml` to an empty folder and run `docker-compose up` in the same folder. This yml file can be found [here](docker-compose.yml). Following outputs from terminal implies the application is running successfully.
+                                                                                                                                                                                                                        
+
         comm_1          | Start Communication Network
         comm_1          | *SGo* -- Listen on :8000
         data_service_1  | Database has been initialized
@@ -281,16 +282,29 @@ The guide document is [here](https://docs.google.com/document/d/12J9YN7X1mOZ9V3j
         data_service_1  | Database habitat has been connected!
         data_service_1  | Habitat Server Started
 
+**Step3:** Go website `http://localhost:8000` , the dashboard of communication network should be running.  The source code and usage details can be found in https://github.com/AmyangXYZ/RETHi-Comm.
 
-**Step3:** Go website `http://localhost:8000` , the dashboard of communication network should be running.
+![cn](img/cn.png)
 
-**Step4:** Run `pkt_generator.py` to generate fake data for testing. This python script can be found [here](https://raw.githubusercontent.com/ChuanyuXue/NASA-RETHi-DataService/master/pkt_generator.py)
+**Step4:** Go website `http://localhost:8080`, the dashboard of human interface should be running. The source code and usage details can be found in https://github.com/HFBZZ/RETHi_HMS_Vis.
+
+![hi](img/hi.png)
+
+*Set-point:* By clicking the `➕CREATE` button on the top-left corner, you can create `Telemetry Control Button` to change the set-point in corresponding subsystems.
+
+ ![setpoint](img/setpoint.png)
+
+**Step5:** Run `pkt_generator.py` to generate fake data for testing. This python script can be found [here](inte/pkt_generator.py). You should observe the data flow in communication network dashboard and data changes in human interface. All data are defined in this online [datasheet](https://docs.google.com/spreadsheets/d/1TneFCrSJujumfb6gYghlOGp2S6lxmde5FNrX20iBUE0/edit#gid=602968348) in Communication-Data-Service tab.
+
+Or you can play with the real MCVT v6.2 to interact with HMS application. To make sure you are using the correct MCVT version, the components in Communication Network subsystem should contains Inputs, Outputs, System Outputs, HMS Socket APIs, and HMS UDP Receiver blocks.
+
+![mcvt](img/mcvt.png)
 
 
 
-### 4.2 How to use python api for C2
+### 4.2 How to use python api for Command & Control
 
-Put `api.py` in the same folder with your application first. This python API file can be found [here](https://raw.githubusercontent.com/ChuanyuXue/NASA-RETHi-DataService/master/api.py).
+Put `api.py` and `utils.py` in the same folder with your application first. 
 
 Using `api.init` function to set ip and port of local and remote server. 
 
@@ -308,7 +322,7 @@ api.init(
 )
 ```
 
-Using `api.request(Data_ID, Simulink_Time, Priority) -> Data`  request data.
+Using `api.request(Data_ID, Simulink_Time, Priority) -> Data`  request history data.
 
 ```
 ## Request data(SPG DUST) whose ID == 3 at simulink time 1000
@@ -321,7 +335,7 @@ re = api.request(synt=0xffffffff, id=3)
 re = api.request(synt=(1, 5), id=3)
 
 ## Request data(SPG DUST) whose ID == 3 from simulink time 1 to the lasted update value (this method severely rely on the correct setting of data frequency)
-re = api.request(synt=(1, 0xffff), id=3
+re = api.request(synt=(1, 0xffff), id=3)
 ```
 
 Using `api.send(Data_ID, Simulink_Time, Data, Priority, type) -> None`  send data to server (You can send to different subsystems by `api.init` function)
@@ -331,7 +345,49 @@ Using `api.send(Data_ID, Simulink_Time, Data, Priority, type) -> None`  send dat
 api.send(synt=1000, id=3, value = [0.1, 0.1, 0.1])
 ```
 
+Using `api.subscribe_reguster(Data_ID, Simulink_Time) -> None` subscribe real-time data.
 
+```
+## This framework helps you subscribe multiple data concurrently:
+
+def update_data(api: api.API, q: Queue):
+    '''
+    Receive data from data repository
+    '''
+    print("[1] Subprocess is working")
+    while True:
+        data = api.subscribe()
+        q.put(
+            {
+                'time':data.header.simulink_time,
+                'length':data.subpackets[0].header.length,
+                'payload':list(data.subpackets[0].payload),
+            }
+            
+        )
+
+## Tell DataService you want data 5002
+conn.subscribe_register(5002, 0)
+
+print("[0] Subscribed")
+## Queue is for communication between 2 process
+q = Queue(QUEUE_SIZE)
+
+## Create a process to collect data
+p = Process(target=update_data, args=(
+    conn,
+    q,
+))
+
+## Start the process
+p.start()
+
+## Get data here without blocking
+while True:
+    if not q.empty():
+        data = q.get()
+        print(data)
+```
 
 <img src="./img/nasa_logo.jpg" width="50" height="50"> *This project is supported by the National Aeronautics and Space Administration*
 
