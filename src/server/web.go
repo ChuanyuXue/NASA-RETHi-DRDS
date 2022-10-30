@@ -35,6 +35,7 @@ type WebServer struct {
 
 	handler   *handler.Handler
 	hmsServer *Server
+	hmsServer *Server
 
 	LocalSrc  uint8
 	ClientSrc []uint8
@@ -89,7 +90,7 @@ func (server *WebServer) Init(src uint8, hmsServer *Server) error {
 	app.POST("/api/c2/:id", server.msgHandler)
 	app.OPTIONS("/api/c2/:id", sgo.PreflightHandler)
 
-	app.Run(":8888")
+	app.Run(":9999")
 
 	return nil
 }
@@ -268,8 +269,8 @@ func (server *WebServer) httpHistory(ctx *sgo.Context) error {
 		return err
 	}
 	for i, t := range tVec {
-		// fmt.Println(uint64(t) + 60*60*4)
-		d = VisualData{Timestamp: t, Value: vMat[i][col], ID: ctx.Param("id")}
+		// fmt.Println(uint64(t)*1000, vMat[i][col], strconv.Itoa(int(id))+"."+reqs[1])
+		d = VisualData{Timestamp: uint64(t), Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." + reqs[1]}
 		dlist = append(dlist, d)
 	}
 	return ctx.JSON(200, 1, "success", dlist)
@@ -333,6 +334,7 @@ func (server *WebServer) httpHistory(ctx *sgo.Context) error {
 
 type C2Msg struct {
 	Value float64 `json:"value"`
+	Time  uint32  `json:"time"`
 	// other fields ...
 }
 
@@ -360,7 +362,7 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 	go server.hmsServer.send(
 		utils.SRC_AGT,
 		utils.PRIORITY_NORMAL,
-		0,
+		msg.Time,
 		utils.FLAG_SINGLE,
 		uint16(id),
 		dataMat,
@@ -368,12 +370,10 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 
 	go server.hmsServer.Send(
 		uint16(id),
-		0,
+		msg.Time,
 		uint32(time.Now().UnixMilli()),
 		dataMat[0])
 
 	fmt.Println(id, msg.Value)
 	return ctx.Text(200, "biu")
 }
-
-// curl -X POST "http://localhost:9999/api/c2/6" -H 'Content-Type: application/json' -d '{"msg":"a dummy message"}'
