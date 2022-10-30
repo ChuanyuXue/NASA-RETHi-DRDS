@@ -333,6 +333,7 @@ func (server *WebServer) httpHistory(ctx *sgo.Context) error {
 
 type C2Msg struct {
 	Value float64 `json:"value"`
+	Time  uint32  `json:"time"`
 	// other fields ...
 }
 
@@ -360,7 +361,7 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 	go server.hmsServer.send(
 		utils.SRC_AGT,
 		utils.PRIORITY_NORMAL,
-		0,
+		msg.Time,
 		utils.FLAG_SINGLE,
 		uint16(id),
 		dataMat,
@@ -368,7 +369,7 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 
 	go server.hmsServer.Send(
 		uint16(id),
-		0,
+		msg.Time,
 		uint32(time.Now().UnixMilli()),
 		dataMat[0])
 

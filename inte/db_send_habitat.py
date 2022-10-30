@@ -8,7 +8,7 @@ ins = api.API(local_ip="0.0.0.0",
               client_id=1,
               server_id=6)
 
-ins.send(10001, 1, [15])
+ins.send(10001, 12345, [15])
 
 # for i in range(100):
 #     ins.send(10001, i, [i])
