@@ -35,7 +35,6 @@ type WebServer struct {
 
 	handler   *handler.Handler
 	hmsServer *Server
-	hmsServer *Server
 
 	LocalSrc  uint8
 	ClientSrc []uint8
