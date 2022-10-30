@@ -193,8 +193,8 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 	var columnList []string
 	var columnFillin []string
 	columnList = append(columnList, "simulink_time")
-	columnList = append(columnList, "physical_time")
-	columnList = append(columnList, "physical_time_2")
+	columnList = append(columnList, "physical_time_s")
+	columnList = append(columnList, "physical_time_d")
 
 	for i := 0; i != int(handler.DataShapes[id]); i++ {
 		columnList = append(columnList, "value"+strconv.Itoa(i))
@@ -248,7 +248,7 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint64, []float64, err
 	}
 
 	query := fmt.Sprintf(
-		"SELECT physical_time_2, %s FROM %s.%s WHERE simulink_time = %s;",
+		"SELECT physical_time_d, %s FROM %s.%s WHERE simulink_time = %s;",
 		columnPattern,
 		handler.DBName,
 		tableName,
@@ -313,7 +313,7 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 	}
 
 	query := fmt.Sprintf(
-		"SELECT physical_time_2, simulink_time, %s FROM %s.%s WHERE (simulink_time >= %s) AND (simulink_time < %s);",
+		"SELECT physical_time_d, simulink_time, %s FROM %s.%s WHERE (simulink_time >= %s) AND (simulink_time < %s);",
 		columnPattern,
 		handler.DBName,
 		tableName,
