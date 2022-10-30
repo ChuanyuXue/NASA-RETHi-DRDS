@@ -3,7 +3,9 @@ package server
 import (
 	"data-service/src/handler"
 	"data-service/src/utils"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -31,7 +33,8 @@ type WebServer struct {
 	Type string
 	Src  string
 
-	handler *handler.Handler
+	handler   *handler.Handler
+	hmsServer *Server
 
 	LocalSrc  uint8
 	ClientSrc []uint8
@@ -42,10 +45,11 @@ type WebServer struct {
 	wsOpenSig  chan bool
 }
 
-func (server *WebServer) Init(src uint8) error {
+func (server *WebServer) Init(src uint8, hmsServer *Server) error {
 	server.LocalSrc = src
 	server.Src = strconv.Itoa(int(src))
 
+	server.hmsServer = hmsServer
 	server.wsOpenSig = make(chan bool)
 	server.wsDataChan = make(chan *VisualData, 65535)
 
@@ -81,6 +85,10 @@ func (server *WebServer) Init(src uint8) error {
 
 	app.GET("/ws", server.wsRealTime)
 	app.GET("/history/:id", server.httpHistory)
+
+	app.POST("/api/c2/:id", server.msgHandler)
+	app.OPTIONS("/api/c2/:id", sgo.PreflightHandler)
+
 	app.Run(":9999")
 
 	return nil
@@ -135,7 +143,7 @@ func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
 		if *closeSig {
 			return nil
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(1 * time.Second)
 		currentTime := server.handler.QueryLastSynt(id)
 		_, timeVec, dataMat, err := server.handler.ReadRange(id, lastTime, currentTime)
 		if err != nil {
@@ -322,3 +330,48 @@ func (server *WebServer) httpHistory(ctx *sgo.Context) error {
 // 		}
 // 	}
 // }
+
+type C2Msg struct {
+	Value float64 `json:"value"`
+	// other fields ...
+}
+
+func (server *WebServer) msgHandler(ctx *sgo.Context) error {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	body, err := ioutil.ReadAll(ctx.Req.Body)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	var msg C2Msg
+	if err = json.Unmarshal(body, &msg); err != nil {
+		return err
+	}
+
+	var dataMat [][]float64
+	var rawData []float64
+	rawData = append(rawData, msg.Value)
+	dataMat = append(dataMat, rawData)
+
+	go server.hmsServer.send(
+		utils.SRC_AGT,
+		utils.PRIORITY_NORMAL,
+		0,
+		utils.FLAG_SINGLE,
+		uint16(id),
+		dataMat,
+	)
+
+	go server.hmsServer.Send(
+		uint16(id),
+		0,
+		uint32(time.Now().UnixMilli()),
+		dataMat[0])
+
+	fmt.Println(id, msg.Value)
+	return ctx.Text(200, "biu")
+}

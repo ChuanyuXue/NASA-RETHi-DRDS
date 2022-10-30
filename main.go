@@ -149,7 +149,7 @@ func main() {
 
 	// Start Habitat web service
 	habitatWebServer := server.WebServer{}
-	go habitatWebServer.Init(utils.SRC_HMS)
+	go habitatWebServer.Init(utils.SRC_HMS, &habitatServer)
 	fmt.Println("Habitat Web-Service Started")
 
 	// Start Ground server
