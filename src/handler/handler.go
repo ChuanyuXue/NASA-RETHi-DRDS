@@ -203,7 +203,7 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 
 	columnFillin = append(columnFillin, strconv.Itoa(int(synt)))
 	// Need to fix int64 -> unsigned int32?
-	columnFillin = append(columnFillin, strconv.Itoa(int(phyt)))
+	columnFillin = append(columnFillin, strconv.FormatUint(uint64(phyt), 10))
 	columnFillin = append(columnFillin, strconv.FormatUint(uint64(time.Now().UnixMilli()), 10))
 
 	if int(handler.DataShapes[id]) != len(value) {

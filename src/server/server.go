@@ -226,7 +226,7 @@ func (server *Server) send(dst uint8, priority uint8, synt uint32, flag uint8, d
 	pkt.Priority = priority
 	pkt.Version = utils.VERSION_V0
 	pkt.Reserved = utils.RESERVED
-	pkt.PhysicalTime = uint32(time.Now().UnixMilli())
+	pkt.PhysicalTime = uint32(time.Now().UnixMilli() / 1e3)
 	pkt.SimulinkTime = synt
 	server.mu.Lock()
 	pkt.Sequence = server.Sequence
@@ -290,7 +290,7 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, service ui
 	pkt.Priority = priority
 	pkt.Version = utils.VERSION_V0
 	pkt.Reserved = utils.RESERVED
-	pkt.PhysicalTime = uint32(time.Now().UnixMilli())
+	pkt.PhysicalTime = uint32(time.Now().UnixMilli() / 1e3)
 	pkt.SimulinkTime = synt
 	server.mu.Lock()
 	pkt.Sequence = server.Sequence

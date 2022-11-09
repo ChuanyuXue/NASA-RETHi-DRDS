@@ -370,7 +370,7 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 	go server.hmsServer.Send(
 		uint16(id),
 		msg.Time,
-		uint32(time.Now().UnixMilli()),
+		uint32(time.Now().UnixMilli()/1e3),
 		dataMat[0])
 
 	fmt.Println(id, msg.Value)

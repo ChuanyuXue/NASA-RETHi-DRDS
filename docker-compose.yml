@@ -29,7 +29,7 @@ services:
 
       ANIMATION_ENABLED: "false"
       CONSOLE_ENABLED: "true"
-      DELAY_ENABLED: "false"
+      DELAY_ENABLED: "true"
       FRER_ENABLED: "false"
       RAND_SEED: "123"
       JITTER: "10"
