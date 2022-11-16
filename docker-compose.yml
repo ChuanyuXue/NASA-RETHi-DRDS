@@ -90,7 +90,7 @@ services:
     volumes:
       - type: bind
         source: ./db_info_v6.json
-        target: /go/bin/data-service/db_info_v6.json
+        target: /db_info_v6.json
     depends_on:
       - ground_db
       - habitat_db
