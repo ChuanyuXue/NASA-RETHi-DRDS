@@ -289,7 +289,7 @@ To terminate Subscribe function, send
 
 **Step1: ** Download Docker Desktop in latest version.
 
-**Step2: ** Copy `docker-compose.yml` to an empty folder and run `docker-compose up` in the same folder. This yml file can be found [here](docker-compose.yml). Following outputs from terminal implies the application is running successfully.
+**Step2: ** Copy `docker-compose.yml` and `db_info_v6.json` together to an empty folder and run `docker-compose up` in the same folder. This yml file can be found [here](docker-compose.yml). Following outputs from terminal implies the application is running successfully.
                                                                                                                                                                                                                         
 
         comm_1          | Start Communication Network
