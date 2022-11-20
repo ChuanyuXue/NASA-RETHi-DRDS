@@ -22,10 +22,10 @@ Please see https://www.purdue.edu/rethi
 <img src="./img/DS_UML.drawio.svg">
 
 ## 3. Service Protocol
-- **For Python, please reference [demo.py](inte/db_send_habitat.py) and [api.py](inte/pyapi/api.py).**
-- **For GoLang, please reference [main.go](main.go).**
-- **For JavaScript, please reference [demo.html](inte/db_subscribe.html)**
-- **For Simulink, please reference [MCVT_v6_shell.slx](inte/v6_shell/MCVT_v6_shell.slx)**
+- **For Python, please refer to  [demo.py](inte/db_send_habitat.py) and [api.py](inte/pyapi/api.py).**
+- **For GoLang, please refer to [main.go](main.go).**
+- **For JavaScript, please refer to [demo.html](inte/db_subscribe.html)**
+- **For Simulink, please refer to [MCVT_v6_shell.slx](inte/v6_shell/MCVT_v6_shell.slx)**
 - **For other Language, please implement by following standards:**
 
 
@@ -283,13 +283,11 @@ To terminate Subscribe function, send
 
 ## 4. Integration Guide
 
-### 4.1 Install Data repository & Communication network
+### 4.1 How to RUN the closed-loop control between OpenMCT and MCVT v6.2?
 
+**Step1: ** Download Docker Desktop in latest version. For windows user, please install WSL following the guidence in Docker.
 
-
-**Step1: ** Download Docker Desktop in latest version.
-
-**Step2: ** Copy `docker-compose.yml` and `db_info_v6.json` together to an empty folder and run `docker-compose up` in the same folder. This yml file can be found [here](docker-compose.yml). Following outputs from terminal implies the application is running successfully.
+**Step2: ** Copy `docker-compose.yml` and `db_info_v6.json` from this GitRepo to an empty folder in your local machine, and run `docker-compose up` in the same folder. This yml file can be found [here](docker-compose.yml). Following outputs from terminal implies the application is running successfully.
                                                                                                                                                                                                                         
 
         comm_1          | Start Communication Network
@@ -299,27 +297,27 @@ To terminate Subscribe function, send
         data_service_1  | Database habitat has been connected!
         data_service_1  | Habitat Server Started
 
-**Step3:** Go website `http://localhost:8000` , the dashboard of communication network should be running.  The source code and usage details can be found in https://github.com/AmyangXYZ/RETHi-Comm.
+**Step3:** Go website `http://localhost:8000` , the dashboard of **HMS: Communication Network Subsystem** should be running.  The source code and usage details can be found in https://github.com/AmyangXYZ/RETHi-Comm.
 
 ![cn](img/cn.png)
 
-**Step4:** Go website `http://localhost:8080`, the dashboard of human interface should be running. The source code and usage details can be found in https://github.com/HFBZZ/RETHi_HMS_Vis.
+**Step4:** Go website `http://localhost:8080`, the dashboard of **HMS: Data Visualization Subsystem** should be running. The source code and usage details can be found in https://github.com/HFBZZ/RETHi_HMS_Vis.
 
 ![hi](img/hi.png)
 
-*Set-point:* By clicking the `➕CREATE` button on the top-left corner, you can create `Telemetry Control Button` to change the set-point in corresponding subsystems.
+*Set-point Control:* By clicking the `➕CREATE` button on the top-left corner, you can create `Telemetry Control Button` to change the set-point in corresponding subsystems.
 
  ![setpoint](img/setpoint.png)
 
-**Step5:** Run `pkt_generator.py` to generate fake data for testing. This python script can be found [here](inte/pkt_generator.py). You should observe the data flow in communication network dashboard and data changes in human interface. All data are defined in this online [datasheet](https://docs.google.com/spreadsheets/d/1TneFCrSJujumfb6gYghlOGp2S6lxmde5FNrX20iBUE0/edit#gid=602968348) in Communication-Data-Service tab.
+**Step5:** Copy `pkt_generator.py` from this GitRepo to the folder with `db_json_v6.json` to generate fake data for testing. This python script can be found [here](inte/pkt_generator.py). You should observe the data flow in communication network dashboard and data changes in human interface. All data are defined in this online [datasheet](https://docs.google.com/spreadsheets/d/1TneFCrSJujumfb6gYghlOGp2S6lxmde5FNrX20iBUE0/edit#gid=602968348) in Communication-Data-Service tab.
 
-Or you can play with the real MCVT v6.2 to interact with HMS application. To make sure you are using the correct MCVT version, the components in Communication Network subsystem should contains Inputs, Outputs, System Outputs, HMS Socket APIs, and HMS UDP Receiver blocks.
+Or you can play with the real MCVT v6.2 to interact with HMS application. To make sure you are using the correct MCVT version, the components in Communication Network (Sys10) subsystem should contains Inputs, Outputs, System Outputs, HMS Socket APIs, and HMS UDP Receiver blocks.
 
 ![mcvt](img/mcvt.png)
 
 
 
-### 4.2 How to use python api for Command & Control
+### 4.2 How to use Python APIs (mainly designed for Command & Control)
 
 Put `api.py` and `utils.py` in the same folder with your application first. 
 
@@ -355,7 +353,7 @@ re = api.request(synt=(1, 5), id=3)
 re = api.request(synt=(1, 0xffff), id=3)
 ```
 
-Using `api.send(Data_ID, Simulink_Time, Data, Priority, type) -> None`  send data to server (You can send to different subsystems by `api.init` function)
+Using `api.send(Data_ID, Simulink_Time, Data, Priority, type) -> None`  send data to server (You can send to different subsystems by `api.init` function, but currently only AGENT and COMMUNICATION subsystems implemented with Simulink Receiving API).
 
 ```
 ## Send data (SPG DUST) whose ID == 3 at simulink time 1000
@@ -383,7 +381,7 @@ def update_data(api: api.API, q: Queue):
             
         )
 
-## Tell DataService you want data 5002
+## Tell DataService you want to subscribe data 5002
 conn.subscribe_register(5002, 0)
 
 print("[0] Subscribed")
@@ -405,6 +403,16 @@ while True:
         data = q.get()
         print(data)
 ```
+
+Python API also supports subscribing multiple data simultaneously with **only ONE client** by simply changing line 20 in above code as following:
+
+```
+## Tell DataService you want both data 5002 and 5003 from SIMULINK_TIME 0
+conn.subscribe_register(5002, 0)
+conn.subscribe_register(5003, 0)
+```
+
+![multi_subscribe](img/multi_subscribe.png)
 
 <img src="./img/nasa_logo.jpg" width="50" height="50"> *This project is supported by the National Aeronautics and Space Administration*
 

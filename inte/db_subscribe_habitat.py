@@ -12,14 +12,11 @@ def update_data(api: api.API, q: Queue):
     print("[1] Subprocess is working")
     while True:
         data = api.subscribe()
-        q.put(
-            {
-                'time':data.header.simulink_time,
-                'length':data.subpackets[0].header.length,
-                'payload':list(data.subpackets[0].payload),
-            }
-            
-        )
+        q.put({
+            'time': data.header.simulink_time,
+            'length': data.subpackets[0].header.length,
+            'payload': list(data.subpackets[0].payload),
+        })
 
 
 if __name__ == '__main__':
@@ -33,6 +30,7 @@ if __name__ == '__main__':
 
     ## Tell DataService you want data 5002
     conn.subscribe_register(5002, 0)
+    conn.subscribe_register(5003, 0)
 
     print("[0] Subscribed")
     ## Queue is for communication between 2 process
