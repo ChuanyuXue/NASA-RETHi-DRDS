@@ -285,9 +285,9 @@ To terminate Subscribe function, send
 
 ### 4.1 How to RUN the closed-loop control between OpenMCT and MCVT v6.2?
 
-**Step1: ** Download Docker Desktop in latest version. For windows user, please install WSL following the guidence in Docker.
+**Step1:** Download Docker Desktop in latest version. For windows user, please install WSL following the guidence in Docker.
 
-**Step2: ** Copy `docker-compose.yml` and `db_info_v6.json` from this GitRepo to an empty folder in your local machine, and run `docker-compose up` in the same folder. This yml file can be found [here](docker-compose.yml). Following outputs from terminal implies the application is running successfully.
+**Step2:** Copy `docker-compose.yml` and `db_info_v6.json` from this GitRepo to an empty folder in your local machine, and run `docker-compose up` in the same folder. This yml file can be found [here](docker-compose.yml). Following outputs from terminal implies the application is running successfully.
                                                                                                                                                                                                                         
 
         comm_1          | Start Communication Network
