@@ -104,7 +104,8 @@ services:
   ground_db:
     image: mariadb
     environment:
-      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      # MYSQL_RANDOM_ROOT_PASSWORD: "yes"
       MYSQL_DATABASE: ground
       MYSQL_USER: uu
       MYSQL_PASSWORD: password
@@ -118,7 +119,8 @@ services:
   habitat_db:
     image: mariadb
     environment:
-      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      # MYSQL_RANDOM_ROOT_PASSWORD: "yes"
       MYSQL_DATABASE: habitat
       MYSQL_USER: uu
       MYSQL_PASSWORD: password
