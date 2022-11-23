@@ -89,7 +89,8 @@ services:
       version: "3.7"
     volumes:
       - type: bind
-        source: ./db_info_v6.json
+        # source: ./db_info_v6.json
+        source: ./config_diagnostic_tests.json
         target: /db_info_v6.json
     depends_on:
       - ground_db

@@ -1,0 +1,112 @@
+{
+    "ECLSS/DT001": {
+        "data_id": 7001,
+        "data_name": "ECLSS/DT001",
+        "data_type": 2,
+        "data_subtype1": 5,
+        "data_subtype2": 7001,
+        "data_rate": 200,
+        "data_size": 2,
+        "data_unit": "n/a",
+        "data_notes": "4"
+    },
+    "ECLSS/DT002": {
+        "data_id": 7002,
+        "data_name": "ECLSS/DT002",
+        "data_type": 2,
+        "data_subtype1": 5,
+        "data_subtype2": 7002,
+        "data_rate": 200,
+        "data_size": 2,
+        "data_unit": "n/a",
+        "data_notes": "3"
+    },
+    "ECLSS/DT003": {
+        "data_id": 7003,
+        "data_name": "ECLSS/DT003",
+        "data_type": 2,
+        "data_subtype1": 5,
+        "data_subtype2": 7003,
+        "data_rate": 200,
+        "data_size": 2,
+        "data_unit": "n/a",
+        "data_notes": "3"
+    },
+    "DT004": {
+        "data_id": 7004,
+        "data_name": "DT004",
+        "data_type": 2,
+        "data_subtype1": 5,
+        "data_subtype2": 7004,
+        "data_rate": 200,
+        "data_size": 2,
+        "data_unit": "n/a",
+        "data_notes": "4"
+    },
+    "DT005": {
+        "data_id": 7005,
+        "data_name": "DT005",
+        "data_type": 2,
+        "data_subtype1": 5,
+        "data_subtype2": 7005,
+        "data_rate": 200,
+        "data_size": 2,
+        "data_unit": "n/a",
+        "data_notes": "5"
+    },
+    "DT006": {
+        "data_id": 7006,
+        "data_name": "DT006",
+        "data_type": 2,
+        "data_subtype1": 5,
+        "data_subtype2": 7006,
+        "data_rate": 200,
+        "data_size": 2,
+        "data_unit": "n/a",
+        "data_notes": "6"
+    },
+    "DT007": {
+        "data_id": 7007,
+        "data_name": "DT007",
+        "data_type": 2,
+        "data_subtype1": 5,
+        "data_subtype2": 7007,
+        "data_rate": 200,
+        "data_size": 2,
+        "data_unit": "n/a",
+        "data_notes": "7"
+    },
+    "DT008": {
+        "data_id": 7008,
+        "data_name": "DT008",
+        "data_type": 2,
+        "data_subtype1": 5,
+        "data_subtype2": 7008,
+        "data_rate": 200,
+        "data_size": 2,
+        "data_unit": "n/a",
+        "data_notes": "7"
+    },
+    "DT009": {
+        "data_id": 7009,
+        "data_name": "DT009",
+        "data_type": 2,
+        "data_subtype1": 5,
+        "data_subtype2": 7009,
+        "data_rate": 200,
+        "data_size": 2,
+        "data_unit": "n/a",
+        "data_notes": "3"
+    },
+    "DT010": {
+        "data_id": 7010,
+        "data_name": "DT010",
+        "data_type": 2,
+        "data_subtype1": 5,
+        "data_subtype2": 7010,
+        "data_rate": 200,
+        "data_size": 2,
+        "data_unit": "n/a",
+        "data_notes": "5"
+    }
+}
