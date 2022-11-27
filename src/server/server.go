@@ -2,6 +2,7 @@ package server
 
 import (
 	"data-service/src/handler"
+	"data-service/src/statistic"
 	"data-service/src/utils"
 	"errors"
 	"os"
@@ -21,6 +22,8 @@ type Server struct {
 	Src  string
 
 	handler *handler.Handler
+	web     *WebServer
+	stat    *statistic.Stat
 
 	LocalSrc     uint8
 	ClientSrc    []uint8
@@ -36,30 +39,36 @@ type Server struct {
 
 func (server *Server) Init(src uint8) error {
 	// -------------------------- Fix the paramter for docker envirioment
+	server.Src = string(src)
+	server.LocalSrc = uint8(src)
 	if src == utils.SRC_GCC {
 		server.Type = "GROUND"
 		server.ClientSrc = []uint8{
-			utils.SRC_AGT,
-			utils.SRC_ECLSS,
-			utils.SRC_EXT,
 			utils.SRC_HMS,
-			utils.SRC_IE,
+			utils.SRC_STR,
 			utils.SRC_PWR,
-			utils.SRC_STR}
-
+			utils.SRC_ECLSS,
+			utils.SRC_AGT,
+			utils.SRC_EXT,
+			utils.SRC_IE,
+			utils.SRC_DTB,
+			utils.SRC_CN,
+			utils.SRC_SPL}
 	} else if src == utils.SRC_HMS {
 		server.Type = "HABITAT"
 		server.ClientSrc = []uint8{
-			utils.SRC_AGT,
-			utils.SRC_ECLSS,
-			utils.SRC_EXT,
 			utils.SRC_GCC,
-			utils.SRC_IE,
+			utils.SRC_STR,
 			utils.SRC_PWR,
-			utils.SRC_STR}
+			utils.SRC_ECLSS,
+			utils.SRC_AGT,
+			utils.SRC_EXT,
+			utils.SRC_IE,
+			utils.SRC_DTB,
+			utils.SRC_CN,
+			utils.SRC_SPL}
 	}
-	server.Src = string(src)
-	server.LocalSrc = uint8(src)
+
 	server.ClientSrcMap = make(map[uint8]net.UDPAddr)
 
 	server.inboundQueue = make(chan *ServicePacket, utils.BUFFLEN)
@@ -73,13 +82,13 @@ func (server *Server) Init(src uint8) error {
 	if err != nil {
 		return fmt.Errorf("unable to resolve remote address for %s", server.Type)
 	}
+	for key := range server.ClientSrc {
+		server.ClientSrcMap[uint8(key)] = *remoteAddr
+	}
+
 	loopAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_LOOP_"+server.Type))
 	if err != nil {
 		return errors.New("unable to resolve local loop")
-	}
-
-	for key := range server.ClientSrc {
-		server.ClientSrcMap[uint8(key)] = *remoteAddr
 	}
 
 	remoteAddr, err = net.ResolveUDPAddr("udp", os.Getenv("DS_REMOTE_LOOP_"+server.Type))
@@ -88,15 +97,16 @@ func (server *Server) Init(src uint8) error {
 	}
 	server.ClientSrcMap[uint8(src)] = *remoteAddr
 
-	// -------------------------- Fix the paramter for docker envirioment
-	// Init data service handler
+	//  Init MySQL data handler
 	server.handler = &handler.Handler{}
 	err = server.handler.Init(server.LocalSrc)
 	if err != nil {
-		fmt.Println("Failed to init data handler")
-		fmt.Println(err)
+		fmt.Printf("[!] Failed to initialize MySQL handler for DRDS at %s. \n", server.Src)
 		return err
 	}
+
+	// Assoicate statistic counter
+	// server.stat = stat
 
 	server.publisherRegister = make(map[uint16][]uint8)
 	server.subscriberRegister = make(map[uint16][]uint8)
@@ -107,7 +117,10 @@ func (server *Server) Init(src uint8) error {
 	return nil
 }
 
-// ------- TODO: RENAME SEND TO SENDHANDLER / send TO SEND
+/*
+--------------------------------- DRDS API ------------------------------------------------
+*/
+
 func (server *Server) Send(id uint16, time uint32, physical_time uint32, rawData []float64) error {
 	err := server.handler.WriteSynt(id, time, physical_time, rawData)
 	if err != nil {
@@ -117,7 +130,7 @@ func (server *Server) Send(id uint16, time uint32, physical_time uint32, rawData
 	return nil
 }
 
-func (server *Server) Request(id uint16, synt uint32, dst uint8, priority uint8) error {
+func (server *Server) Request(id uint16, synt uint32, dst uint8, priority uint8) ([][]float64, error) {
 	// for request last data
 	// fmt.Println("[2]Test: Last time stamp", synt, utils.TIME_SIMU_LAST)
 	if synt == utils.TIME_SIMU_LAST {
@@ -128,22 +141,22 @@ func (server *Server) Request(id uint16, synt uint32, dst uint8, priority uint8)
 
 	_, data, err := server.handler.ReadSynt(id, synt)
 	if err != nil {
-		return err
-	}
-	if err != nil {
-
-		return err
+		return nil, err
 	}
 	var dataMat [][]float64
 	dataMat = append(dataMat, data)
-	err = server.send(dst, priority, synt, utils.FLAG_SINGLE, id, dataMat)
-	if err != nil {
-		return err
+
+	// If dst == 255 return the data locally
+	if dst == utils.SRC_DROP {
+		return dataMat, nil
+	} else {
+		// else return the dataMat to destination host.
+		err = server.send(dst, priority, synt, utils.FLAG_SINGLE, id, dataMat)
+		return nil, err
 	}
-	return nil
 }
 
-func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16, dst uint8, priority uint8) error {
+func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16, dst uint8, priority uint8) ([][]float64, error) {
 	var dataMat [][]float64
 	var err error
 
@@ -151,71 +164,80 @@ func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16,
 		_, _, dataMat, err = server.handler.ReadRange(id, timeStart, server.handler.QueryLastSynt(id))
 		if err != nil {
 			fmt.Println(err)
-			return err
+			return nil, err
 		}
 	} else {
 		_, _, dataMat, err = server.handler.ReadRange(id, timeStart, timeStart+uint32(timeDiff))
 		if err != nil {
 			fmt.Println(err)
-			return err
+			return nil, err
 		}
 	}
 
-	err = server.send(dst, utils.PRIORITY_HIGHT,
-		timeStart, utils.FLAG_SINGLE, id, dataMat)
-
-	if err != nil {
-		return err
+	// If dst == 255 return the data locally
+	if dst == utils.SRC_DROP {
+		return dataMat, nil
+	} else {
+		// else return the dataMat to destination host.
+		err = server.send(dst, utils.PRIORITY_HIGHT,
+			timeStart, utils.FLAG_SINGLE, id, dataMat)
+		return nil, err
 	}
-	return nil
 }
 
 func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt uint32, physical_time uint32, rawData []float64) error {
-	if utils.Uint8Contains(server.publisherRegister[id], dst) { // if publisher registered
-		// if para2 is stop streaming
-		lastSynt := server.handler.QueryLastSynt(id)
-		if synt < lastSynt {
-			// Send error back to dst
-			server.sendOpt(dst, utils.PRIORITY_HIGHT, synt, utils.SER_RESPONSE, utils.FLAG_ERROR, utils.RESERVED, utils.RESERVED)
-			return errors.New("published data are not synchronized with current database")
-		}
+	// if utils.Uint8Contains(server.publisherRegister[id], dst) { // if publisher registered
+	// 	// if para2 is stop streaming
+	// 	lastSynt := server.handler.QueryLastSynt(id)
+	// 	if synt < lastSynt {
+	// 		// Send error back to dst
+	// 		server.sendOpt(dst, utils.PRIORITY_HIGHT, synt, utils.SER_RESPONSE, utils.FLAG_ERROR, utils.RESERVED, utils.RESERVED)
+	// 		return errors.New("published data are not synchronized with current database")
+	// 	}
 
-		col := int(cols)
-		for row := 0; row < int(rows); row++ {
-			server.handler.WriteSynt(id,
-				synt+uint32(row),
-				physical_time,
-				rawData[row*col:(row+1)*col],
-			)
-		}
-	} else {
-		server.publisherRegister[id] = append(server.publisherRegister[id], dst)
+	// 	col := int(cols)
+	// 	for row := 0; row < int(rows); row++ {
+	// 		server.handler.WriteSynt(id,
+	// 			synt+uint32(row),
+	// 			physical_time,
+	// 			rawData[row*col:(row+1)*col],
+	// 		)
+	// 	}
+	// } else {
+	// 	server.publisherRegister[id] = append(server.publisherRegister[id], dst)
+	// 	server.sendOpt(dst, utils.PRIORITY_HIGHT, synt, utils.SER_RESPONSE,
+	// 		utils.FLAG_SINGLE, utils.RESERVED, utils.RESERVED)
+	// }
 
-		server.sendOpt(dst, utils.PRIORITY_HIGHT, synt, utils.SER_RESPONSE,
-			utils.FLAG_SINGLE, utils.RESERVED, utils.RESERVED)
-	}
-
-	return nil
+	// return nil
+	return errors.New("publish service not implemented in current version")
 }
 
-func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) error {
-	if utils.Uint8Contains(server.subscriberRegister[id], dst) { // if subscriber registered
-		lastSynt := server.handler.QueryLastSynt(id)
-		if synt <= lastSynt {
-			dataMap := make([][]float64, 0)
-			for i := synt; i <= lastSynt; i++ {
-				_, row, _ := server.handler.ReadSynt(id, i)
-				dataMap = append(dataMap, row)
-			}
-			server.send(dst, utils.PRIORITY_MEDIUM, synt, utils.FLAG_SINGLE, id, dataMap)
-		}
-
-	} else {
+func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) ([][]float64, error) {
+	// if subscriber not registered
+	if !utils.Uint8Contains(server.subscriberRegister[id], dst) {
 		server.subscriberRegister[id] = append(server.subscriberRegister[id], dst)
 		server.sendOpt(dst, utils.PRIORITY_HIGHT, synt,
 			utils.SER_RESPONSE, utils.FLAG_SINGLE, utils.RESERVED, utils.RESERVED)
 	}
-	return nil
+
+	// Return the history data to destination or local component
+	lastSynt := server.handler.QueryLastSynt(id)
+	if synt <= lastSynt {
+		dataMap := make([][]float64, 0)
+		for i := synt; i <= lastSynt; i++ {
+			_, row, _ := server.handler.ReadSynt(id, i)
+			dataMap = append(dataMap, row)
+		}
+		if dst != utils.SRC_DROP {
+			err := server.send(dst, utils.PRIORITY_MEDIUM, synt, utils.FLAG_SINGLE, id, dataMap)
+			return nil, err
+		} else {
+			return dataMap, nil
+		}
+	}
+	return nil, errors.New("subscribe starts from future is not vaild")
+	// The Real-time data will be streamed in handle function by checking subscribeRegister[id]
 }
 
 func (server *Server) send(dst uint8, priority uint8, synt uint32, flag uint8, data_id uint16, dataMap [][]float64) error {
@@ -282,6 +304,10 @@ func (server *Server) send(dst uint8, priority uint8, synt uint32, flag uint8, d
 	return nil
 }
 
+/*
+--------------------------------- Communciation Network Interface ------------------------------------------------
+*/
+
 func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, service uint8, flag uint8, opt1 uint8, opt2 uint8) error {
 	var pkt ServicePacket
 	pkt.Src = server.LocalSrc
@@ -325,6 +351,10 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, service ui
 	return nil
 }
 
+/*
+--------------------------------- DRDS Main Loop ------------------------------------------------
+*/
+
 func (server *Server) listen(addr *net.UDPAddr, procnums int) error {
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
@@ -346,7 +376,6 @@ func (server *Server) listen(addr *net.UDPAddr, procnums int) error {
 	}
 
 	// producer
-
 	for {
 		var buf [utils.BUFFLEN]byte
 		_, _, err := conn.ReadFromUDP(buf[:])
@@ -377,13 +406,10 @@ func (server *Server) handle(pkt *ServicePacket) error {
 	switch pkt.Service {
 	case utils.SER_SEND: //Send (data packet)
 		for _, subpkt := range pkt.Subpackets {
-			if subpkt.DataID == 0 {
-				fmt.Println(subpkt)
-			}
-
 			rawData := PayloadBuf2Float(subpkt.Payload)
 			go server.Send(subpkt.DataID, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
 
+			// Forward data to subscriber ->
 			for _, dst := range server.subscriberRegister[subpkt.DataID] {
 				var dataMat [][]float64
 				for i := 0; i < int(subpkt.Row); i++ {
@@ -391,6 +417,9 @@ func (server *Server) handle(pkt *ServicePacket) error {
 				}
 				go server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
 			}
+
+			// TODO: Feed data to DVI no matter
+
 		}
 
 	case utils.SER_REQUEST: //Request (operation packet)
@@ -398,21 +427,20 @@ func (server *Server) handle(pkt *ServicePacket) error {
 		// fmt.Println("[-]Test4", pkt.Service)
 		for _, subpkt := range pkt.Subpackets {
 			if subpkt.TimeDiff == 0 {
-
-				err := server.Request(subpkt.DataID, pkt.SimulinkTime, pkt.Src, pkt.Priority)
+				_, err := server.Request(subpkt.DataID, pkt.SimulinkTime, pkt.Src, pkt.Priority)
 				if err != nil {
 					return err
 				}
 			} else if subpkt.TimeDiff > 0 {
-				err := server.RequestRange(subpkt.DataID, pkt.SimulinkTime, subpkt.TimeDiff, pkt.Src, pkt.Priority)
+				_, err := server.RequestRange(subpkt.DataID, pkt.SimulinkTime, subpkt.TimeDiff, pkt.Src, pkt.Priority)
 				if err != nil {
 					return err
 				}
 			}
 		}
 
-	case utils.SER_PUBLISH: // Publish (opeartion packet / data packet)
-
+	// Currently not implemented
+	case utils.SER_PUBLISH:
 		rawData := PayloadBuf2Float(pkt.Payload)
 		for _, subpkt := range pkt.Subpackets {
 			err := server.Publish(subpkt.DataID, pkt.Src, subpkt.Row, subpkt.Col, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
@@ -420,23 +448,24 @@ func (server *Server) handle(pkt *ServicePacket) error {
 				return err
 			}
 
-			if subpkt.Length == 0 {
-				return nil
-			}
-			for _, dst := range server.subscriberRegister[subpkt.DataID] {
-				var dataMat [][]float64
-				for i := 0; i < int(subpkt.Row); i++ {
-					dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
-				}
-				go server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
-			}
+			// if subpkt.Length == 0 {
+			// 	fmt.Println("[!] Publish service message payload error")
+			// } else {
+			// 	for _, dst := range server.subscriberRegister[subpkt.DataID] {
+			// 		var dataMat [][]float64
+			// 		for i := 0; i < int(subpkt.Row); i++ {
+			// 			dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
+			// 		}
+			// 		go server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
+			// 	}
+			// }
 
 		}
 
-	// forward if not publish regiester
+	// forward if not publish register
 	case utils.SER_SUBSCRIBE: // Subscribe (operation packet)
 		for _, subpkt := range pkt.Subpackets {
-			err := server.Subscribe(subpkt.DataID, pkt.Src, pkt.SimulinkTime, subpkt.TimeDiff)
+			_, err := server.Subscribe(subpkt.DataID, pkt.Src, pkt.SimulinkTime, subpkt.TimeDiff)
 			if err != nil {
 				return err
 			}

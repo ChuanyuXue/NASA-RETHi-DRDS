@@ -201,9 +201,11 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 	}
 	columnPattern := strings.Join(columnList, ",")
 
+	// [0] simulink_time
 	columnFillin = append(columnFillin, strconv.Itoa(int(synt)))
-	// Need to fix int64 -> unsigned int32?
+	// [1] physical_time_s
 	columnFillin = append(columnFillin, strconv.FormatUint(uint64(phyt), 10))
+	// [2] physical_time_d
 	columnFillin = append(columnFillin, strconv.FormatUint(uint64(time.Now().UnixMilli()), 10))
 
 	if int(handler.DataShapes[id]) != len(value) {

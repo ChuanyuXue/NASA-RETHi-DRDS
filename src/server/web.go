@@ -2,6 +2,7 @@ package server
 
 import (
 	"data-service/src/handler"
+	"data-service/src/statistic"
 	"data-service/src/utils"
 	"encoding/json"
 	"fmt"
@@ -33,8 +34,8 @@ type WebServer struct {
 	Type string
 	Src  string
 
-	handler   *handler.Handler
-	hmsServer *Server
+	handler    *handler.Handler
+	dataServer *Server
 
 	LocalSrc  uint8
 	ClientSrc []uint8
@@ -45,11 +46,11 @@ type WebServer struct {
 	wsOpenSig  chan bool
 }
 
-func (server *WebServer) Init(src uint8, hmsServer *Server) error {
+func (server *WebServer) Init(src uint8, dataServer *Server, stat *statistic.Stat) error {
 	server.LocalSrc = src
 	server.Src = strconv.Itoa(int(src))
 
-	server.hmsServer = hmsServer
+	server.dataServer = dataServer
 	server.wsOpenSig = make(chan bool)
 	server.wsDataChan = make(chan *VisualData, 65535)
 
@@ -358,7 +359,7 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 	rawData = append(rawData, msg.Value)
 	dataMat = append(dataMat, rawData)
 
-	go server.hmsServer.send(
+	go server.dataServer.send(
 		utils.SRC_AGT,
 		utils.PRIORITY_NORMAL,
 		msg.Time,
@@ -367,7 +368,7 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 		dataMat,
 	)
 
-	go server.hmsServer.Send(
+	go server.dataServer.Send(
 		uint16(id),
 		msg.Time,
 		uint32(time.Now().UnixMilli()/1e3),

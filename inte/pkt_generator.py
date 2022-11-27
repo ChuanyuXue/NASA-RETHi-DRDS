@@ -12,14 +12,15 @@ with open("../config_diagnostic_tests.json") as f:
     for synt in range(99, 99 * 600 + 1, 100):
         for name, data in data_discript.items():
             if name != "Health_Management_System":
+                data_id = int(data['data_notes'])
                 ins = api.API(
                     local_ip="0.0.0.0",
                     local_port=61234,
                     to_ip="localhost",
-                    to_port=10000 + int(data['data_subtype1']),
+                    to_port=10000 + data_id,
                     # to_port=65533, # for local testing
                     # to_port=65531,  # for data service testing
-                    client_id=int(data["data_subtype1"]),
+                    client_id=data_id,
                     server_id=1,
                     # set_blocking=
                     # False,  # Setting it to "True" causes issues when testing

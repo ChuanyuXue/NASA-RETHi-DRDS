@@ -140,6 +140,10 @@ func main() {
 	// }
 	// --------------- Test for Ground <-- Habitat <--> Subsystem ------------------------
 	// Start Habitat server
+
+	// &handler.Handler{}
+	// err = server.handler.Init(server.LocalSrc)
+
 	habitatServer := server.Server{}
 	err := habitatServer.Init(utils.SRC_HMS)
 	if err != nil {
