@@ -33,8 +33,12 @@ type Server struct {
 	Sequence     uint16
 	mu           sync.Mutex
 
-	publisherRegister  map[uint16][]uint8 // publisherRegister[data_id] = [client_0, ....]
-	subscriberRegister map[uint16][]uint8 // subscriberRegister[data_id] = [client_0, ....]
+	// publisherRegister[data_id] = [client_0, ....]
+	publisherRegister map[uint16][]uint8
+	// subscriberRegister[data_id] = [client_0, ....]
+	subscriberRegister map[uint16][]uint8
+	// DVI Register: DVI doesn't use UDP but HTTP as required by OpenMCT.
+	dviRegister []uint16
 }
 
 func (server *Server) Init(src uint8) error {
@@ -105,7 +109,9 @@ func (server *Server) Init(src uint8) error {
 		return err
 	}
 
-	// Assoicate statistic counter
+	// Init web server component
+
+	// Init statistic counter
 	// server.stat = stat
 
 	server.publisherRegister = make(map[uint16][]uint8)
@@ -343,11 +349,6 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, service ui
 		fmt.Println("Failed to send data to clients")
 		return err
 	}
-
-	server.mu.Lock()
-	server.Sequence++
-	server.mu.Unlock()
-
 	return nil
 }
 
