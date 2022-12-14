@@ -332,9 +332,15 @@ func (server *WebServer) httpHistory(ctx *sgo.Context) error {
 // }
 
 type C2Msg struct {
-	Value float64 `json:"value"`
-	Time  uint32  `json:"time"`
-	// other fields ...
+	DoOrCancel  float64 `json:"do_or_cancel"`
+	CommandID   float64 `json:"command_id"`
+	TimeToStart float64 `json:"time_to_start"`
+	SystemID    float64 `json:"system_id"`
+	CommandType float64 `jason:"command_type"`
+	ZoneID      float64 `json:"zone_id"`
+	Mode        float64 `json:"mode"`
+	TSpHeat     float64 `json:"t_sp_heat"`
+	TSpCool     float64 `json:"t_sp_cool"`
 }
 
 func (server *WebServer) msgHandler(ctx *sgo.Context) error {
