@@ -26,6 +26,18 @@ type VisualData struct {
 	ID        string  `json:"id"`
 }
 
+type MohsenMsg struct {
+	DoOrCancel  float64 `json:"do_or_cancel"`
+	CommandID   float64 `json:"command_id"`
+	TimeToStart float64 `json:"time_to_start"`
+	SystemID    float64 `json:"system_id"`
+	CommandType float64 `jason:"command_type"`
+	ZoneID      float64 `json:"zone_id"`
+	Mode        float64 `json:"mode"`
+	TSpHeat     float64 `json:"t_sp_heat"`
+	TSpCool     float64 `json:"t_sp_cool"`
+}
+
 type WebServer struct {
 	utils.JsonStandard
 	utils.ServiceStandard
@@ -331,17 +343,6 @@ func (server *WebServer) httpHistory(ctx *sgo.Context) error {
 // 	}
 // }
 
-type C2Msg struct {
-	DoOrCancel  float64 `json:"do_or_cancel"`
-	CommandID   float64 `json:"command_id"`
-	TimeToStart float64 `json:"time_to_start"`
-	SystemID    float64 `json:"system_id"`
-	CommandType float64 `jason:"command_type"`
-	ZoneID      float64 `json:"zone_id"`
-	Mode        float64 `json:"mode"`
-	TSpHeat     float64 `json:"t_sp_heat"`
-	TSpCool     float64 `json:"t_sp_cool"`
-}
 
 func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 	id, err := strconv.Atoi(ctx.Param("id"))
@@ -354,20 +355,32 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 		fmt.Println(err)
 		return err
 	}
-	var msg C2Msg
+	var msg MohsenMsg
 	if err = json.Unmarshal(body, &msg); err != nil {
 		return err
 	}
 
 	var dataMat [][]float64
 	var rawData []float64
-	rawData = append(rawData, msg.Value)
+
+	rawData = append(
+		rawData, 
+		msg.DoOrCancel, 
+		msg.CommandID, 
+		msg.TimeToStart, 
+		msg.SystemID, 
+		msg.CommandType, 
+		msg.ZoneID, 
+		msg.Mode, 
+		msg.TSpHeat, 
+		msg.TSpCool,
+	)
 	dataMat = append(dataMat, rawData)
 
 	go server.hmsServer.send(
 		utils.SRC_AGT,
 		utils.PRIORITY_NORMAL,
-		msg.Time,
+		uint32(utils.RESERVED),
 		utils.FLAG_SINGLE,
 		uint16(id),
 		dataMat,
@@ -375,10 +388,10 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 
 	go server.hmsServer.Send(
 		uint16(id),
-		msg.Time,
+		uint32(utils.RESERVED),
 		uint32(time.Now().UnixMilli()/1e3),
 		dataMat[0])
 
-	fmt.Println(id, msg.Value)
+	fmt.Println("Got msg:", msg)
 	return ctx.Text(200, "biu")
 }

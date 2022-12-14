@@ -135,15 +135,15 @@ services:
     image: lovablemahira/rethi_hms_vis
     ports:
       - "8080:8080"
-
-  dummy_c2:
-    image: xuechuanyu/c2
-    ports:
-      - "65533:65533/udp"
-    networks:
-      - hms-network
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      
+  # dummy_c2:
+  #   image: xuechuanyu/c2
+  #   ports:
+  #     - "65533:65533/udp"
+  #   networks:
+  #     - hms-network
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
   # image: ctolbert555/rethi-hms-vis
   # image: hfbzzx/rethi-visualization
 
