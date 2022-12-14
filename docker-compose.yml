@@ -89,8 +89,8 @@ services:
       version: "3.7"
     volumes:
       - type: bind
-        # source: ./db_info_v6.json
-        source: ./config_diagnostic_tests.json
+        source: ./db_info_v6.json
+        # source: ./config_diagnostic_tests.json
         target: /db_info_v6.json
     depends_on:
       - ground_db
@@ -104,7 +104,7 @@ services:
   ground_db:
     image: mariadb
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       # MYSQL_RANDOM_ROOT_PASSWORD: "yes"
       MYSQL_DATABASE: ground
       MYSQL_USER: uu
@@ -119,7 +119,7 @@ services:
   habitat_db:
     image: mariadb
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       # MYSQL_RANDOM_ROOT_PASSWORD: "yes"
       MYSQL_DATABASE: habitat
       MYSQL_USER: uu
@@ -132,7 +132,7 @@ services:
       - hms-network
 
   visualization:
-    image: ctolbert555/rethi-visualization
+    image: lovablemahira/rethi_hms_vis
     ports:
       - "8080:8080"
 
