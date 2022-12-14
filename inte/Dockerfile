@@ -1,6 +1,5 @@
 #Deriving the latest base image
-FROM python:latest
-LABEL Maintainer="roushan.me17"
+FROM python:alpine
 WORKDIR /
 
 #to COPY the remote file at working directory in container
