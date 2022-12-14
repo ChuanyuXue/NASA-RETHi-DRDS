@@ -66,7 +66,6 @@ class SubHeader(Structure):
 
 
 class SubPacket:
-
     def __init__(self, ):
         pass
 
@@ -128,7 +127,6 @@ class Packet:
             self.subpackets.append(subpkt)
 
         return index
-
 
 if __name__ == '__main__':
     pass
