@@ -12,15 +12,15 @@ import (
 
 type TableInfo struct {
 	utils.JsonStandard
-	Id         uint16 `json:"data_id"`
-	Name       string `json:"data_name"`
-	Type       uint16 `json:"data_type"`
-	Subtype    uint16 `json:"data_subtype1"`
-	Subsubtype uint16 `json:"data_subtype2"`
-	Rate       uint16 `json:"data_rate"`
-	Size       uint16 `json:"data_size"`
-	Unit       string `json:"data_unit"`
-	Notes      string `json:"data_notes"`
+	Id       uint16 `json:"data_id"`
+	Name     string `json:"data_name"`
+	Type     uint16 `json:"data_type"`
+	Subtype1 uint16 `json:"data_subtype1"`
+	Subtype2 uint16 `json:"data_subtype2"`
+	Rate     uint16 `json:"data_rate"`
+	Size     uint16 `json:"data_size"`
+	Unit     string `json:"data_unit"`
+	Notes    string `json:"data_notes"`
 }
 
 func ReadDataInfo(path string) ([]TableInfo, error) {
@@ -89,7 +89,7 @@ func DatabaseGenerator(src uint8, path string) error {
 			break
 		}
 		fmt.Println(err)
-		time.Sleep(2 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 
 	// ----------------------- Create table ------------------------------
@@ -101,14 +101,14 @@ func DatabaseGenerator(src uint8, path string) error {
 	}
 	action := fmt.Sprintf(`CREATE TABLE %s.%s (
             data_id INT(16) UNSIGNED NOT NULL,
-            data_name VARCHAR(45) NULL,
+            data_name VARCHAR(128) NULL,
             data_type INT(8) UNSIGNED NOT NULL,
             data_subtype1 INT(8) UNSIGNED NULL,
             data_subtype2 INT(8) UNSIGNED NULL,
             data_rate INT(16) UNSIGNED NULL,
             data_size INT(16) UNSIGNED NULL,
             data_unit VARCHAR(45) NULL,
-            data_notes VARCHAR(45) NULL,
+            data_notes VARCHAR(128) NULL,
             PRIMARY KEY (data_id),
             UNIQUE INDEX data_id_UNIQUE (data_id ASC) VISIBLE);`, dbName, tableName)
 
@@ -128,8 +128,8 @@ func DatabaseGenerator(src uint8, path string) error {
 	// ---------------------- Insert info
 
 	for _, info := range dataList {
-		act := fmt.Sprintf(`INSERT INTO %s.%s (data_id, data_name, data_type, data_rate, data_size) VALUES
-				("%d", "%s", "%d", "%d", "%d");`, dbName, tableName, info.Id, info.Name, info.Type, info.Rate, info.Size)
+		act := fmt.Sprintf(`INSERT INTO %s.%s (data_id, data_name, data_type, data_subtype1, data_subtype2, data_rate, data_size) VALUES
+				("%d", "%s", "%d", "%d","%d","%d", "%d");`, dbName, tableName, info.Id, info.Name, info.Type, info.Subtype1, info.Subtype2, info.Rate, info.Size)
 		_, err = db.Exec(act)
 		if err != nil {
 			fmt.Println(err)
@@ -144,7 +144,7 @@ func DatabaseGenerator(src uint8, path string) error {
 		act := fmt.Sprintf("create table `%s` (", tableName)
 		act = act + "simulink_time int unsigned NOT NULL,"
 		act = act + "physical_time int unsigned NOT NULL,"
-		act = act + "physical_time_2 int unsigned NOT NULL,"
+		act = act + "physical_time_2 bigint unsigned NOT NULL,"
 		for i := 0; i != int(info.Size); i++ {
 			act = act + fmt.Sprintf("value%d float,", i)
 		}

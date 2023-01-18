@@ -43,7 +43,7 @@ func (server *Server) Init(src uint8) error {
 			utils.SRC_ECLSS,
 			utils.SRC_EXT,
 			utils.SRC_HMS,
-			utils.SRC_ING,
+			utils.SRC_IE,
 			utils.SRC_PWR,
 			utils.SRC_STR}
 
@@ -54,7 +54,7 @@ func (server *Server) Init(src uint8) error {
 			utils.SRC_ECLSS,
 			utils.SRC_EXT,
 			utils.SRC_GCC,
-			utils.SRC_ING,
+			utils.SRC_IE,
 			utils.SRC_PWR,
 			utils.SRC_STR}
 	}
@@ -67,11 +67,11 @@ func (server *Server) Init(src uint8) error {
 
 	localAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_ADDR_"+server.Type))
 	if err != nil {
-		return errors.New(fmt.Sprintf("unable to resolve local address for %s", server.Type))
+		return fmt.Errorf("unable to resolve local address for %s", server.Type)
 	}
 	remoteAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_REMOTE_ADDR_"+server.Type))
 	if err != nil {
-		return errors.New(fmt.Sprintf("unable to resolve remote address for %s", server.Type))
+		return fmt.Errorf("unable to resolve remote address for %s", server.Type)
 	}
 	loopAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_LOOP_"+server.Type))
 	if err != nil {
@@ -107,9 +107,11 @@ func (server *Server) Init(src uint8) error {
 	return nil
 }
 
+// ------- TODO: RENAME SEND TO SENDHANDLER / send TO SEND
 func (server *Server) Send(id uint16, time uint32, physical_time uint32, rawData []float64) error {
 	err := server.handler.WriteSynt(id, time, physical_time, rawData)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	return nil
@@ -117,11 +119,14 @@ func (server *Server) Send(id uint16, time uint32, physical_time uint32, rawData
 
 func (server *Server) Request(id uint16, synt uint32, dst uint8, priority uint8) error {
 	// for request last data
+	// fmt.Println("[2]Test: Last time stamp", synt, utils.TIME_SIMU_LAST)
 	if synt == utils.TIME_SIMU_LAST {
+		// fmt.Println("[1]Test: Last time stamp", synt, utils.TIME_SIMU_LAST)
 		synt = server.handler.QueryLastSynt(id)
+		// fmt.Println("[3]Test: Last time stamp", synt, utils.TIME_SIMU_LAST)
 	}
 
-	data, err := server.handler.ReadSynt(id, synt)
+	_, data, err := server.handler.ReadSynt(id, synt)
 	if err != nil {
 		return err
 	}
@@ -143,13 +148,13 @@ func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16,
 	var err error
 
 	if timeDiff == utils.PARAMTER_REQUEST_LAST {
-		_, dataMat, err = server.handler.ReadRange(id, timeStart, server.handler.QueryLastSynt(id))
+		_, _, dataMat, err = server.handler.ReadRange(id, timeStart, server.handler.QueryLastSynt(id))
 		if err != nil {
 			fmt.Println(err)
 			return err
 		}
 	} else {
-		_, dataMat, err = server.handler.ReadRange(id, timeStart, timeStart+uint32(timeDiff))
+		_, _, dataMat, err = server.handler.ReadRange(id, timeStart, timeStart+uint32(timeDiff))
 		if err != nil {
 			fmt.Println(err)
 			return err
@@ -172,7 +177,7 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 		if synt < lastSynt {
 			// Send error back to dst
 			server.sendOpt(dst, utils.PRIORITY_HIGHT, synt, utils.SER_RESPONSE, utils.FLAG_ERROR, utils.RESERVED, utils.RESERVED)
-			return errors.New("Published data are not synchronized with current DataBase")
+			return errors.New("published data are not synchronized with current database")
 		}
 
 		col := int(cols)
@@ -199,7 +204,7 @@ func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) 
 		if synt <= lastSynt {
 			dataMap := make([][]float64, 0)
 			for i := synt; i <= lastSynt; i++ {
-				row, _ := server.handler.ReadSynt(id, i)
+				_, row, _ := server.handler.ReadSynt(id, i)
 				dataMap = append(dataMap, row)
 			}
 			server.send(dst, utils.PRIORITY_MEDIUM, synt, utils.FLAG_SINGLE, id, dataMap)
@@ -264,13 +269,13 @@ func (server *Server) send(dst uint8, priority uint8, synt uint32, flag uint8, d
 	conn, err := net.DialUDP("udp", nil, &dstAddr)
 
 	if err != nil {
-		fmt.Println("Failed to dial clients")
+		fmt.Println("[!] Failed to dial clients")
 		return err
 	}
 	defer conn.Close()
 	_, err = conn.Write(pkt.ToServiceBuf())
 	if err != nil {
-		fmt.Println("Failed to send data to clients")
+		fmt.Println("[!] Failed to send data to clients")
 		return err
 	}
 
@@ -364,31 +369,36 @@ func (server *Server) handle(pkt *ServicePacket) error {
 	// server.Mu.Unlock()
 	// // ----------------------------------
 
+	// fmt.Printf("[ Simulink Time %d ] Receive %d data from subsystem %d \n", pkt.SimulinkTime, pkt.SubframeNum, pkt.Src)
+	// for _, subpkt := range pkt.Subpackets {
+	// 	fmt.Println(subpkt.DataID, subpkt.Row, subpkt.Col, subpkt.Length)
+	// }
+
 	switch pkt.Service {
 	case utils.SER_SEND: //Send (data packet)
 		for _, subpkt := range pkt.Subpackets {
-			rawData := PayloadBuf2Float(subpkt.Payload)
-			err := server.Send(subpkt.DataID, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
-			if err != nil {
-				return err
+			if subpkt.DataID == 0 {
+				fmt.Println(subpkt)
 			}
+
+			rawData := PayloadBuf2Float(subpkt.Payload)
+			go server.Send(subpkt.DataID, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
+
 			for _, dst := range server.subscriberRegister[subpkt.DataID] {
 				var dataMat [][]float64
 				for i := 0; i < int(subpkt.Row); i++ {
 					dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
 				}
-				err = server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
-				if err != nil {
-					fmt.Println("failed to forward data:  ", err)
-					return err
-				}
+				go server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
 			}
 		}
 
 	case utils.SER_REQUEST: //Request (operation packet)
 		// Time diff used to tell the end time of request
+		// fmt.Println("[-]Test4", pkt.Service)
 		for _, subpkt := range pkt.Subpackets {
 			if subpkt.TimeDiff == 0 {
+
 				err := server.Request(subpkt.DataID, pkt.SimulinkTime, pkt.Src, pkt.Priority)
 				if err != nil {
 					return err
@@ -402,6 +412,7 @@ func (server *Server) handle(pkt *ServicePacket) error {
 		}
 
 	case utils.SER_PUBLISH: // Publish (opeartion packet / data packet)
+
 		rawData := PayloadBuf2Float(pkt.Payload)
 		for _, subpkt := range pkt.Subpackets {
 			err := server.Publish(subpkt.DataID, pkt.Src, subpkt.Row, subpkt.Col, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
@@ -417,11 +428,7 @@ func (server *Server) handle(pkt *ServicePacket) error {
 				for i := 0; i < int(subpkt.Row); i++ {
 					dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
 				}
-				err = server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
-				if err != nil {
-					fmt.Println("failed to forward data:  ", err)
-					return err
-				}
+				go server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
 			}
 
 		}

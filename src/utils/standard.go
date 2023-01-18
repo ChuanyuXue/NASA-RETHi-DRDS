@@ -15,14 +15,29 @@ const (
 )
 
 //---------- Source_address
+// const (
+// 	SRC_GCC   uint8 = 0
+// 	SRC_HMS   uint8 = 1
+// 	SRC_STR   uint8 = 2
+// 	SRC_PWR   uint8 = 3
+// 	SRC_ECLSS uint8 = 4
+// 	SRC_AGT   uint8 = 5
+// 	SRC_ING   uint8 = 6
+// 	SRC_EXT   uint8 = 7
+// 	SRC_SPL   uint8 = 8
+// 	SRC_DTB   uint8 = 9
+// )
+
 const (
 	SRC_GCC   uint8 = 0
 	SRC_HMS   uint8 = 1
 	SRC_STR   uint8 = 2
+	SRC_SPL   uint8 = 11
+	SRC_ECLSS uint8 = 5
 	SRC_PWR   uint8 = 3
-	SRC_ECLSS uint8 = 4
-	SRC_AGT   uint8 = 5
-	SRC_ING   uint8 = 6
+	SRC_AGT   uint8 = 6
+	SRC_IE    uint8 = 8
+	SRC_DTB   uint8 = 9
 	SRC_EXT   uint8 = 7
 )
 
@@ -34,12 +49,13 @@ const (
 
 //----------- Data Type
 const (
-	TYPE_NODATA uint8 = 0
-	TYPE_FDD    uint8 = 1
-	TYPE_SENSOR uint8 = 2
-	TYPE_AGENT  uint8 = 3
-	TYPE_TEST   uint8 = 4
-	TYPE_OTHER  uint8 = 255
+	TYPE_NODATA        uint8 = 0
+	TYPE_SENSOR        uint8 = 1
+	TYPE_FDD           uint8 = 2
+	TYPE_FDD_COMPONENT uint8 = 3
+	TYPE_FDD_MEASURE   uint8 = 4
+	TYPE_AGENT         uint8 = 5
+	TYPE_OTHER         uint8 = 255
 )
 
 //------------ Priority

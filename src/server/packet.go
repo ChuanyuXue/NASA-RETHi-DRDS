@@ -81,7 +81,7 @@ func PayloadFloat2Buf(payload []float64) []byte {
 
 func PayloadBuf2Float(buf []byte) []float64 {
 	var data64 []float64
-	for i, _ := range buf {
+	for i := range buf {
 		if i%8 == 0 {
 			targetBuf := buf[i : i+8]
 			data64 = append(data64, Float64frombytes(targetBuf))
@@ -127,11 +127,11 @@ type SubPacket struct {
 
 type ServicePacket struct {
 	Packet
-	Service     uint8
-	Flag        uint8
-	Option1     uint8
-	Option2     uint8
-	SubframeNum uint16
+	Service     uint8  `json:"service"`
+	Flag        uint8  `json:"flag"`
+	Option1     uint8  `json:"option_1"`
+	Option2     uint8  `json:"option_2"`
+	SubframeNum uint16 `json:"subframe_num"`
 
 	Subpackets []*SubPacket
 }
@@ -190,10 +190,10 @@ func FromServiceBuf(buf []byte) ServicePacket {
 		subpacket.Row = uint8(pkt.Payload[4])
 		subpacket.Col = uint8(pkt.Payload[5])
 		subpacket.Length = binary.LittleEndian.Uint16(pkt.Payload[6:8])
-		subpacket.Payload = pkt.Payload[8 : 8+8*binary.LittleEndian.Uint16(pkt.Payload[6:8])]
+		subpacket.Payload = pkt.Payload[8 : 8+8*subpacket.Length]
 		servicePkt.Subpackets = append(servicePkt.Subpackets, &subpacket)
 
-		pkt.Payload = pkt.Payload[8+8*binary.LittleEndian.Uint16(pkt.Payload[6:8]):]
+		pkt.Payload = pkt.Payload[8+8*subpacket.Length:]
 	}
 	servicePkt.Packet = pkt
 

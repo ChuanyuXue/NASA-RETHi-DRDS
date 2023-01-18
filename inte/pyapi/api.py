@@ -133,43 +133,69 @@ class API:
         priority    :
             ??
         """
+
         _src = self.id_client
         _dst = self.id_server
         _message_type = 1
-        _data_type = 0
         _priority = priority
+        _verson = 0
+        _reserved = 0
         _physical_time = int(time.time())
-        _row = 0
-        _col = 0
-        _length = 0
+        _sequence = self.seq
+        _length = SERVICE_HEADER_LEN + SUB_HEADER_LEN
 
-        _opt = 1
+        _service = 1
         _flag = 0
-        _param = id
+        _opt1 = 0
+        _opt2 = 0
+        _subframe = 1
+
+        _data_id = id
+        _timediff = 0
 
         if not isinstance(synt, tuple):
 
-            _subparam = 1
+            _timediff = 0
             _payload = []
             _simulink_time = synt
-
-            pkt = Packet()
-            buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority,
-                              _physical_time, _simulink_time, _row, _col,
-                              _length, _opt, _flag, _param, _subparam,
-                              _payload)
-            self.out_sock.sendto(buf, (self.ip_server, self.port_server))
+            _row = 0
+            _col = 0
+            _length = 0
+            subpkt = SubPacket()
+            subpkt.init(_data_id, _timediff, _row, _col, _length, _payload)
         else:
-            _subparam = synt[1]
+            _timediff = synt[1]
             _payload = []
             _simulink_time = synt[0]
+            _row = 0
+            _col = 0
+            _length = 0
+            subpkt = SubPacket()
+            subpkt.init(_data_id, _timediff, _row, _col, _length, _payload)
 
-            pkt = Packet()
-            buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority,
-                              _physical_time, _simulink_time, _row, _col,
-                              _length, _opt, _flag, _param, _subparam,
-                              _payload)
-            self.out_sock.sendto(buf, (self.ip_server, self.port_server))
+        pkt = Packet()
+
+        pkt.init(
+            _src,
+            _dst,
+            _message_type,
+            _priority,
+            _verson,
+            _reserved,
+            _physical_time,
+            _simulink_time,
+            _sequence,
+            _length,
+            _service,
+            _flag,
+            _opt1,
+            _opt2,
+            _subframe,
+            [subpkt],
+        )
+
+        buf = pkt.pkt2Buf()
+        self.out_sock.sendto(buf, (self.ip_server, self.port_server))
 
         count = 0
         while True:
@@ -201,26 +227,52 @@ class API:
         _src = self.id_client
         _dst = self.id_server
         _message_type = 1
-        _data_type = 0
         _priority = priority
+        _verson = 0
+        _reserved = 0
         _physical_time = int(time.time())
         _simulink_time = synt
+        _sequence = self.seq
+        _length = SERVICE_HEADER_LEN + SUB_HEADER_LEN
 
+        _service = 2
+        _flag = 0
+        _opt1 = 0
+        _opt2 = 0
+        _subframe = 1
+
+        _data_id = id
+        _timediff = 0
         _row = 0
         _col = 0
         _length = 0
-
-        _opt = 2
-        _flag = 0
-        _param = id
-        _subparam = 0
-
         _payload = []
 
+        subpkt = SubPacket()
+        subpkt.init(_data_id, _timediff, _row, _col, _length, _payload)
+
+        
+
         pkt = Packet()
-        buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority,
-                          _physical_time, _simulink_time, _row, _col, _length,
-                          _opt, _flag, _param, _subparam, _payload)
+        pkt.init(
+            _src,
+            _dst,
+            _message_type,
+            _priority,
+            _verson,
+            _reserved,
+            _physical_time,
+            _simulink_time,
+            _sequence,
+            _length,
+            _service,
+            _flag,
+            _opt1,
+            _opt2,
+            _subframe,
+            [subpkt],
+        )
+        buf = pkt.pkt2Buf()
         self.out_sock.sendto(buf, (self.ip_server, self.port_server))
 
         count = 0
@@ -237,51 +289,8 @@ class API:
                 count += 1
                 continue
 
-    def publish(self, id, synt, value, priority=7, type=1):
-        """
-        Publish (??)
-
-        Parameters:
-        -----------
-        id          :
-            ??
-        synt        :
-            ??
-        value       :
-            ??
-        priority    :
-            ??
-        """
-
-        _src = self.id_client
-        _dst = self.id_server
-        _message_type = 1
-        _data_type = type
-        _priority = priority
-        _physical_time = int(time.time())
-        _simulink_time = synt
-
-        _opt = 2
-        _flag = 1
-        _param = id
-        _subparam = 0
-
-        if not isinstance(value[0], list):
-            _payload = value
-            _row = 1
-            _col = len(value)
-            _length = _col
-        else:
-            _payload = [x for y in value for x in y]
-            _row = len(value)
-            _col = len(value[0])
-            _length = _row * _col
-
-        pkt = Packet()
-        buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority,
-                          _physical_time, _simulink_time, _row, _col, _length,
-                          _opt, _flag, _param, _subparam, _payload)
-        self.out_sock.sendto(buf, (self.ip_server, self.port_server))
+    def publish(self, id, synt, value, priority=7):
+        self.send(id, synt, value, priority)
 
     def subscribe_register(self, id, synt, priority=7):
         """
@@ -299,26 +308,51 @@ class API:
         _src = self.id_client
         _dst = self.id_server
         _message_type = 1
-        _data_type = 0
-
         _priority = priority
+        _verson = 0
+        _reserved = 0
         _physical_time = int(time.time())
         _simulink_time = synt
+        _sequence = self.seq
+        _length = SERVICE_HEADER_LEN + SUB_HEADER_LEN
 
+        _service = 3
+        _flag = 0
+        _opt1 = 0
+        _opt2 = 0
+        _subframe = 1
+
+        _data_id = id
+        _timediff = 0
         _row = 0
         _col = 0
         _length = 0
-
-        _opt = 3
-        _flag = 1
-        _param = id
-        _subparam = 0
         _payload = []
 
+        subpkt = SubPacket()
+        subpkt.init(_data_id, _timediff, _row, _col, _length, _payload)
+
+
         pkt = Packet()
-        buf = pkt.pkt2Buf(_src, _dst, _message_type, _data_type, _priority,
-                          _physical_time, _simulink_time, _row, _col, _length,
-                          _opt, _flag, _param, _subparam, _payload)
+        pkt.init(
+            _src,
+            _dst,
+            _message_type,
+            _priority,
+            _verson,
+            _reserved,
+            _physical_time,
+            _simulink_time,
+            _sequence,
+            _length,
+            _service,
+            _flag,
+            _opt1,
+            _opt2,
+            _subframe,
+            [subpkt],
+        )
+        buf = pkt.pkt2Buf()
         self.out_sock.sendto(buf, (self.ip_server, self.port_server))
 
         count = 0

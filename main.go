@@ -11,11 +11,11 @@ import (
 
 
 func init() {
-	err := handler.DatabaseGenerator(0, "db_info.json")
+	err := handler.DatabaseGenerator(0, "db_info_v6.json")
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = handler.DatabaseGenerator(1, "db_info.json")
+	err = handler.DatabaseGenerator(1, "db_info_v6.json")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -150,29 +150,27 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("Habitat Server Started")
-	time.Sleep(2 * time.Second)
+	fmt.Println("Habitat Data-Service Started")
 
-	// // Start Habitat http service
-	// habitatStream := server.Stream{}
-	// go habitatStream.Init(utils.SRC_HMS)
-	// fmt.Println("Habitat Stream Started")
-	// time.Sleep(2 * time.Second)
+	// Start Habitat web service
+	habitatWebServer := server.WebServer{}
+	go habitatWebServer.Init(utils.SRC_HMS, &habitatServer)
+	fmt.Println("Habitat Web-Service Started")
 
 	// Start Ground server
-	// groundServer := server.Server{}
-	// go groundServer.Init(utils.SRC_GCC)
-	// fmt.Println("Ground Server Started")
-	// time.Sleep(2 * time.Second)
+	groundServer := server.Server{}
+	go groundServer.Init(utils.SRC_GCC)
+	fmt.Println("Ground Server Started")
+	time.Sleep(2 * time.Second)
 
-	// // Let Ground server subscribe Habitat server
-	// habitatServer.Subscribe(3, groundServer.LocalSrc, 0, 1000)
-	// habitatServer.Subscribe(4, groundServer.LocalSrc, 0, 1000)
-	// habitatServer.Subscribe(5, groundServer.LocalSrc, 0, 1000)
-	// habitatServer.Subscribe(6, groundServer.LocalSrc, 0, 1000)
-	// habitatServer.Subscribe(7, groundServer.LocalSrc, 0, 1000)
-	// habitatServer.Subscribe(8, groundServer.LocalSrc, 0, 1000)
-	// fmt.Println("Ground Server subscribed Habitat server")
+	// Let Ground server subscribe Habitat server
+	habitatServer.Subscribe(8011, groundServer.LocalSrc, 0, 1000)
+	habitatServer.Subscribe(8012, groundServer.LocalSrc, 0, 1000)
+	habitatServer.Subscribe(8013, groundServer.LocalSrc, 0, 1000)
+	habitatServer.Subscribe(8014, groundServer.LocalSrc, 0, 1000)
+	habitatServer.Subscribe(8015, groundServer.LocalSrc, 0, 1000)
+	habitatServer.Subscribe(8016, groundServer.LocalSrc, 0, 1000)
+	fmt.Println("Ground Server subscribed Habitat server")
 
 	// Let MCVT subscribe Habitat server
 	// habitatServer.Subscribe(9, utils.SRC_AGT, 0, 1000)
