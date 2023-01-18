@@ -38,6 +38,11 @@ type Packet struct {
 // |      DATA…
 // +-+-+-+-+-+-+-+-+
 
+// FromBuf function converts a byte slice to a Packet struct
+// Args:
+// 	buf: the byte slice to be converted
+// Returns:
+// 	pkt: the converted Packet struct
 func FromBuf(buf []byte) Packet {
 	var pkt Packet
 	pkt.Src = uint8(buf[0])
@@ -55,6 +60,11 @@ func FromBuf(buf []byte) Packet {
 	return pkt
 }
 
+// ToBuf function converts a Packet struct to a byte slice
+// Args:
+// 	pkt: the Packet struct to be converted
+// Returns:
+// 	buf: the converted byte slice
 func (pkt Packet) ToBuf() []byte {
 	var buf [16]byte
 	buf[0] = byte(pkt.Src)
@@ -68,6 +78,11 @@ func (pkt Packet) ToBuf() []byte {
 	return append(buf[:], pkt.Payload...)
 }
 
+// PayloadFloat2Buf function converts a float64 slice to a byte slice
+// Args:
+// 	payload: the float64 slice to be converted
+// Returns:
+// 	buft: the converted byte slice
 func PayloadFloat2Buf(payload []float64) []byte {
 	var buft bytes.Buffer
 	for _, v := range payload {
@@ -79,6 +94,11 @@ func PayloadFloat2Buf(payload []float64) []byte {
 	return buft.Bytes()
 }
 
+// PayloadBuf2Float function converts a byte slice to a float64 slice
+// Args:
+// 	buf: the byte slice to be converted
+// Returns:
+// 	data64: the converted float64 slice
 func PayloadBuf2Float(buf []byte) []float64 {
 	var data64 []float64
 	for i := range buf {
@@ -90,6 +110,11 @@ func PayloadBuf2Float(buf []byte) []float64 {
 	return data64
 }
 
+// Float64frombytes function converts a byte slice to a float64
+// Args:
+// 	bytes: the byte slice to be converted
+// Returns:
+// 	float: the converted float64
 func Float64frombytes(bytes []byte) float64 {
 	bits := binary.LittleEndian.Uint64(bytes)
 	float := math.Float64frombits(bits)
@@ -116,6 +141,8 @@ func Float64frombytes(bytes []byte) float64 {
 // |            LENGTH             |             DATA...
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
+// SubPacket struct
+// Note subpacket is the smallest unit of data in the service packet
 type SubPacket struct {
 	DataID   uint16
 	TimeDiff uint16
@@ -125,6 +152,8 @@ type SubPacket struct {
 	Payload  []byte
 }
 
+// ServicePacket struct
+// Defined on top of the TSN Emulation Protocol by adding service, flag, option1, option2, subframe_num fields
 type ServicePacket struct {
 	Packet
 	Service     uint8  `json:"service"`
@@ -136,6 +165,11 @@ type ServicePacket struct {
 	Subpackets []*SubPacket
 }
 
+// ToServiceBuf function converts a ServicePacket struct to a byte slice
+// Args:
+// 	pkt: the ServicePacket struct to be converted
+// Returns:
+// 	buf: the converted byte slice
 func (pkt *ServicePacket) ToServiceBuf() []byte {
 	var buf [16]byte
 	var bufExt []byte
@@ -172,6 +206,11 @@ func (pkt *ServicePacket) ToServiceBuf() []byte {
 	return append(bufExt, payload...)
 }
 
+// FromServiceBuf function converts a byte slice to a ServicePacket struct
+// Args:
+// 	buf: the byte slice to be converted
+// Returns:
+// 	pkt: the converted ServicePacket struct
 func FromServiceBuf(buf []byte) ServicePacket {
 	pkt := FromBuf(buf)
 	servicePkt := ServicePacket{}
