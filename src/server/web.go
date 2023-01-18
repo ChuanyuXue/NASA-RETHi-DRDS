@@ -65,6 +65,12 @@ type WebServer struct {
 	wsOpenSig  chan bool
 }
 
+// Init function initializes the web server
+// Args:
+// 	src: the source of the web server
+// 	hmsServer: the pointer to the hms server
+// Returns:
+// 	err: the error message
 func (server *WebServer) Init(src uint8, hmsServer *Server) error {
 	server.LocalSrc = src
 	server.Src = strconv.Itoa(int(src))
