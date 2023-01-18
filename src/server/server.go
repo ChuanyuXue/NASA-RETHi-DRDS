@@ -34,6 +34,12 @@ type Server struct {
 	subscriberRegister map[uint16][]uint8 // subscriberRegister[data_id] = [client_0, ....]
 }
 
+// Init function initializes the server by setting its source, client sources,
+// and client source map. It also sets the inboundQueue, the sequence, and the publisher and subscriber register.
+// Args:
+// 	src: the source of the server
+// Returns:
+// 	error: the error message
 func (server *Server) Init(src uint8) error {
 	// -------------------------- Fix the paramter for docker envirioment
 	if src == utils.SRC_GCC {
@@ -65,15 +71,15 @@ func (server *Server) Init(src uint8) error {
 	server.inboundQueue = make(chan *ServicePacket, utils.BUFFLEN)
 	server.Sequence = 0
 
-	localAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_ADDR_"+server.Type))
+	localAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_ADDR_"+server.Type)) // Obtain the local address
 	if err != nil {
 		return fmt.Errorf("unable to resolve local address for %s", server.Type)
 	}
-	remoteAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_REMOTE_ADDR_"+server.Type))
+	remoteAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_REMOTE_ADDR_"+server.Type)) // Obtain the remote address
 	if err != nil {
 		return fmt.Errorf("unable to resolve remote address for %s", server.Type)
 	}
-	loopAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_LOOP_"+server.Type))
+	loopAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_LOOP_"+server.Type)) // Obtain the local loop address within HMS
 	if err != nil {
 		return errors.New("unable to resolve local loop")
 	}
@@ -88,7 +94,6 @@ func (server *Server) Init(src uint8) error {
 	}
 	server.ClientSrcMap[uint8(src)] = *remoteAddr
 
-	// -------------------------- Fix the paramter for docker envirioment
 	// Init data service handler
 	server.handler = &handler.Handler{}
 	err = server.handler.Init(server.LocalSrc)
@@ -98,16 +103,24 @@ func (server *Server) Init(src uint8) error {
 		return err
 	}
 
-	server.publisherRegister = make(map[uint16][]uint8)
-	server.subscriberRegister = make(map[uint16][]uint8)
+	server.publisherRegister = make(map[uint16][]uint8)  // publisherRegister[data_id] = [client_0, ....]
+	server.subscriberRegister = make(map[uint16][]uint8) // subscriberRegister[data_id] = [client_0, ....]
 
-	go server.listen(localAddr, int(utils.PROCNUMS))
-	go server.listen(loopAddr, int(utils.PROCNUMS))
+	go server.listen(localAddr, int(utils.PROCNUMS)) // Start listening from the TSN emulator
+	go server.listen(loopAddr, int(utils.PROCNUMS))  // Start listening from the subsystems within HMS
 
 	return nil
 }
 
-// ------- TODO: RENAME SEND TO SENDHANDLER / send TO SEND
+// Send Service: Store the data info into the database
+// Note that Send func is different from send. send is a private func to send the data to one remote client.
+// Args:
+// 	id: the data id
+// 	time: the simulink time stamp
+// 	physical_time: the physical time stamp
+// 	rawData: the data
+// Returns:
+// 	error: the error message
 func (server *Server) Send(id uint16, time uint32, physical_time uint32, rawData []float64) error {
 	err := server.handler.WriteSynt(id, time, physical_time, rawData)
 	if err != nil {
@@ -117,6 +130,14 @@ func (server *Server) Send(id uint16, time uint32, physical_time uint32, rawData
 	return nil
 }
 
+// Request Service: Request the data from the database based on the simulink time stamp. Return the 1 * M data
+// Args:
+// 	id: the data id
+// 	synt: the simulink time stamp
+// 	dst: the destination of the data
+// 	priority: the priority of the data
+// Returns:
+// 	error: the error message
 func (server *Server) Request(id uint16, synt uint32, dst uint8, priority uint8) error {
 	// for request last data
 	// fmt.Println("[2]Test: Last time stamp", synt, utils.TIME_SIMU_LAST)
@@ -143,6 +164,16 @@ func (server *Server) Request(id uint16, synt uint32, dst uint8, priority uint8)
 	return nil
 }
 
+// RequestRange Service: Request the data from the database based on the simulink time stamp
+// Compared with Request, RequestRange can request a range of data with a N * M matrix
+// Args:
+// 	id: the data id
+// 	timeStart: the start time stamp
+// 	timeDiff: the time difference
+// 	dst: the destination of the data
+// 	priority: the priority of the data
+// Returns:
+// 	error: the error message
 func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16, dst uint8, priority uint8) error {
 	var dataMat [][]float64
 	var err error
@@ -170,6 +201,17 @@ func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16,
 	return nil
 }
 
+// Publish Service: Receive the data stream from the subsystems and store the data into the database
+// Args:
+// 	id: the data id
+// 	dst: the destination of the data
+// 	rows: the number of rows
+// 	cols: the number of columns
+// 	synt: the simulink time stamp
+// 	physical_time: the physical time stamp
+// 	rawData: the data
+// Returns:
+// 	error: the error message
 func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt uint32, physical_time uint32, rawData []float64) error {
 	if utils.Uint8Contains(server.publisherRegister[id], dst) { // if publisher registered
 		// if para2 is stop streaming
@@ -198,6 +240,14 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 	return nil
 }
 
+// Subscribe Service: Subscribe the data from the database based to client
+// Args:
+// 	id: the data id
+// 	dst: the destination of the data
+// 	synt: the simulink time stamp
+// 	rate: the rate of the data
+// Returns:
+// 	error: the error message
 func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) error {
 	if utils.Uint8Contains(server.subscriberRegister[id], dst) { // if subscriber registered
 		lastSynt := server.handler.QueryLastSynt(id)
@@ -218,6 +268,16 @@ func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) 
 	return nil
 }
 
+// Private function that send the data to the destination
+// Args:
+// 	dst: the destination of the data
+// 	priority: the priority of the data
+// 	synt: the simulink time stamp
+// 	flag: the flag of the data
+// 	data_id: the data id
+// 	dataMap: the data
+// Returns:
+// 	error: the error message
 func (server *Server) send(dst uint8, priority uint8, synt uint32, flag uint8, data_id uint16, dataMap [][]float64) error {
 	var pkt ServicePacket
 	pkt.Src = server.LocalSrc
@@ -242,6 +302,8 @@ func (server *Server) send(dst uint8, priority uint8, synt uint32, flag uint8, d
 	} else {
 		col = uint8(len(dataMap[0]))
 	}
+
+	// calculate the length of the packet
 	pkt.Length = uint16(utils.SERVICE_HEADER_LEN) + uint16(utils.SUB_HEADER_LEN) + uint16(row)*uint16(col)*8
 
 	pkt.Service = utils.SER_SEND
@@ -282,6 +344,17 @@ func (server *Server) send(dst uint8, priority uint8, synt uint32, flag uint8, d
 	return nil
 }
 
+// Private function that send the protocol event or command to the destination
+// Args:
+// 	dst: the destination of the data
+// 	priority: the priority of the data
+// 	synt: the simulink time stamp
+// 	service: the service type
+// 	flag: the flag of the data
+// 	opt1: the option1 of the data
+// 	opt2: the option2 of the data
+// Returns:
+// 	error: the error message
 func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, service uint8, flag uint8, opt1 uint8, opt2 uint8) error {
 	var pkt ServicePacket
 	pkt.Src = server.LocalSrc
@@ -325,6 +398,12 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, service ui
 	return nil
 }
 
+// The function that listen to the client
+// TODO: A design question that how many goroutines should be used to handle the packet
+// Args:
+// 	pkt: the packet received from the client
+// Returns:
+// 	error: the error message
 func (server *Server) listen(addr *net.UDPAddr, procnums int) error {
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
@@ -358,6 +437,11 @@ func (server *Server) listen(addr *net.UDPAddr, procnums int) error {
 	}
 }
 
+// The function that handle the packet received from the client
+// Args:
+// 	pkt: the packet received from the client
+// Returns:
+// 	error: the error message
 func (server *Server) handle(pkt *ServicePacket) error {
 	// fmt.Println("SimTime:", pkt.SimulinkTime, " ------ Insert into table record", pkt.Param)
 

@@ -26,6 +26,12 @@ type VisualData struct {
 	ID        string  `json:"id"`
 }
 
+type C2Msg struct {
+	Value float64 `json:"value"`
+	Time  uint32  `json:"time"`
+	// other fields ...
+}
+
 type WebServer struct {
 	utils.JsonStandard
 	utils.ServiceStandard
@@ -94,6 +100,16 @@ func (server *WebServer) Init(src uint8, hmsServer *Server) error {
 	return nil
 }
 
+// Overwrite the function in ServiceStandard instead of using from server.go
+// Args:
+// 	- id: data id
+// 	- timeStart: start time of the data
+// 	- timeEnd: end time of the data
+// Return:
+// 	- timeSimuVec: simulation time vector
+// 	- timePhyVec: physical time vector
+// 	- dataMat: data matrix
+// 	- err: error
 func (server *WebServer) RequestRange(id uint16, timeStart uint32, timeEnd uint32) ([]uint32, []uint64, [][]float64, error) {
 	// fmt.Println("[2] Debug: RequestRange")
 	var dataMat [][]float64
@@ -110,12 +126,20 @@ func (server *WebServer) RequestRange(id uint16, timeStart uint32, timeEnd uint3
 	return timeSimuVec, timePhyVec, dataMat, nil
 }
 
+// Overwrite the function in ServiceStandard instead of using from server.go
+// The main loop to feed Visualization subsystem with real-time data
+// Args:
+// 	- id: data id
+// 	- closeSig: close signal
+// Return:
+// 	- err: error
 func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
 	// fmt.Println("[1] Debug: Subscribe")
 
 	/* 	------------ CHUANYU APR 19 2022 MODIFICATION-------------------------
-	   	No history data for Visualization in the real time part anymore,
+	   	1. No history data for Visualization in the real time part anymore,
 	   	History data are handled by Request function now
+		2. No need to wrap the data into ServicePacket anymore, VisualData is defined for more flexible internal communication
 	*/
 
 	// lastTime := server.handler.QueryLastSynt(id)
@@ -162,6 +186,13 @@ func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
 
 }
 
+// A wrapper function to format the data into VisualData
+// Args:
+// 	- dataID: data id
+// 	- timestamp: timestamp of the data
+// 	- data: data vector
+// Return:
+// 	- err: error
 func (server *WebServer) send(dataID uint16, timestamp uint64, data []float64) error {
 
 	for i, col := range data {
@@ -202,6 +233,11 @@ func (server *WebServer) send(dataID uint16, timestamp uint64, data []float64) e
 	return nil
 }
 
+// The event handler for websocket connection
+// Args:
+// 	- ctx: context
+// Return:
+// 	- err: error
 func (server *WebServer) wsRealTime(ctx *sgo.Context) error {
 	// fmt.Println("[4] Debug: wsReadTime")
 	SubscribeCloseSig := false
@@ -248,6 +284,11 @@ func (server *WebServer) wsRealTime(ctx *sgo.Context) error {
 	}
 }
 
+// Feed the history data to the Visualization as a list of VisualData
+// Args:
+// 	- ctx: context
+// Return:
+// 	- err: error
 func (server *WebServer) httpHistory(ctx *sgo.Context) error {
 	var dlist []VisualData
 	var d VisualData
@@ -331,12 +372,11 @@ func (server *WebServer) httpHistory(ctx *sgo.Context) error {
 // 	}
 // }
 
-type C2Msg struct {
-	Value float64 `json:"value"`
-	Time  uint32  `json:"time"`
-	// other fields ...
-}
-
+// MsgHandler handles the set-point command from the client
+// Args:
+// 	- ctx: context
+// Return:
+// 	- err: error
 func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -374,5 +414,5 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 		dataMat[0])
 
 	fmt.Println(id, msg.Value)
-	return ctx.Text(200, "biu")
+	return ctx.Text(200, "command received and forwarded")
 }
