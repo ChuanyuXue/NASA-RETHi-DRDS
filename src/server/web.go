@@ -26,16 +26,24 @@ type VisualData struct {
 	ID        string  `json:"id"`
 }
 
+// type MohsenMsg struct {
+// 	DoOrCancel  float64 `json:"do_or_cancel"`
+// 	CommandID   float64 `json:"command_id"`
+// 	TimeToStart float64 `json:"time_to_start"`
+// 	SystemID    float64 `json:"system_id"`
+// 	CommandType float64 `jason:"command_type"`
+// 	ZoneID      float64 `json:"zone_id"`
+// 	Mode        float64 `json:"mode"`
+// 	TSpHeat     float64 `json:"t_sp_heat"`
+// 	TSpCool     float64 `json:"t_sp_cool"`
+// }
+
 type MohsenMsg struct {
-	DoOrCancel  float64 `json:"do_or_cancel"`
-	CommandID   float64 `json:"command_id"`
-	TimeToStart float64 `json:"time_to_start"`
-	SystemID    float64 `json:"system_id"`
-	CommandType float64 `jason:"command_type"`
-	ZoneID      float64 `json:"zone_id"`
-	Mode        float64 `json:"mode"`
-	TSpHeat     float64 `json:"t_sp_heat"`
-	TSpCool     float64 `json:"t_sp_cool"`
+	Value0   float64 `json:"value0"`
+	Value1   float64 `json:"value1"`
+	Value2   float64 `json:"value2"`
+	Value3   float64 `json:"value3"`
+	Value4   float64 `jaso:"value4"`
 }
 
 type WebServer struct {
@@ -364,17 +372,27 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 	var rawData []float64
 
 	rawData = append(
-		rawData, 
-		msg.DoOrCancel, 
-		msg.CommandID, 
-		msg.TimeToStart, 
-		msg.SystemID, 
-		msg.CommandType, 
-		msg.ZoneID, 
-		msg.Mode, 
-		msg.TSpHeat, 
-		msg.TSpCool,
+		rawData,
+		msg.Value0, 
+		msg.Value1, 
+		msg.Value2, 
+		msg.Value3, 
+		msg.Value4, 
 	)
+
+	// rawData = append(
+	// 	rawData, 
+	// 	msg.DoOrCancel, 
+	// 	msg.CommandID, 
+	// 	msg.TimeToStart, 
+	// 	msg.SystemID, 
+	// 	msg.CommandType, 
+	// 	msg.ZoneID, 
+	// 	msg.Mode, 
+	// 	msg.TSpHeat, 
+	// 	msg.TSpCool,
+	// )
+
 	dataMat = append(dataMat, rawData)
 
 	go server.hmsServer.send(
