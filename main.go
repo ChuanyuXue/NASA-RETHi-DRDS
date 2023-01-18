@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+
+
 func init() {
 	err := handler.DatabaseGenerator(0, "db_info.json")
 	if err != nil {
@@ -19,6 +21,9 @@ func init() {
 	}
 }
 
+
+// Usage: go run main.go
+// NOTE: This program can only run in the docker container with correct docker-compose.yml file
 func main() {
 	// --------------------- Test for packet V6 --------------------------
 
@@ -139,9 +144,9 @@ func main() {
 	// 	fmt.Print(nil)
 	// }
 	// --------------- Test for Ground <-- Habitat <--> Subsystem ------------------------
-	// Start Habitat server
-	habitatServer := server.Server{}
-	err := habitatServer.Init(utils.SRC_HMS)
+	
+	habitatServer := server.Server{} // Start Habitat server
+	err := habitatServer.Init(utils.SRC_HMS) // Init Habitat server
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -172,6 +177,6 @@ func main() {
 	// Let MCVT subscribe Habitat server
 	// habitatServer.Subscribe(9, utils.SRC_AGT, 0, 1000)
 
-	select {}
+	select {} // Keep the main thread alive
 
 }

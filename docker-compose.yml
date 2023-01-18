@@ -3,7 +3,7 @@ services:
   comm:
     image: amyangxyz111/rethi-comm
     # image: comm_t
-    environment:
+    environment: 
       ADDR_LOCAL_GCC: ":10000"
       ADDR_LOCAL_HMS: ":10001"
       ADDR_LOCAL_STR: ":10002"
