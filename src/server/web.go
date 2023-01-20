@@ -39,11 +39,11 @@ type VisualData struct {
 // }
 
 type MohsenMsg struct {
-	Value0   float64 `json:"value0"`
-	Value1   float64 `json:"value1"`
-	Value2   float64 `json:"value2"`
-	Value3   float64 `json:"value3"`
-	Value4   float64 `jaso:"value4"`
+	Value0 float64 `json:"value0"`
+	Value1 float64 `json:"value1"`
+	Value2 float64 `json:"value2"`
+	Value3 float64 `json:"value3"`
+	Value4 float64 `jaso:"value4"`
 }
 
 type WebServer struct {
@@ -65,6 +65,12 @@ type WebServer struct {
 	wsOpenSig  chan bool
 }
 
+// Init function initializes the web server
+// Args:
+// 	src: the source of the web server
+// 	hmsServer: the pointer to the hms server
+// Returns:
+// 	err: the error message
 func (server *WebServer) Init(src uint8, hmsServer *Server) error {
 	server.LocalSrc = src
 	server.Src = strconv.Itoa(int(src))
@@ -412,23 +418,23 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 
 	rawData = append(
 		rawData,
-		msg.Value0, 
-		msg.Value1, 
-		msg.Value2, 
-		msg.Value3, 
-		msg.Value4, 
+		msg.Value0,
+		msg.Value1,
+		msg.Value2,
+		msg.Value3,
+		msg.Value4,
 	)
 
 	// rawData = append(
-	// 	rawData, 
-	// 	msg.DoOrCancel, 
-	// 	msg.CommandID, 
-	// 	msg.TimeToStart, 
-	// 	msg.SystemID, 
-	// 	msg.CommandType, 
-	// 	msg.ZoneID, 
-	// 	msg.Mode, 
-	// 	msg.TSpHeat, 
+	// 	rawData,
+	// 	msg.DoOrCancel,
+	// 	msg.CommandID,
+	// 	msg.TimeToStart,
+	// 	msg.SystemID,
+	// 	msg.CommandType,
+	// 	msg.ZoneID,
+	// 	msg.Mode,
+	// 	msg.TSpHeat,
 	// 	msg.TSpCool,
 	// )
 
@@ -449,6 +455,5 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 		uint32(time.Now().UnixMilli()/1e3),
 		dataMat[0])
 
-	fmt.Println(id, msg.Value)
 	return ctx.Text(200, "command received and forwarded")
 }
