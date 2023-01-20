@@ -1,8 +1,6 @@
 package server
 
 import (
-	"NASA-RETHi-DRDS/src/handler"
-	"NASA-RETHi-DRDS/src/utils"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -14,6 +12,8 @@ import (
 	"github.com/AmyangXYZ/sgo"
 	"github.com/AmyangXYZ/sgo/middlewares"
 	"github.com/gorilla/websocket"
+	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/handler"
+	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/utils"
 )
 
 const (

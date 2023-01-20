@@ -1,9 +1,9 @@
 package main
 
 import (
-	"NASA-RETHi-DRDS/src/handler"
-	"NASA-RETHi-DRDS/src/server"
-	"NASA-RETHi-DRDS/src/utils"
+	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/handler"
+	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/server"
+	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/utils"
 	"fmt"
 	"time"
 )

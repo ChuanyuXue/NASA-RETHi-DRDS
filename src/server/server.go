@@ -1,8 +1,7 @@
 package server
 
 import (
-	"NASA-RETHi-DRDS/src/handler"
-	"NASA-RETHi-DRDS/src/utils"
+	
 	"errors"
 	"os"
 	"sync"
@@ -11,6 +10,9 @@ import (
 	// "errors"
 	"fmt"
 	"net"
+
+	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/handler"
+	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/utils"
 )
 
 type Server struct {

@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"NASA-RETHi-DRDS/src/utils"
+	
 	"database/sql"
 	"fmt"
 	"os"
@@ -10,7 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/utils"
 	_ "github.com/go-sql-driver/mysql"
+	
 )
 
 // Handler is the main struct for the handler

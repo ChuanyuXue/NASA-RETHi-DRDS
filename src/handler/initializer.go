@@ -1,13 +1,13 @@
 package handler
 
 import (
-	"NASA-RETHi-DRDS/src/utils"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
+	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/utils"
+	"database/sql"
 )
 
 // TableInfo struct defines the structure of the data information table
