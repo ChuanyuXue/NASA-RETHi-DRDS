@@ -1,4 +1,4 @@
-module github.com/ChuanyuXue/NASA-RETHi-DRDS/v1
+module github.com/ChuanyuXue/NASA-RETHi-DRDS
 
 go 1.17
 
