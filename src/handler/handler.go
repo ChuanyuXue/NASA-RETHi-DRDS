@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"data-service/src/utils"
+	"NASA-RETHi-DRDS/src/utils"
 	"database/sql"
 	"fmt"
 	"os"

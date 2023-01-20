@@ -1,4 +1,4 @@
-module data-service
+module NASA-RETHi-DRDS
 
 go 1.17
 

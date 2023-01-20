@@ -1,8 +1,8 @@
 package server
 
 import (
-	"data-service/src/handler"
-	"data-service/src/utils"
+	"NASA-RETHi-DRDS/src/handler"
+	"NASA-RETHi-DRDS/src/utils"
 	"errors"
 	"os"
 	"sync"
