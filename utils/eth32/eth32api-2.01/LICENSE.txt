@@ -1,0 +1,30 @@
+ETH32 API Source Code
+Copyright 2016 Winford Engineering
+www.winford.com
+==================================
+ETH32 API SOURCE CODE LICENSE
+
+The source code for the ETH32 API is provided for users who may wish 
+to control the ETH32 device from platforms that aren't directly 
+supported by Winford Engineering, or who may wish to alter the behavior 
+of the API.
+
+Winford Engineering grants permission to use, modify, and distribute the 
+ETH32 API, in source or binary form, in any application in which the ETH32 
+API is used to communicate with or control Winford Engineering's ETH32 device.
+
+For commercial users, the ETH32 API source may not be used for purposes other 
+than controlling Winford Engineering's ETH32 device.
+
+For non-commercial users, Winford Engineering also grants permission to use 
+and modify the ETH32 API source code, even in cases where it is not being 
+used to communicate with or control Winford Engineering's ETH32 device.
+
+If you modify the ETH32 API source code, you may distribute it in 
+source or compiled binary form, provided that you clearly specify that 
+the files you are distributing were modified and are NOT the original 
+files provided by Winford Engineering.
+
+When distributing the ETH32 API source code, all copyright notices and 
+this LICENSE.txt file must be included in the distribution.
+
