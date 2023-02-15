@@ -1,3 +1,6 @@
+## This program acts as a gateway on RaspberryPi
+## It listens the packets from the A/D converter for structural subsystem
+
 import time
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
