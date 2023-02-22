@@ -6,10 +6,10 @@ Please see https://www.purdue.edu/rethi
 ## 2. Current design
 
 ### 2.1 DS - Data flow for MCVT
-<img src="./img/DS_protocol.drawio.svg">
+<img src="./img/HMS-Design-v6.svg">
 
 ### 2.2 DS - Data flow for CPT
-<img src="./img/DDS_INTE_V3.drawio.svg">
+<img src="./img/cpt.jpg">
 
 ### 2.2 DS - Data flow in Data service
 <img src="./img/DDS_FLOW.drawio.svg">
