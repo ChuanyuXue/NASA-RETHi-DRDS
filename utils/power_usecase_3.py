@@ -1,42 +1,52 @@
-## This program acts as a gateway on RaspberryPi for BK-PRECISION 85**
-## It reads serial data
-## and send the observation to simulink
+# 0x5F Read input voltage, current, power and relative state
+# Byte
+# offset Meaning
+# 3 to 6 4 byte little-endian integer for terminal voltage in units of 1 mV
+# 7 to 10 4 byte little-endian integer for terminal current in units of 0.1 mA
+# 11 to 14 4 byte little-endian integer for terminal power in units of 1 mW
+# 15 Operation state register (see bit list below)
+# 16 to 17 2 byte little-endian integer for demand state register (see bit list below)
+# 18-24 Reserved
 
-from pyapi.utils import Header, Packet
-from ctypes import *
-from struct import error, pack
-import subprocess
-import socket
+import serial
+import time
+import datetime
 
-LOCAL_IP = "0.0.0.0"
-LOCAL_PORT = 12345
+REMOTE_IP = "0.0.0.0"
+REMOTE_PORT = 12345
+
+LENGTH_PKT = 26
+
+def checksum(data):
+    return sum(data) & 0xff
+
+cmd = []
+cmd += [0xaa, 0x00, 0x20, 0x01]
+cmd +=  [0x00] * (LENGTH_PKT - 4 - 1)
+cmd += [checksum(cmd)]
+
+assert len(cmd) == LENGTH_PKT
+
+# print(len(cmd))
+# print([hex(x) for x in cmd])
 
 
-try:
-    sock = socket.socket(
-        socket.AF_INET,  # Internet
-        socket.SOCK_DGRAM)  # UDP
-    sock.bind((LOCAL_IP, LOCAL_PORT))
-except error:
-    print(LOCAL_PORT, str(error))
+# ser = serial.Serial("/dev/ttyUSB0", 9600, parity=serial.PARITY_NONE,
+#         stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS)
+# ser.setDTR(False)
+# ser.setRTS(False)
 
-log = {}
+ser = serial.Serial()
+ser.baudrate = 19200
+ser.port = "/dev/ttyUSB0"
+ser.open()
+print(ser.is_open)
 
-print("----------------- Start listening packets ------------------------")
+ser.write(cmd)
 
-while True:
-    re = Packet()
-    data, addr = sock.recvfrom(1500)  # buffer size is 1024 bytes
-    re.buf2Pkt(data)
-    print(re.header.simulink_time)
-    print("Receive the packets from Simulink")
-    for i in re.subpackets:
-        print(i.header.data_id)
-        print(i.header.col, i.header.row, i.header.length)
-        print(i.payload[0])
-        
-        subprocess.call(["./eth32/eth32-example/comm", str(0), str(i.payload[0])])
+print([hex(x) for x in cmd])
 
-        # Check the command status and call the C program 
-        pass
-    
+response = ser.read(LENGTH_PKT)
+print(response)
+print(ser.is_open)
+
