@@ -11,9 +11,9 @@ import (
 
 	"github.com/AmyangXYZ/sgo"
 	"github.com/AmyangXYZ/sgo/middlewares"
-	"github.com/gorilla/websocket"
 	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/handler"
 	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/utils"
+	"github.com/gorilla/websocket"
 )
 
 const (

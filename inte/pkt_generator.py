@@ -2,7 +2,8 @@ import pyapi.api as api
 import time
 import json
 import random
-import json, random
+import json
+import random
 
 with open("../config_diagnostic_tests.json") as f:
     # with open("../db_info_v6.json") as f:
@@ -16,10 +17,12 @@ with open("../config_diagnostic_tests.json") as f:
                     local_ip="0.0.0.0",
                     local_port=61234,
                     to_ip="localhost",
-                    to_port=10000 + int(data['data_subtype1']),
+                    to_port=10000 + 3,
+                    # to_port=10000 + int(data['data_subtype1']),
                     # to_port=65533, # for local testing
                     # to_port=65531,  # for data service testing
-                    client_id=int(data["data_subtype1"]),
+                    # client_id=int(data["data_subtype1"]),
+                    client_id=3,
                     server_id=1,
                     # set_blocking=
                     # False,  # Setting it to "True" causes issues when testing
