@@ -1,0 +1,74 @@
+ETH32 API Source Code
+Copyright 2016 Winford Engineering
+www.winford.com
+==================================
+REQUIREMENTS AND INSTALLATION
+
+
+The ETH32 API has been compiled and tested on Windows and Linux platforms.  
+Compiling and using the ETH32 API on other platforms may require some 
+modification of the source code.
+
+Windows System Requirements
+  * Windows 95 or later
+  * MinGW GCC and tools:  http://www.mingw.org
+    The following packages should be installed, according to instructions from 
+    the MinGW project:
+      * gcc-core 3.3.1 or later
+      * mingw-runtime
+      * mingw-utils
+      * w32api
+      * binutils
+      * make (mingw32-make)
+  * WinPcap Developer's Pack (tested with 4.1.1)
+      * You must download and extract the WinPcap developer's pack so that the WpdPack directory 
+        is underneath the "dependencies" directory of the ETH32 API
+
+Windows Compiling and Installation
+   * Install the required packages (listed above) from MinGW.
+     Essentially, just unzip (for example with WinZip) each one tar.gz 
+     package into the same folder.  There will probably be a few times 
+     it prompts you to overwrite an existing file.  It doesn't matter 
+     whether you choose to overwrite those files or not.
+     We'll assume the packages were unzipped into C:\apps\mingw
+   * Extract the ETH32 API source code into a folder if you haven't already.
+   * Open a command prompt window
+   * Add the MinGW bin directory to your PATH, for example:
+     SET PATH=C:\apps\mingw\bin;%PATH%
+   * CD into the "win" subdirectory of the ETH32 API source code
+   * Compile the API according to the rules within the Makefile by running 
+     the command:
+      mingw32-make
+     Each individual file will be compiled.  At the end, you will get a 
+     notice like this, which is fine:
+       "dllwrap: no export definition file provided.
+        Creating one, but that may not be what you want"
+   * If all was compiled successfully, you will be left with (among other files)
+     an eth32api.dll file in the "win" directory.
+   * The eth32api.dll file should be copied into your system directory
+     (for example, C:\Windows\system32).
+   * When you compile your applications to use the ETH32 API, you may use the 
+     headers and other support files provided with the main ETH32 API distribution, 
+     unless you have added, modified, or removed public API functions or their
+     arguments.
+
+================================================
+
+Linux System Requirements
+  * System with 2.0 kernel or later
+  * GCC 2.95.4 or later
+  * binutils
+  * GNU make
+  * Linux pthreads support (included in recent versions of GNU libc)
+  * glibc and headers  (tested with glibc 2.3.2)
+
+Linux Compiling and Installation
+  * Extract the ETH32 API source code into a directory if you haven't already.
+  * cd into the "linux" subdirectory
+  * Type "make"
+  * If all was compiled successfully, you will be left with (among other files)
+    a libeth32.a and libeth32.so.(version) file in the "linux" directory.
+  * Run the installation script (type "./install.sh") to install the library 
+    and set up the symbolic links
+
+
