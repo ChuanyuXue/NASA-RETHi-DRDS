@@ -6,10 +6,10 @@ Please see https://www.purdue.edu/rethi
 ## 2. Current design
 
 ### 2.1 DS - Data flow for MCVT
-<img src="./img/DS_protocol.drawio.svg">
+<img src="./img/HMS-Design-v6.svg">
 
 ### 2.2 DS - Data flow for CPT
-<img src="./img/DDS_INTE_V3.drawio.svg">
+<img src="./img/cpt.jpg">
 
 ### 2.2 DS - Data flow in Data service
 <img src="./img/DDS_FLOW.drawio.svg">
@@ -22,10 +22,10 @@ Please see https://www.purdue.edu/rethi
 <img src="./img/DS_UML.drawio.svg">
 
 ## 3. Service Protocol
-- **For Python, please refer to  [demo.py](inte/db_send_habitat.py) and [api.py](inte/pyapi/api.py).**
+- **For Python, please refer to  [demo.py](utils/c2_usecase.py) and [api.py](utils/pyapi/api.py).**
 - **For GoLang, please refer to [main.go](main.go).**
-- **For JavaScript, please refer to [demo.html](inte/db_subscribe.html)**
-- **For Simulink, please refer to [MCVT_v6_shell.slx](inte/v6_shell/MCVT_v6_shell.slx)**
+- **For JavaScript, please refer to [demo.html](utils/db_subscribe.html)**
+- **For Simulink, please refer to [MCVT_v6_shell.slx](utils/simapi/power_switch.slx)**
 - **For other Language, please implement by following standards:**
 
 
