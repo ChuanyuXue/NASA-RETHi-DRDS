@@ -1,3 +1,5 @@
+# This code is for the Power Load 
+# (Not working currently, no response when sending the command)
 # 0x5F Read input voltage, current, power and relative state
 # Byte
 # offset Meaning

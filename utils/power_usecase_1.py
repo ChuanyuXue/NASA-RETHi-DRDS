@@ -29,8 +29,9 @@ ins = API(local_ip="0.0.0.0",
 
 ser = serial.Serial("/dev/ttyUSB0", 19200, parity=serial.PARITY_NONE,
         stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS)
-
+ser.timeout = 5
 time.sleep(1)
+
 print(ser.is_open)
 ser.write(b'OUTP:START\n')
 count = 0
@@ -62,7 +63,13 @@ while True:
     except KeyboardInterrupt:
         break
     except Exception as e:
-        print(e)
+        while not ser.is_open:
+            ser = serial.Serial("/dev/ttyUSB0", 19200, parity=serial.PARITY_NONE,
+            stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS)
+            print("Serial Timeout Exception: ", e)
+            print("Reopen the serial port")
+            print("Exception: ", e)
+            time.sleep(1)
 
 ser.write(b'OUTP:STOP\n')
 ser.close()
