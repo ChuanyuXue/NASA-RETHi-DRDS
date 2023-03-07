@@ -8,6 +8,10 @@
 #include <unistd.h>
 #include "eth32.h"
 
+// void voltage_monitor(eth32 handle, eth32_event *event, void *extra){
+
+// }
+
 int main(int argc, char *argv[])
 {
 	char hostname[200];
@@ -18,8 +22,8 @@ int main(int argc, char *argv[])
 
 	char *pin_arg = argv[1];
 	int pin = atoi(pin_arg);
-	char *value_arg = argv[2];
-	int value = atoi(value_arg);
+
+	int direction = 0;
 
 	// Open a connection to the ETH32
 	handle = eth32_open(hostname, ETH32_PORT, 5000, &eth32result);
@@ -27,18 +31,28 @@ int main(int argc, char *argv[])
 	// printf("%d\n", eth32result);
 
 	// printf("Set up the direction: \n");
-	for (int port = 0; port < 6; port++)
-	{
-		eth32result = eth32_set_direction(handle, port, 1);
-	}
+	// eth32result = eth32_set_direction_bit(handle, 3, pin, direction);
+	eth32result = eth32_set_analog_state(handle, ADC_ENABLED);
+	eth32result = eth32_set_analog_assignment(handle, 0, pin);
+	eth32result = eth32_set_analog_reference(handle, REF_INTERNAL);
 
 	// printf("%d\n", eth32result);
 
 	// printf("Change the voltage to on pin %d as value %d \n", pin, value);
-	eth32result = eth32_output_bit(handle, 3, pin, value);
+	int value = -1;
+	while (1)
+	{
+		eth32result = eth32_input_analog(handle, 0, &value);
+		printf("Current Voltage: %f \n", (value / 1024.0) * 5.0);
+		printf("Refered Value: %d \n", value);
+		sleep(1);
+	}
+	// eth32result = eth32_input_analog(handle, pin, &value);
 
-	// printf("%d\n", eth32result);
+	// printf("eth32_input_analog(): %d\n", eth32result);
 	// Close the board and exit.
 	eth32_close(handle);
-	return (0);
+	printf("Current Voltage: %f \n", (value / 1024.0) * 5.0);
+	printf("Refered Value: %d \n", value);
+	return value;
 }
