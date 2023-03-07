@@ -9,7 +9,7 @@ import modbus_tk
 
 ## Communication configurations
 BAUD_RATE = 9600
-PORT = "/dev/ttyUSB1"
+PORT = "/dev/ttyUSB0"
 BYTE_SIZE = serial.EIGHTBITS
 STOP_BIT = serial.STOPBITS_TWO
 PARITY = serial.PARITY_NONE

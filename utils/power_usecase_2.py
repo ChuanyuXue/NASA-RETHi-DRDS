@@ -35,7 +35,7 @@ while True:
         print(i.header.col, i.header.row, i.header.length)
         print(i.payload[0])
         
-        subprocess.call(["./eth32/eth32-example/comm", str(0), str(i.payload[0])])
+        subprocess.call(["./eth32/eth32-example/comm", str(0), str(1), str(i.payload[0])])
 
         # Check the command status and call the C program 
         pass
