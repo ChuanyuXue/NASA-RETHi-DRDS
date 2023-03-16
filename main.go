@@ -5,7 +5,7 @@ import (
 	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/server"
 	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/utils"
 	"fmt"
-	"time"
+	// "time"
 )
 
 
@@ -157,23 +157,23 @@ func main() {
 	go habitatWebServer.Init(utils.SRC_HMS, &habitatServer)
 	fmt.Println("Habitat Web-Service Started")
 
-	// Start Ground server
-	groundServer := server.Server{}
-	go groundServer.Init(utils.SRC_GCC)
-	fmt.Println("Ground Server Started")
-	time.Sleep(2 * time.Second)
+	// // Start Ground server
+	// groundServer := server.Server{}
+	// go groundServer.Init(utils.SRC_GCC)
+	// fmt.Println("Ground Server Started")
+	// time.Sleep(2 * time.Second)
 
-	// Let Ground server subscribe Habitat server
-	habitatServer.Subscribe(8011, groundServer.LocalSrc, 0, 1000)
-	habitatServer.Subscribe(8012, groundServer.LocalSrc, 0, 1000)
-	habitatServer.Subscribe(8013, groundServer.LocalSrc, 0, 1000)
-	habitatServer.Subscribe(8014, groundServer.LocalSrc, 0, 1000)
-	habitatServer.Subscribe(8015, groundServer.LocalSrc, 0, 1000)
-	habitatServer.Subscribe(8016, groundServer.LocalSrc, 0, 1000)
-	fmt.Println("Ground Server subscribed Habitat server")
+	// // Let Ground server subscribe Habitat server
+	// habitatServer.Subscribe(8011, groundServer.LocalSrc, 0, 1000)
+	// habitatServer.Subscribe(8012, groundServer.LocalSrc, 0, 1000)
+	// habitatServer.Subscribe(8013, groundServer.LocalSrc, 0, 1000)
+	// habitatServer.Subscribe(8014, groundServer.LocalSrc, 0, 1000)
+	// habitatServer.Subscribe(8015, groundServer.LocalSrc, 0, 1000)
+	// habitatServer.Subscribe(8016, groundServer.LocalSrc, 0, 1000)
+	// fmt.Println("Ground Server subscribed Habitat server")
 
 	// Let MCVT subscribe Habitat server
-	habitatServer.Subscribe(4001, utils.SRC_AGT, 0, 1000)
+	// habitatServer.Subscribe(4001, utils.SRC_AGT, 0, 1000)
 
 	select {} // Keep the main thread alive
 

@@ -5,8 +5,7 @@ import random
 import json
 import random
 
-with open("../config_diagnostic_tests.json") as f:
-    # with open("../db_info_v6.json") as f:
+with open("../db_info_v6.json") as f:
     data_discript = json.load(f)
 
     # Simulation for 600 seconds
