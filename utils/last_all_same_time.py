@@ -59,8 +59,15 @@ class ClientDRDS(Thread):
                             current_simulink_time)])
             else:
                 latest_find = True
+                self._clean_buffer_before_time(current_simulink_time)
                 return current_simulink_time, latest_all
         return None, -1
+    
+    def _clean_buffer_before_time(self, time):
+        for data_id in self.buffer:
+            while self.buffer[data_id]['time'] and self.buffer[data_id]['time'][0] < time:
+                self.buffer[data_id]['time'].pop(0)
+                self.buffer[data_id]['record'].pop(0)
 
     def _append_data(self, data):
         data_id = data.subpackets[0].header.data_id
@@ -87,6 +94,7 @@ def load_dataID(path):
     return all_data
 
 
+## How to use this API?
 if __name__ == '__main__':
     ## Initialize client
     client = ClientDRDS(local_ip="0.0.0.0",
