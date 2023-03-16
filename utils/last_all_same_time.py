@@ -37,6 +37,11 @@ class ClientDRDS(Thread):
         self.subscribed = True
 
     def get_latest_all(self, all_subscribed_data: list):
+        '''
+        Return:
+        - time: int
+        - latest_all: A list of 1-D vectors ordered by input all_subscribed_data
+        '''
         current_simulink_time = self.current_simulink_time
         latest_find = False
 
@@ -83,19 +88,21 @@ def load_dataID(path):
 
 
 if __name__ == '__main__':
+    ## Initialize client
     client = ClientDRDS(local_ip="0.0.0.0",
                         local_port=65533,
                         to_ip="127.0.0.1",
                         to_port=65531,
                         client_id=1,
                         server_id=1)
-
-    data = load_dataID("../db_info_v6.json")
-    client.subscribe(data)
+    ## [client.subscribe()]: Let client subscribe required data
+    request_id = load_dataID("../db_info_v6.json")
+    client.subscribe(request_id)
     client.start()
 
+    ## [client.get_latest_all()]: Get latest data with same timestamp
     while True:
-        t, values = client.get_latest_all(data)
+        t, values = client.get_latest_all(request_id)
         print(f"[GET LATEST DATA]: time-{t}, data-{values}", flush=True)
         time.sleep(1)
     client.join()
