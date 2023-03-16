@@ -16,10 +16,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const (
-	DATAPATH = "db_info.json"
-)
-
 type VisualData struct {
 	Timestamp uint64  `json:"timestamp"`
 	Value     float64 `json:"value"`
@@ -39,30 +35,25 @@ type VisualData struct {
 // }
 
 type MohsenMsg struct {
-	Value0 float64 `json:"value0"`
-	Value1 float64 `json:"value1"`
-	Value2 float64 `json:"value2"`
-	Value3 float64 `json:"value3"`
-	Value4 float64 `jaso:"value4"`
+	Value0 uint64 `json:"value0"`
+	Value1 uint64 `json:"value1"`
+	Value2 uint64 `json:"value2"`
+	Value3 uint64 `json:"value3"`
+	Value4 uint64 `jaso:"value4"`
 }
 
 type WebServer struct {
 	utils.JsonStandard
 	utils.ServiceStandard
 
-	Type string
-	Src  string
+	LocalSystemID     uint8
+	AllClientSystemID []uint8
 
-	handler   *handler.Handler
-	hmsServer *Server
+	bufferOutput chan *VisualData
 
-	LocalSrc  uint8
-	ClientSrc []uint8
-
-	upgrader websocket.Upgrader
-
-	wsDataChan chan *VisualData
-	wsOpenSig  chan bool
+	upgrader  websocket.Upgrader
+	DBHandler *handler.Handler
+	UDPServer *Server
 }
 
 // Init function initializes the web server
@@ -71,35 +62,41 @@ type WebServer struct {
 // 	hmsServer: the pointer to the hms server
 // Returns:
 // 	err: the error message
-func (server *WebServer) Init(src uint8, hmsServer *Server) error {
-	server.LocalSrc = src
-	server.Src = strconv.Itoa(int(src))
-
-	server.hmsServer = hmsServer
-	server.wsOpenSig = make(chan bool)
-	server.wsDataChan = make(chan *VisualData, 65535)
+func (server *WebServer) Init(id uint8, udpServer *Server) error {
+	server.LocalSystemID = id
+	server.UDPServer = udpServer
+	server.bufferOutput = make(chan *VisualData, utils.OUTPUT_BUFFER_LEN)
 
 	//------ init data handler
-
-	server.handler = &handler.Handler{}
-	err := server.handler.Init(server.LocalSrc)
+	err := server.initDBHander()
 	if err != nil {
-		fmt.Println("Failed to init data handler")
 		fmt.Println(err)
 		return err
 	}
 
-	//------- init http communication
+	//------ init http handler
+	err = server.initHttphandler()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 
-	// dataList, err := handler.ReadDataInfo(DATAPATH)
-	// if err != nil {
-	// 	fmt.Println("Streaming server unable to read data description")
-	// 	return err
-	// }
-	// for _, info := range dataList {
-	// 	server.wsPktChMap[int(info.Id)] = make(chan *ServicePacket, 1024)
-	// }
+	return nil
+}
 
+func (server *WebServer) initDBHander() error {
+	server.DBHandler = &handler.Handler{}
+	err := server.DBHandler.Init(server.LocalSystemID)
+	if err != nil {
+		fmt.Println("Webserver failed to init data handler")
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (server *WebServer) initHttphandler() error {
+	// Init Http service: Please contact Jiachen if any questions
 	server.upgrader = websocket.Upgrader{
 		CheckOrigin:     func(r *http.Request) bool { return true },
 		ReadBufferSize:  1024,
@@ -109,147 +106,12 @@ func (server *WebServer) Init(src uint8, hmsServer *Server) error {
 	app := sgo.New()
 	app.USE(middlewares.CORS(middlewares.CORSOpt{}))
 
-	app.GET("/ws", server.wsRealTime)
-	app.GET("/history/:id", server.httpHistory)
-
-	app.POST("/api/c2/:id", server.msgHandler)
+	app.GET("/ws", server.RealtimeProcess)
+	app.GET("/history/:id", server.HistoryProcess)
+	app.POST("/api/c2/:id", server.CommandProcess)
 	app.OPTIONS("/api/c2/:id", sgo.PreflightHandler)
 
 	app.Run(":9999")
-
-	return nil
-}
-
-// Overwrite the function in ServiceStandard instead of using from server.go
-// Args:
-// 	- id: data id
-// 	- timeStart: start time of the data
-// 	- timeEnd: end time of the data
-// Return:
-// 	- timeSimuVec: simulation time vector
-// 	- timePhyVec: physical time vector
-// 	- dataMat: data matrix
-// 	- err: error
-func (server *WebServer) RequestRange(id uint16, timeStart uint32, timeEnd uint32) ([]uint32, []uint64, [][]float64, error) {
-	// fmt.Println("[2] Debug: RequestRange")
-	var dataMat [][]float64
-	var timeSimuVec []uint32
-	var timePhyVec []uint64
-	var err error
-
-	timeSimuVec, timePhyVec, dataMat, err = server.handler.ReadRange(id, timeStart, timeEnd)
-	if err != nil {
-		fmt.Println(err)
-		return nil, nil, nil, err
-	}
-
-	return timeSimuVec, timePhyVec, dataMat, nil
-}
-
-// Overwrite the function in ServiceStandard instead of using from server.go
-// The main loop to feed Visualization subsystem with real-time data
-// Args:
-// 	- id: data id
-// 	- closeSig: close signal
-// Return:
-// 	- err: error
-func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
-	// fmt.Println("[1] Debug: Subscribe")
-
-	/* 	------------ CHUANYU APR 19 2022 MODIFICATION-------------------------
-	   	1. No history data for Visualization in the real time part anymore,
-	   	History data are handled by Request function now
-		2. No need to wrap the data into ServicePacket anymore, VisualData is defined for more flexible internal communication
-	*/
-
-	// lastTime := server.handler.QueryLastSynt(id)
-	// firstTime := server.handler.QueryFirstSynt(id)
-
-	// timeVec, dataMat, err := server.handler.ReadRange(id, firstTime, lastTime)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return err
-	// }
-
-	// for i, t := range timeVec {
-	// 	server.send(
-	// 		utils.SRC_HMS,
-	// 		id,
-	// 		utils.PRIORITY_HIGHT,
-	// 		t,
-	// 		255,
-	// 		dataMat[i],
-	// 	)
-	// }
-
-	lastTime := server.handler.QueryLastSynt(id)
-	for {
-		if *closeSig {
-			return nil
-		}
-		time.Sleep(1 * time.Second)
-		currentTime := server.handler.QueryLastSynt(id)
-		_, timeVec, dataMat, err := server.handler.ReadRange(id, lastTime, currentTime)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		for i, t := range timeVec {
-			server.send(
-				id,
-				t,
-				dataMat[i],
-			)
-		}
-		lastTime = currentTime
-	}
-
-}
-
-// A wrapper function to format the data into VisualData
-// Args:
-// 	- dataID: data id
-// 	- timestamp: timestamp of the data
-// 	- data: data vector
-// Return:
-// 	- err: error
-func (server *WebServer) send(dataID uint16, timestamp uint64, data []float64) error {
-
-	for i, col := range data {
-		data := VisualData{
-			Timestamp: timestamp,
-			Value:     col,
-			ID:        fmt.Sprintf("%d.%d", dataID, i),
-		}
-		server.wsDataChan <- &data
-	}
-
-	// fmt.Println("[3] Debug: send")
-	// var pkt ServicePacket
-	// pkt.Src = server.LocalSrc
-	// pkt.Dst = dst
-	// pkt.MessageType = utils.MSG_OUTER
-	// pkt.Priority = priority
-	// pkt.PhysicalTime = uint64(time.Now().UnixMilli())
-	// pkt.SimulinkTime = synt
-
-	// var subpkt SubPacket
-
-	// subpkt.DataID = dataID
-	// subpkt.Row = 1
-	// subpkt.Col = uint8(len(dataMap))
-	// subpkt.Length = uint16(subpkt.Row * subpkt.Col)
-
-	// pkt.Service = utils.SER_SEND
-	// pkt.Flag = utils.FLAG_SINGLE
-	// pkt.Option1 = utils.RESERVED
-	// pkt.Option2 = option2
-	// pkt.Data = dataMap
-	// pkt.Subpackets = make([]*SubPacket, 0)
-	// pkt.Subpackets = append(pkt.Subpackets, &subpkt)
-
-	// channel <- &pkt
-	// server.wsPktChMap[int(subpkt.DataID)] <- &pkt
 	return nil
 }
 
@@ -258,7 +120,7 @@ func (server *WebServer) send(dataID uint16, timestamp uint64, data []float64) e
 // 	- ctx: context
 // Return:
 // 	- err: error
-func (server *WebServer) wsRealTime(ctx *sgo.Context) error {
+func (server *WebServer) RealtimeProcess(ctx *sgo.Context) error {
 	// fmt.Println("[4] Debug: wsReadTime")
 	SubscribeCloseSig := false
 
@@ -273,7 +135,7 @@ func (server *WebServer) wsRealTime(ctx *sgo.Context) error {
 	}()
 
 	// Subscribe all of the data
-	for _, dataID := range server.handler.RecordTables {
+	for _, dataID := range server.DBHandler.RecordTables {
 		go server.Subscribe(dataID, &SubscribeCloseSig)
 	}
 
@@ -289,9 +151,10 @@ func (server *WebServer) wsRealTime(ctx *sgo.Context) error {
 		}
 	}()
 
+	// send
 	for {
 		select {
-		case data := <-server.wsDataChan:
+		case data := <-server.bufferOutput:
 			if err = ws.WriteJSON(data); err != nil {
 				fmt.Println(err)
 				continue
@@ -304,12 +167,72 @@ func (server *WebServer) wsRealTime(ctx *sgo.Context) error {
 	}
 }
 
+// Subscribe function reads data from database and send it to the visualization. Unlike the UDP-Server
+// here subscribe is not to directly forward the data from clients to visualization but to read data from database
+//
+// Args:
+// 	- id: data id
+// 	- closeSig: close signal
+// Return:
+// 	- err: error
+func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
+	/* 	------------ CHUANYU APR 19 2022 MODIFICATION----------
+	   	1. No history data for Visualization in the real time part anymore,
+	   	History data are handled by Request function now
+		2. No need to wrap the data into ServicePacket anymore, VisualData is defined for more flexible internal communication
+	*/
+
+	lastTime := server.DBHandler.QueryLastSynt(id)
+	for {
+		if *closeSig {
+			return nil
+		}
+		currentTime := server.DBHandler.QueryLastSynt(id)
+		_, timeVec, dataMat, err := server.DBHandler.ReadRange(id, lastTime, currentTime)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		for i, t := range timeVec {
+			server.writeBufferOutput(
+				id,
+				t,
+				dataMat[i],
+			)
+		}
+		lastTime = currentTime
+
+		time.Sleep(time.Second / time.Duration(utils.RT_STREAM_FREQ))
+	}
+
+}
+
+// Append data to the Visualization subsystem output buffer
+// Args:
+// 	- dataID: data id
+// 	- timestamp: timestamp of the data
+// 	- data: data vector
+// Return:
+// 	- err: error
+func (server *WebServer) writeBufferOutput(dataID uint16, timestamp uint64, data []float64) error {
+
+	for i, col := range data {
+		data := VisualData{
+			Timestamp: timestamp,
+			Value:     col,
+			ID:        fmt.Sprintf("%d.%d", dataID, i),
+		}
+		server.bufferOutput <- &data
+	}
+	return nil
+}
+
 // Feed the history data to the Visualization as a list of VisualData
 // Args:
 // 	- ctx: context
 // Return:
 // 	- err: error
-func (server *WebServer) httpHistory(ctx *sgo.Context) error {
+func (server *WebServer) HistoryProcess(ctx *sgo.Context) error {
 	var dlist []VisualData
 	var d VisualData
 
@@ -317,13 +240,7 @@ func (server *WebServer) httpHistory(ctx *sgo.Context) error {
 	id, _ := strconv.ParseUint(reqs[0], 10, 16)
 	col, _ := strconv.Atoi(reqs[1])
 
-	// start, _ := strconv.ParseUint(ctx.Param("start"), 10, 32)
-	// end, _ := strconv.ParseUint(ctx.Param("end"), 10, 32)
-
-	// fmt.Println("[5] Debug: wsHistory")
-
-	_, tVec, vMat, err := server.RequestRange(uint16(id), 0, server.handler.QueryLastSynt(uint16(id)))
-	// _, tVec, vMat, err := server.RequestRange(uint16(id), uint32(start), uint16(uint32(end)-uint32(start)))
+	_, tVec, vMat, err := server.RequestRange(uint16(id), 0, server.DBHandler.QueryLastSynt(uint16(id)))
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -336,68 +253,33 @@ func (server *WebServer) httpHistory(ctx *sgo.Context) error {
 	return ctx.JSON(200, 1, "success", dlist)
 }
 
-// func (server *Stream) wsHandler(ctx *sgo.Context) error {
-// 	ws, err := server.upgrader.Upgrade(ctx.Resp, ctx.Req, nil)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return err
-// 	}
-// 	defer func() {
-// 		ws.Close()
-// 		fmt.Println("ws/client closed")
-// 	}()
-// 	dataID, err := strconv.Atoi(ctx.Param("dataID"))
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return err
-// 	}
-// 	wsPktCh := server.wsPktChMap[dataID]
-// 	// server.wsOpenSig <- true
-// 	// <-server.wsOpenSig
-// 	closeSig := make(chan bool)
+// Overwrite the function in ServiceStandard instead of using from server.go
+//
+// Args:
+// 	- id: data id
+// 	- timeStart: start time of the data
+// 	- timeEnd: end time of the data
+// Return:
+// 	- timeSimuVec: simulation time vector
+// 	- timePhyVec: physical time vector
+// 	- dataMat: data matrix
+// 	- err: error
+func (server *WebServer) RequestRange(id uint16, timeStart uint32, timeEnd uint32) ([]uint32, []uint64, [][]float64, error) {
+	simulationTime, physicalTime, values, err := server.DBHandler.ReadRange(id, timeStart, timeEnd)
+	if err != nil {
+		fmt.Println(err)
+		return nil, nil, nil, err
+	}
 
-// 	// receive
-// 	go func() {
-// 		for {
-// 			_, _, err := ws.ReadMessage()
-// 			if err != nil {
-// 				closeSig <- true
-// 			}
-// 		}
-// 	}()
-// 	// 		pkt := new(Packet)
-// 	// 		if err = pkt.FromJSON(buf); err != nil {
-// 	// 			fmt.Println(err)
-// 	// 			continue
-// 	// 		}
-// 	// 		fmt.Println("received from js:", pkt)
-// 	// 	}
-// 	// }()
-// 	SubscribeCloseSig := false
-// 	go server.Subscribe(uint16(dataID), &SubscribeCloseSig)
-
-// 	// send
-
-// 	for {
-// 		select {
-// 		case pkt := <-wsPktCh:
-// 			if err = ws.WriteJSON(pkt); err != nil {
-// 				fmt.Println(err)
-// 				continue
-// 			}
-// 		case <-closeSig:
-// 			SubscribeCloseSig = true
-// 			return nil
-// 		}
-// 	}
-// }
+	return simulationTime, physicalTime, values, nil
+}
 
 // MsgHandler handles the set-point command from the client
 // Args:
 // 	- ctx: context
 // Return:
 // 	- err: error
-func (server *WebServer) msgHandler(ctx *sgo.Context) error {
+func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		fmt.Println(err)
@@ -418,11 +300,11 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 
 	rawData = append(
 		rawData,
-		msg.Value0,
-		msg.Value1,
-		msg.Value2,
-		msg.Value3,
-		msg.Value4,
+		float64(msg.Value0),
+		float64(msg.Value1),
+		float64(msg.Value2),
+		float64(msg.Value3),
+		float64(msg.Value4),
 	)
 
 	// rawData = append(
@@ -440,7 +322,7 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 
 	dataMat = append(dataMat, rawData)
 
-	go server.hmsServer.send(
+	go server.UDPServer.send(
 		utils.SRC_AGT,
 		utils.PRIORITY_NORMAL,
 		uint32(utils.RESERVED),
@@ -449,7 +331,7 @@ func (server *WebServer) msgHandler(ctx *sgo.Context) error {
 		dataMat,
 	)
 
-	go server.hmsServer.Send(
+	go server.UDPServer.Send(
 		uint16(id),
 		uint32(utils.RESERVED),
 		uint32(time.Now().UnixMilli()/1e3),

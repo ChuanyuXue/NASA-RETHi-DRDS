@@ -1,6 +1,6 @@
 package utils
 
-//---------- Basic configuraitons ---------- SEQ
+// UDP server configuration
 const (
 	BUFFLEN            uint32 = 65536
 	QUEUELELN          uint32 = 65536
@@ -14,20 +14,13 @@ const (
 	MTU                uint16 = 1500
 )
 
-//---------- Source_address
-// const (
-// 	SRC_GCC   uint8 = 0
-// 	SRC_HMS   uint8 = 1
-// 	SRC_STR   uint8 = 2
-// 	SRC_PWR   uint8 = 3
-// 	SRC_ECLSS uint8 = 4
-// 	SRC_AGT   uint8 = 5
-// 	SRC_ING   uint8 = 6
-// 	SRC_EXT   uint8 = 7
-// 	SRC_SPL   uint8 = 8
-// 	SRC_DTB   uint8 = 9
-// )
+// WebServer configuration
+const (
+	OUTPUT_BUFFER_LEN uint32 = 65536
+	RT_STREAM_FREQ    uint32 = 1
+)
 
+//---------- Source_address
 const (
 	SRC_GCC   uint8 = 0
 	SRC_HMS   uint8 = 1

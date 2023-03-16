@@ -1,7 +1,6 @@
 package handler
 
 import (
-	
 	"database/sql"
 	"fmt"
 	"os"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/utils"
 	_ "github.com/go-sql-driver/mysql"
-	
 )
 
 // Handler is the main struct for the handler
@@ -36,21 +34,21 @@ type Handler struct {
 // Returns:
 // 	error: nil if no error
 
-func (handler *Handler) Init(src uint8) error {
+func (handler *Handler) Init(id uint8) error {
 	var (
 		err       error
 		tableName string
 	)
 
 	// Open database connection
-	if src == 0 { // ground
+	if id == 0 { // ground
 		handler.DBPointer, err = sql.Open("mysql", fmt.Sprintf("%v:%v@(ground_db:3306)/%v", // "hms_db" is the database container's name in the docker-compose.yml
 			os.Getenv("DB_USER_GROUND"),
 			os.Getenv("DB_PASSWORD_GROUND"),
 			os.Getenv("DB_NAME_GROUND")))
 		handler.DBName = "ground"
 
-	} else if src == 1 { // habitat
+	} else if id == 1 { // habitat
 		handler.DBPointer, err = sql.Open("mysql", fmt.Sprintf("%v:%v@(habitat_db:3306)/%v", // "hms_db" is the database container's name in the docker-compose.yml
 			os.Getenv("DB_USER_HABITAT"),
 			os.Getenv("DB_PASSWORD_HABITAT"),
@@ -281,7 +279,7 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint64, []float64, err
 		scans[i] = &values[i]
 	}
 
-	row := handler.DBPointer.QueryRow(query) 
+	row := handler.DBPointer.QueryRow(query)
 	err := row.Scan(scans...) // Scan the data
 	if err != nil {
 		// fmt.Println("No data found!")
@@ -311,6 +309,17 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint64, []float64, err
 
 }
 
+// Read multiple rows of data from database
+//
+// Args:
+// 	- id: data id
+// 	- start: start simulation timestamp
+// 	- end: end simulation timestamp
+// Return:
+// 	- simulation time 1D vector
+// 	- physical time 1D vector
+// 	- data matrix (2D)
+// 	- err: error
 func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32, []uint64, [][]float64, error) {
 	var tableName string
 	var dataSize uint8
@@ -391,7 +400,7 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 // 	id: the id of the data
 // 	column: the column name of the data
 // Return:
-// 	para: the value of the column	
+// 	para: the value of the column
 // 	err: the error of the query
 func (handler *Handler) QueryInfo(id uint16, column string) (int, error) {
 
@@ -429,7 +438,7 @@ func (handler *Handler) QueryLastSynt(id uint16) uint32 {
 		handler.DBName,
 		tableName,
 	) // Sort the data by simulink time and get the last one
-	row := handler.DBPointer.QueryRow(query) 
+	row := handler.DBPointer.QueryRow(query)
 	err := row.Scan(&time)
 	if err != nil {
 		// fmt.Println("No data found!")
