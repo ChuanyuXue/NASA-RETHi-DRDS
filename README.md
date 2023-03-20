@@ -5,20 +5,20 @@ Please see https://www.purdue.edu/rethi
 
 ## 2. Current design
 
-### 2.1 DS - Data flow for MCVT
+### 2.1 DS - Overall architecture of MCVT
 <img src="./img/HMS-Design-v6.svg">
 
-### 2.2 DS - Data flow for CPT
+### 2.2 DS - Overall architecture of CPT
 <img src="./img/cpt.jpg">
 
-### 2.2 DS - Data flow in Data service
+### 2.2 DS - Data flow within DRDS
 <img src="./img/DDS_FLOW.drawio.svg">
 
 ### 2.3 DS - Database schema
 <img src="./img/DDS_SCHEMA.drawio.svg" style="zoom:80%;"  >
 
 
-### 2.4 DS - Programming design
+### 2.4 DS - Program architecture
 <img src="./img/DS_UML.drawio.svg">
 
 ## 3. Service Protocol
