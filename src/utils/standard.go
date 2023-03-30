@@ -26,6 +26,7 @@ const (
 	SRC_HMS   uint8 = 1
 	SRC_STR   uint8 = 2
 	SRC_SPL   uint8 = 11
+	SRC_CORR  uint8 = 10
 	SRC_ECLSS uint8 = 5
 	SRC_PWR   uint8 = 3
 	SRC_AGT   uint8 = 6

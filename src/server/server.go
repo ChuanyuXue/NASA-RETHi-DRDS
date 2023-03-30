@@ -1,7 +1,6 @@
 package server
 
 import (
-	
 	"errors"
 	"os"
 	"sync"
@@ -475,6 +474,7 @@ func (server *Server) handle(pkt *ServicePacket) error {
 				for i := 0; i < int(subpkt.Row); i++ {
 					dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
 				}
+				// fmt.Println("Send data to", dst, "with priority", pkt.Priority)
 				go server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
 			}
 		}
@@ -498,7 +498,6 @@ func (server *Server) handle(pkt *ServicePacket) error {
 		}
 
 	case utils.SER_PUBLISH: // Publish (opeartion packet / data packet)
-
 		rawData := PayloadBuf2Float(pkt.Payload)
 		for _, subpkt := range pkt.Subpackets {
 			err := server.Publish(subpkt.DataID, pkt.Src, subpkt.Row, subpkt.Col, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
