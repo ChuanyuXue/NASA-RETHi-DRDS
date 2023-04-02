@@ -1,5 +1,12 @@
 package utils
 
+import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
+	"strconv"
+)
+
 // UDP server configuration
 const (
 	BUFFLEN            uint32 = 65536
@@ -21,19 +28,20 @@ const (
 )
 
 //---------- Source_address
-const (
-	SRC_GCC   uint8 = 0
-	SRC_HMS   uint8 = 1
-	SRC_STR   uint8 = 2
-	SRC_SPL   uint8 = 11
-	SRC_CORR  uint8 = 10
-	SRC_ECLSS uint8 = 5
-	SRC_PWR   uint8 = 3
-	SRC_AGT   uint8 = 6
-	SRC_IE    uint8 = 8
-	SRC_DTB   uint8 = 9
-	SRC_EXT   uint8 = 7
-)
+
+var SYSTEM_ID = map[string]uint8{
+	"GCC":   0,
+	"HMS":   1,
+	"STR":   2,
+	"SPL":   11,
+	"CORR":  10,
+	"ECLSS": 5,
+	"PWR":   3,
+	"AGT":   6,
+	"IE":    8,
+	"DTB":   9,
+	"EXT":   7,
+}
 
 //----------- Message Type
 const (
@@ -89,6 +97,7 @@ const (
 
 //------------ SIMU TIME
 const (
+	TIME_SIMU_START uint32 = 0
 	TIME_SIMU_LAST uint32 = 0xFFFFFFFF
 )
 
@@ -124,4 +133,68 @@ type HandlerStandard interface {
 type ClientStandard interface {
 	Send() error
 	Listen() (PacketStandard, error)
+}
+
+// ----------- Common static functions ----------
+func LoadFromJson(path string, server JsonStandard) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	byteValue, err := ioutil.ReadAll(file)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal([]byte(byteValue), &server)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func StringToInt(s string) (int, error) {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return -1, err
+	}
+	return i, nil
+}
+
+func Uint8Contains(s []uint8, i uint8) bool {
+	for _, v := range s {
+		if v == i {
+			return true
+		}
+	}
+	return false
+}
+
+func Uint16Contains(s []uint16, i uint16) bool {
+	for _, v := range s {
+		if v == i {
+			return true
+		}
+	}
+	return false
+}
+
+func Uint32Contains(s []uint32, i uint32) bool {
+	for _, v := range s {
+		if v == i {
+			return true
+		}
+	}
+	return false
+}
+
+func DoubleContains(s []float64, i float64) bool {
+	for _, v := range s {
+		if v == i {
+			return true
+		}
+	}
+	return false
 }

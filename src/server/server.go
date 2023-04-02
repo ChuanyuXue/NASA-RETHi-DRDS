@@ -23,11 +23,13 @@ type Server struct {
 
 	handler *handler.Handler
 
-	LocalSrc     uint8
-	ClientSrc    []uint8
-	ClientSrcMap map[uint8]net.UDPAddr
+	LocalSystemID uint8
+	AllLocalAddr  []net.UDPAddr
 
-	inboundQueue chan *ServicePacket
+	AllClientSystemID []uint8
+	AllClientAddr     map[uint8]net.UDPAddr
+
+	PacketBuffer chan *ServicePacket
 	Sequence     uint16
 	mu           sync.Mutex
 
@@ -36,85 +38,109 @@ type Server struct {
 }
 
 // Init function initializes the server by setting its source, client sources,
-// and client source map. It also sets the inboundQueue, the sequence, and the publisher and subscriber register.
+// and client source map. It also sets the PacketBuffer, the sequence, and the publisher and subscriber register.
 // Args:
 // 	src: the source of the server
 // Returns:
 // 	error: the error message
 func (server *Server) Init(src uint8) error {
-	// -------------------------- Fix the paramter for docker envirioment
-	if src == utils.SRC_GCC {
-		server.Type = "GROUND"
-		server.ClientSrc = []uint8{
-			utils.SRC_AGT,
-			utils.SRC_ECLSS,
-			utils.SRC_EXT,
-			utils.SRC_HMS,
-			utils.SRC_IE,
-			utils.SRC_PWR,
-			utils.SRC_STR}
-
-	} else if src == utils.SRC_HMS {
-		server.Type = "HABITAT"
-		server.ClientSrc = []uint8{
-			utils.SRC_AGT,
-			utils.SRC_ECLSS,
-			utils.SRC_EXT,
-			utils.SRC_GCC,
-			utils.SRC_IE,
-			utils.SRC_PWR,
-			utils.SRC_STR}
+	err := server.initID(src)
+	if err != nil {
+		return err
 	}
+
+	err = server.initAddr()
+	if err != nil {
+		return err
+	}
+
+	err = server.initDBHander()
+	if err != nil {
+		return err
+	}
+
+	server.initService()
+	return nil
+}
+
+func (server *Server) initID(src uint8) error {
+	server.LocalSystemID = src
 	server.Src = string(src)
-	server.LocalSrc = uint8(src)
-	server.ClientSrcMap = make(map[uint8]net.UDPAddr)
+	if server.LocalSystemID == utils.SYSTEM_ID["GCC"] {
+		server.Type = "GROUND"
+	}
+	if server.LocalSystemID == utils.SYSTEM_ID["HMS"] {
+		server.Type = "HABITAT"
+	}
 
-	server.inboundQueue = make(chan *ServicePacket, utils.BUFFLEN)
-	server.Sequence = 0
+	server.AllClientSystemID = make([]uint8, 0, len(utils.SYSTEM_ID))
+	for _, value := range utils.SYSTEM_ID {
+		if value == server.LocalSystemID {
+			continue
+		}
+		server.AllClientSystemID = append(server.AllClientSystemID, value)
+	}
+	return nil
+}
 
-	localAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_ADDR_"+server.Type)) // Obtain the local address
+func (server *Server) initAddr() error {
+
+	server.AllLocalAddr = make([]net.UDPAddr, 0, len(utils.SYSTEM_ID))
+
+	localAddrNet, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_ADDR_"+server.Type)) // Obtain the local address
 	if err != nil {
 		return fmt.Errorf("unable to resolve local address for %s", server.Type)
 	}
+	server.AllLocalAddr = append(server.AllLocalAddr, *localAddrNet)
+
+	localAddrLoop, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_LOOP_"+server.Type)) // Obtain the local loop address within HMS
+	if err != nil {
+		return errors.New("unable to resolve local loop")
+	}
+	server.AllLocalAddr = append(server.AllLocalAddr, *localAddrLoop)
+
+	server.AllClientAddr = make(map[uint8]net.UDPAddr)
 	remoteAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_REMOTE_ADDR_"+server.Type)) // Obtain the remote address
 	if err != nil {
 		return fmt.Errorf("unable to resolve remote address for %s", server.Type)
 	}
-	loopAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_LOOP_"+server.Type)) // Obtain the local loop address within HMS
-	if err != nil {
-		return errors.New("unable to resolve local loop")
+	for key := range server.AllClientSystemID {
+		server.AllClientAddr[uint8(key)] = *remoteAddr
 	}
 
-	for key := range server.ClientSrc {
-		server.ClientSrcMap[uint8(key)] = *remoteAddr
-	}
-
-	remoteAddr, err = net.ResolveUDPAddr("udp", os.Getenv("DS_REMOTE_LOOP_"+server.Type))
+	remoteAddrLoop, err := net.ResolveUDPAddr("udp", os.Getenv("DS_REMOTE_LOOP_"+server.Type))
 	if err != nil {
 		return errors.New("unable to resolve remote loop")
 	}
-	server.ClientSrcMap[uint8(src)] = *remoteAddr
-
-	// Init data service handler
-	server.handler = &handler.Handler{}
-	err = server.handler.Init(server.LocalSrc)
-	if err != nil {
-		fmt.Println("Failed to init data handler")
-		fmt.Println(err)
-		return err
-	}
-
-	server.publisherRegister = make(map[uint16][]uint8)  // publisherRegister[data_id] = [client_0, ....]
-	server.subscriberRegister = make(map[uint16][]uint8) // subscriberRegister[data_id] = [client_0, ....]
-
-	go server.listen(localAddr, int(utils.PROCNUMS)) // Start listening from the TSN emulator
-	go server.listen(loopAddr, int(utils.PROCNUMS))  // Start listening from the subsystems within HMS
+	server.AllClientAddr[server.LocalSystemID] = *remoteAddrLoop
 
 	return nil
 }
 
+func (server *Server) initDBHander() error {
+	server.handler = &handler.Handler{}
+	err := server.handler.Init(server.LocalSystemID)
+	if err != nil {
+		fmt.Println("Failed to init data handler", err)
+		return err
+	}
+	return nil
+}
+
+func (server *Server) initService() {
+	server.Sequence = 0
+	server.publisherRegister = make(map[uint16][]uint8)  // publisherRegister[data_id] = [client_0, ....]
+	server.subscriberRegister = make(map[uint16][]uint8) // subscriberRegister[data_id] = [client_0, ....]
+	server.PacketBuffer = make(chan *ServicePacket, utils.BUFFLEN)
+
+	for _, localAddr := range server.AllLocalAddr {
+		go server.listen(&localAddr, int(utils.PROCNUMS))
+	}
+}
+
 // Send Service: Store the data info into the database
 // Note that Send func is different from send. send is a private func to send the data to one remote client.
+//
 // Args:
 // 	id: the data id
 // 	time: the simulink time stamp
@@ -132,6 +158,7 @@ func (server *Server) Send(id uint16, time uint32, physical_time uint32, rawData
 }
 
 // Request Service: Request the data from the database based on the simulink time stamp. Return the 1 * M data
+//
 // Args:
 // 	id: the data id
 // 	synt: the simulink time stamp
@@ -158,7 +185,7 @@ func (server *Server) Request(id uint16, synt uint32, dst uint8, priority uint8)
 	}
 	var dataMat [][]float64
 	dataMat = append(dataMat, data)
-	err = server.send(dst, priority, synt, utils.FLAG_SINGLE, id, dataMat)
+	err = server.sendPkt(dst, priority, synt, utils.FLAG_SINGLE, id, dataMat)
 	if err != nil {
 		return err
 	}
@@ -193,7 +220,7 @@ func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16,
 		}
 	}
 
-	err = server.send(dst, utils.PRIORITY_HIGHT,
+	err = server.sendPkt(dst, utils.PRIORITY_HIGHT,
 		timeStart, utils.FLAG_SINGLE, id, dataMat)
 
 	if err != nil {
@@ -258,7 +285,7 @@ func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) 
 				_, row, _ := server.handler.ReadSynt(id, i)
 				dataMap = append(dataMap, row)
 			}
-			server.send(dst, utils.PRIORITY_MEDIUM, synt, utils.FLAG_SINGLE, id, dataMap)
+			server.sendPkt(dst, utils.PRIORITY_MEDIUM, synt, utils.FLAG_SINGLE, id, dataMap)
 		}
 
 	} else {
@@ -279,9 +306,9 @@ func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) 
 // 	dataMap: the data
 // Returns:
 // 	error: the error message
-func (server *Server) send(dst uint8, priority uint8, synt uint32, flag uint8, data_id uint16, dataMap [][]float64) error {
+func (server *Server) sendPkt(dst uint8, priority uint8, synt uint32, flag uint8, data_id uint16, dataMap [][]float64) error {
 	var pkt ServicePacket
-	pkt.Src = server.LocalSrc
+	pkt.Src = server.LocalSystemID
 	pkt.Dst = dst
 	pkt.MessageType = utils.MSG_OUTER
 	pkt.Priority = priority
@@ -328,7 +355,7 @@ func (server *Server) send(dst uint8, priority uint8, synt uint32, flag uint8, d
 	subpkt.Payload = PayloadFloat2Buf(dataFlatten)
 	pkt.Subpackets = append(pkt.Subpackets, &subpkt)
 
-	dstAddr := server.ClientSrcMap[dst]
+	dstAddr := server.AllClientAddr[dst]
 	conn, err := net.DialUDP("udp", nil, &dstAddr)
 
 	if err != nil {
@@ -346,6 +373,7 @@ func (server *Server) send(dst uint8, priority uint8, synt uint32, flag uint8, d
 }
 
 // Private function that send the protocol event or command to the destination
+//
 // Args:
 // 	dst: the destination of the data
 // 	priority: the priority of the data
@@ -358,7 +386,7 @@ func (server *Server) send(dst uint8, priority uint8, synt uint32, flag uint8, d
 // 	error: the error message
 func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, service uint8, flag uint8, opt1 uint8, opt2 uint8) error {
 	var pkt ServicePacket
-	pkt.Src = server.LocalSrc
+	pkt.Src = server.LocalSystemID
 	pkt.Dst = dst
 	pkt.MessageType = utils.MSG_OUTER
 	pkt.Priority = priority
@@ -378,7 +406,7 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, service ui
 	pkt.Option2 = opt2
 	pkt.SubframeNum = 0
 
-	dstAddr := server.ClientSrcMap[dst]
+	dstAddr := server.AllClientAddr[dst]
 	conn, err := net.DialUDP("udp", nil, &dstAddr)
 	if err != nil {
 		fmt.Println("Failed to dial clients")
@@ -416,7 +444,7 @@ func (server *Server) listen(addr *net.UDPAddr, procnums int) error {
 	for i := 0; i < procnums; i++ {
 		go func() {
 			for {
-				pkt := <-server.inboundQueue
+				pkt := <-server.PacketBuffer
 				err = server.handle(pkt)
 				if err != nil {
 					fmt.Println(err)
@@ -434,7 +462,7 @@ func (server *Server) listen(addr *net.UDPAddr, procnums int) error {
 			fmt.Println("Failed to listen packet from connection")
 		}
 		pkt := FromServiceBuf(buf[:])
-		server.inboundQueue <- &pkt
+		server.PacketBuffer <- &pkt
 	}
 }
 
@@ -475,7 +503,7 @@ func (server *Server) handle(pkt *ServicePacket) error {
 					dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
 				}
 				// fmt.Println("Send data to", dst, "with priority", pkt.Priority)
-				go server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
+				go server.sendPkt(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
 			}
 		}
 
@@ -513,7 +541,7 @@ func (server *Server) handle(pkt *ServicePacket) error {
 				for i := 0; i < int(subpkt.Row); i++ {
 					dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
 				}
-				go server.send(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
+				go server.sendPkt(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
 			}
 
 		}

@@ -322,20 +322,28 @@ func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 
 	dataMat = append(dataMat, rawData)
 
-	go server.UDPServer.send(
-		utils.SRC_AGT,
+	err = server.UDPServer.sendPkt(
+		utils.SYSTEM_ID["AGT"],
 		utils.PRIORITY_NORMAL,
 		uint32(utils.RESERVED),
 		utils.FLAG_SINGLE,
 		uint16(id),
 		dataMat,
 	)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 
-	go server.UDPServer.Send(
+	err = server.UDPServer.Send(
 		uint16(id),
 		uint32(utils.RESERVED),
 		uint32(time.Now().UnixMilli()/1e3),
 		dataMat[0])
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 
 	return ctx.Text(200, "command received and forwarded")
 }
