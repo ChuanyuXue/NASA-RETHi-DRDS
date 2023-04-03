@@ -24,10 +24,10 @@ type Server struct {
 	handler *handler.Handler
 
 	LocalSystemID uint8
-	AllLocalAddr  []net.UDPAddr
+	AllLocalAddr  []*net.UDPAddr
 
 	AllClientSystemID []uint8
-	AllClientAddr     map[uint8]net.UDPAddr
+	AllClientAddr     map[uint8]*net.UDPAddr
 
 	PacketBuffer chan *ServicePacket
 	Sequence     uint16
@@ -68,7 +68,6 @@ func (server *Server) Init(src uint8) error {
 
 func (server *Server) initID(src uint8) error {
 	server.LocalSystemID = src
-	server.Src = string(src)
 	if server.LocalSystemID == utils.SYSTEM_ID["GCC"] {
 		server.Type = "GROUND"
 	}
@@ -76,47 +75,48 @@ func (server *Server) initID(src uint8) error {
 		server.Type = "HABITAT"
 	}
 
-	server.AllClientSystemID = make([]uint8, 0, len(utils.SYSTEM_ID))
+	server.AllClientSystemID = []uint8{}
 	for _, value := range utils.SYSTEM_ID {
 		if value == server.LocalSystemID {
 			continue
 		}
 		server.AllClientSystemID = append(server.AllClientSystemID, value)
 	}
+	// fmt.Println("[DEBUG]:", server.AllClientSystemID)
 	return nil
 }
 
 func (server *Server) initAddr() error {
 
-	server.AllLocalAddr = make([]net.UDPAddr, 0, len(utils.SYSTEM_ID))
+	server.AllLocalAddr = []*net.UDPAddr{}
 
 	localAddrNet, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_ADDR_"+server.Type)) // Obtain the local address
 	if err != nil {
 		return fmt.Errorf("unable to resolve local address for %s", server.Type)
 	}
-	server.AllLocalAddr = append(server.AllLocalAddr, *localAddrNet)
+	server.AllLocalAddr = append(server.AllLocalAddr, localAddrNet)
 
 	localAddrLoop, err := net.ResolveUDPAddr("udp", os.Getenv("DS_LOCAL_LOOP_"+server.Type)) // Obtain the local loop address within HMS
 	if err != nil {
 		return errors.New("unable to resolve local loop")
 	}
-	server.AllLocalAddr = append(server.AllLocalAddr, *localAddrLoop)
+	server.AllLocalAddr = append(server.AllLocalAddr, localAddrLoop)
 
-	server.AllClientAddr = make(map[uint8]net.UDPAddr)
+	server.AllClientAddr = make(map[uint8]*net.UDPAddr)
 	remoteAddr, err := net.ResolveUDPAddr("udp", os.Getenv("DS_REMOTE_ADDR_"+server.Type)) // Obtain the remote address
 	if err != nil {
 		return fmt.Errorf("unable to resolve remote address for %s", server.Type)
 	}
 	for key := range server.AllClientSystemID {
-		server.AllClientAddr[uint8(key)] = *remoteAddr
+		server.AllClientAddr[uint8(key)] = remoteAddr
 	}
 
 	remoteAddrLoop, err := net.ResolveUDPAddr("udp", os.Getenv("DS_REMOTE_LOOP_"+server.Type))
 	if err != nil {
 		return errors.New("unable to resolve remote loop")
 	}
-	server.AllClientAddr[server.LocalSystemID] = *remoteAddrLoop
-
+	server.AllClientAddr[server.LocalSystemID] = remoteAddrLoop
+	// fmt.Println("[DEBUG]:", server.AllClientAddr, server.AllLocalAddr)
 	return nil
 }
 
@@ -137,8 +137,10 @@ func (server *Server) initService() {
 	server.PacketBuffer = make(chan *ServicePacket, utils.BUFFLEN)
 
 	for _, localAddr := range server.AllLocalAddr {
-		go server.listen(&localAddr, int(utils.PROCNUMS))
+		go server.listen(localAddr, int(utils.PROCNUMS))
 	}
+
+	select {}
 }
 
 // Send Service: Store the data info into the database
@@ -383,7 +385,7 @@ func (server *Server) sendPkt(dst uint8, priority uint8, synt uint32, flag uint8
 	pkt.Subpackets = append(pkt.Subpackets, &subpkt)
 
 	dstAddr := server.AllClientAddr[dst]
-	conn, err := net.DialUDP("udp", nil, &dstAddr)
+	conn, err := net.DialUDP("udp", nil, dstAddr)
 
 	if err != nil {
 		fmt.Println("[!] Failed to dial clients")
@@ -437,7 +439,7 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, service ui
 	pkt.SubframeNum = 0
 
 	dstAddr := server.AllClientAddr[dst]
-	conn, err := net.DialUDP("udp", nil, &dstAddr)
+	conn, err := net.DialUDP("udp", nil, dstAddr)
 	if err != nil {
 		fmt.Println("Failed to dial clients")
 		return err
@@ -490,6 +492,7 @@ func (server *Server) listen(addr *net.UDPAddr, procnums int) error {
 	for {
 		var buf [utils.BUFFLEN]byte
 		_, _, err := conn.ReadFromUDP(buf[:])
+		// fmt.Println("[DEBUG]: Read from client", addr)
 		if err != nil {
 			fmt.Println("Failed to listen packet from connection")
 		}
