@@ -144,7 +144,7 @@ func main() {
 	// --------------- Test for Ground <-- Habitat <--> Subsystem ------------------------
 
 	habitatServer := server.Server{}         // Start Habitat server
-	err := habitatServer.Init(utils.SRC_HMS) // Init Habitat server
+	err := habitatServer.Init(utils.SYSTEM_ID["HMS"]) // Init Habitat server
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -152,7 +152,7 @@ func main() {
 
 	// Start Habitat web service
 	habitatWebServer := server.WebServer{}
-	go habitatWebServer.Init(utils.SRC_HMS, &habitatServer)
+	go habitatWebServer.Init(utils.SYSTEM_ID["HMS"], &habitatServer)
 	fmt.Println("Habitat Web-Service Started")
 
 	// // Start Ground server
@@ -171,7 +171,7 @@ func main() {
 	// fmt.Println("Ground Server subscribed Habitat server")
 
 	// Let MCVT subscribe the data Murali asked
-	habitatServer.Subscribe(65000, utils.SRC_STR, 0, 1000)
+	habitatServer.Subscribe(65000, utils.SYSTEM_ID["STR"], 0, 1000)
 
 	select {} // Keep the main thread alive
 

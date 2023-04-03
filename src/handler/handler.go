@@ -2,6 +2,7 @@ package handler
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -14,9 +15,9 @@ import (
 )
 
 type Data struct {
-	iter   uint32
-	send_t uint32
-	value  []float64
+	Iter  uint32
+	SendT uint32
+	Value []float64
 }
 
 // Handler is the main struct for the handler
@@ -32,6 +33,7 @@ type Handler struct {
 	RecordTables []uint16
 
 	DataShapes map[uint16]uint8
+	DataBuffer map[uint16]chan *Data
 }
 
 // Init is the function to initialize the handler
@@ -176,6 +178,11 @@ func (handler *Handler) Init(id uint8) error {
 		}
 		handler.DataShapes[dataId] = dataSize // Record the size of each data
 	}
+
+	// Init data buffer
+	handler.DataBuffer = make(map[uint16]chan *Data, utils.BUFFLEN)
+	handler.handleData()
+
 	return nil
 }
 
@@ -188,7 +195,7 @@ func (handler *Handler) Init(id uint8) error {
 // Return:
 // 	error: error message
 
-func (handler *Handler) WriteSynt(id uint16, iter uint32, send_t uint32, value []float64) error {
+func (handler *Handler) WriteSynt(id uint16, data *Data) error {
 	// TODO: Security Check:
 	// // 1. ID == 0 is not allowed
 	// if handler.InteTable == id {
@@ -222,23 +229,79 @@ func (handler *Handler) WriteSynt(id uint16, iter uint32, send_t uint32, value [
 	}
 	columnPattern := strings.Join(columnList, ",") // Join the column name by comma
 
-	columnFillin = append(columnFillin, strconv.Itoa(int(iter)))
+	columnFillin = append(columnFillin, strconv.Itoa(int(data.Iter)))
 	// Need to fix int64 -> unsigned int32?
-	columnFillin = append(columnFillin, strconv.FormatUint(uint64(send_t), 10))
+	columnFillin = append(columnFillin, strconv.FormatUint(uint64(data.SendT), 10))
 	columnFillin = append(columnFillin, strconv.FormatUint(uint64(time.Now().UnixMilli()), 10))
 
-	if int(handler.DataShapes[id]) != len(value) {
-		return fmt.Errorf("[!] Data #%d has inconsistent data shape %d rather than %d", id, len(value), int(handler.DataShapes[id]))
+	if int(handler.DataShapes[id]) != len(data.Value) {
+		return fmt.Errorf("[!] Data #%d has inconsistent data shape %d rather than %d", id, len(data.Value), int(handler.DataShapes[id]))
 	}
 
 	for i := 0; i != int(handler.DataShapes[id]); i++ {
-		columnFillin = append(columnFillin, fmt.Sprintf("%f", value[i]))
+		columnFillin = append(columnFillin, fmt.Sprintf("%f", data.Value[i]))
 	}
 	columnValue := strings.Join(columnFillin, ",")
 
 	// Construct the query
 	query := fmt.Sprintf(
 		"INSERT INTO %s.%s ("+columnPattern+") VALUES ("+columnValue+");",
+		handler.DBName,
+		tableName,
+	)
+
+	// Write the data into the database
+	_, err := handler.DBPointer.Exec(query)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
+
+func (handler *Handler) WriteRange(id uint16, dataVec []*Data) error {
+	if !utils.Uint16Contains(handler.RecordTables, id) {
+		fmt.Println("[!] Data Error: Unknown data ", id, " is received")
+		return nil
+	}
+
+	tableName := "record" + strconv.Itoa(int(id))
+
+	// Construct the query
+	var columnList []string
+	var columnFillinVec []string
+	columnList = append(columnList, "iter")
+	columnList = append(columnList, "send_t")
+	columnList = append(columnList, "recv_t")
+
+	for i := 0; i != int(handler.DataShapes[id]); i++ {
+		columnList = append(columnList, "value"+strconv.Itoa(i))
+	}
+	columnPattern := strings.Join(columnList, ",") // Join the column name by comma
+
+	recv_t := strconv.FormatUint(uint64(time.Now().UnixMilli()), 10)
+	for _, data := range dataVec {
+		columnFillin := make([]string, 0)
+		columnFillin = append(columnFillin, strconv.Itoa(int(data.Iter)))
+		// Need to fix int64 -> unsigned int32?
+		columnFillin = append(columnFillin, strconv.FormatUint(uint64(data.SendT), 10))
+		columnFillin = append(columnFillin, recv_t)
+
+		if int(handler.DataShapes[id]) != len(data.Value) {
+			return fmt.Errorf("[!] Data #%d has inconsistent data shape %d rather than %d", id, len(data.Value), int(handler.DataShapes[id]))
+		}
+
+		for k := 0; k != int(handler.DataShapes[id]); k++ {
+			columnFillin = append(columnFillin, fmt.Sprintf("%f", data.Value[k]))
+		}
+		columnValue := "(" + strings.Join(columnFillin, ",") + ")"
+		columnFillinVec = append(columnFillinVec, columnValue)
+	}
+	columnFillinStr := strings.Join(columnFillinVec, ",")
+
+	// Construct the query
+	query := fmt.Sprintf(
+		"INSERT INTO %s.%s ("+columnPattern+") VALUES "+columnFillinStr+";",
 		handler.DBName,
 		tableName,
 	)
@@ -484,4 +547,45 @@ func (handler *Handler) QueryFirstSynt(id uint16) uint32 {
 	}
 	result, _ := utils.StringToInt(time)
 	return uint32(result)
+}
+
+func (handler *Handler) WriteToBuffer(id uint16, data *Data) error {
+	// Check if the buffer is full
+	if len(handler.DataBuffer[id]) == int(utils.BUFFLEN) {
+		<-handler.DataBuffer[id] // Pop the oldest data
+		return errors.New("buffer is full")
+	}
+	handler.DataBuffer[id] <- data // Push the new data
+	return nil
+}
+
+func (handler *Handler) handleData() {
+	ticker := time.NewTicker(100 * time.Millisecond)
+	buffer := map[uint16][]*Data{}
+	lastWriteTime := map[uint16]time.Time{}
+
+	for id, dataChan := range handler.DataBuffer {
+		go func(id uint16, dataChan <-chan *Data) {
+			for data := range dataChan {
+				buffer[id] = append(buffer[id], data)
+			}
+		}(id, dataChan)
+	}
+
+	for {
+		select {
+		case <-ticker.C:
+			for id, data := range buffer {
+				if len(data) > 0 {
+					now := time.Now()
+					lastTime, ok := lastWriteTime[id]
+					if !ok || now.Sub(lastTime) >= 1*time.Second {
+						handler.WriteRange(id, data)
+						buffer[id] = []*Data{}
+						lastWriteTime[id] = now
+					}
+				}
+			}
+		}
+	}
 }
