@@ -13,6 +13,12 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type Data struct {
+	iter   uint32
+	send_t uint32
+	value  []float64
+}
+
 // Handler is the main struct for the handler
 type Handler struct {
 	utils.JsonStandard
@@ -182,7 +188,7 @@ func (handler *Handler) Init(id uint8) error {
 // Return:
 // 	error: error message
 
-func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []float64) error {
+func (handler *Handler) WriteSynt(id uint16, iter uint32, send_t uint32, value []float64) error {
 	// TODO: Security Check:
 	// // 1. ID == 0 is not allowed
 	// if handler.InteTable == id {
@@ -207,18 +213,18 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 	// Construct the query
 	var columnList []string
 	var columnFillin []string
-	columnList = append(columnList, "simulink_time")
-	columnList = append(columnList, "physical_time_s")
-	columnList = append(columnList, "physical_time_d")
+	columnList = append(columnList, "iter")
+	columnList = append(columnList, "send_t")
+	columnList = append(columnList, "recv_t")
 
 	for i := 0; i != int(handler.DataShapes[id]); i++ {
 		columnList = append(columnList, "value"+strconv.Itoa(i))
 	}
 	columnPattern := strings.Join(columnList, ",") // Join the column name by comma
 
-	columnFillin = append(columnFillin, strconv.Itoa(int(synt)))
+	columnFillin = append(columnFillin, strconv.Itoa(int(iter)))
 	// Need to fix int64 -> unsigned int32?
-	columnFillin = append(columnFillin, strconv.FormatUint(uint64(phyt), 10))
+	columnFillin = append(columnFillin, strconv.FormatUint(uint64(send_t), 10))
 	columnFillin = append(columnFillin, strconv.FormatUint(uint64(time.Now().UnixMilli()), 10))
 
 	if int(handler.DataShapes[id]) != len(value) {
@@ -266,7 +272,7 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint64, []float64, err
 
 	// Construct the query
 	query := fmt.Sprintf(
-		"SELECT physical_time_d, %s FROM %s.%s WHERE simulink_time = %s;",
+		"SELECT recv_t, %s FROM %s.%s WHERE iter = %s;",
 		columnPattern,
 		handler.DBName,
 		tableName,
@@ -312,14 +318,15 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint64, []float64, err
 // Read multiple rows of data from database
 //
 // Args:
-// 	- id: data id
-// 	- start: start simulation timestamp
-// 	- end: end simulation timestamp
+//   - id: data id
+//   - start: start simulation timestamp
+//   - end: end simulation timestamp
+//
 // Return:
-// 	- simulation time 1D vector
-// 	- physical time 1D vector
-// 	- data matrix (2D)
-// 	- err: error
+//   - simulation time 1D vector
+//   - physical time 1D vector
+//   - data matrix (2D)
+//   - err: error
 func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32, []uint64, [][]float64, error) {
 	var tableName string
 	var dataSize uint8
@@ -343,7 +350,7 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 
 	// Construct the query with condition of time range
 	query := fmt.Sprintf(
-		"SELECT physical_time_d, simulink_time, %s FROM %s.%s WHERE (simulink_time >= %s) AND (simulink_time < %s);",
+		"SELECT recv_t, iter, %s FROM %s.%s WHERE (iter >= %s) AND (iter < %s);",
 		columnPattern,
 		handler.DBName,
 		tableName,
@@ -397,11 +404,14 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 
 // QueryInfo query the information of the data
 // Args:
-// 	id: the id of the data
-// 	column: the column name of the data
+//
+//	id: the id of the data
+//	column: the column name of the data
+//
 // Return:
-// 	para: the value of the column
-// 	err: the error of the query
+//
+//	para: the value of the column
+//	err: the error of the query
 func (handler *Handler) QueryInfo(id uint16, column string) (int, error) {
 
 	// Construct the query with condition of table name and data id
@@ -427,14 +437,17 @@ func (handler *Handler) QueryInfo(id uint16, column string) (int, error) {
 
 // QueryLastSynt query the last time of the data
 // Args:
-// 	id: the id of the data
+//
+//	id: the id of the data
+//
 // Return:
-// 	time: the last time of the data
+//
+//	time: the last time of the data
 func (handler *Handler) QueryLastSynt(id uint16) uint32 {
 	var time string
 	tableName := "record" + strconv.Itoa(int(id))
 	query := fmt.Sprintf(
-		"SELECT simulink_time FROM %s.%s ORDER BY simulink_time DESC LIMIT 1;",
+		"SELECT iter FROM %s.%s ORDER BY iter DESC LIMIT 1;",
 		handler.DBName,
 		tableName,
 	) // Sort the data by simulink time and get the last one
@@ -450,14 +463,17 @@ func (handler *Handler) QueryLastSynt(id uint16) uint32 {
 
 // QueryFirstSynt query the first time of the data
 // Args:
-// 	id: the id of the data
+//
+//	id: the id of the data
+//
 // Return:
-// 	time: the first time of the data
+//
+//	time: the first time of the data
 func (handler *Handler) QueryFirstSynt(id uint16) uint32 {
 	var time string
 	tableName := "record" + strconv.Itoa(int(id))
 	query := fmt.Sprintf(
-		"SELECT simulink_time FROM %s.%s ORDER BY simulink_time LIMIT 1;",
+		"SELECT iter FROM %s.%s ORDER BY iter LIMIT 1;",
 		handler.DBName,
 		tableName,
 	) // Sort the data by simulink time and get the first one

@@ -445,7 +445,7 @@ func (server *Server) listen(addr *net.UDPAddr, procnums int) error {
 		go func() {
 			for {
 				pkt := <-server.PacketBuffer
-				err = server.handle(pkt)
+				err = server.handlePkt(pkt)
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -454,7 +454,6 @@ func (server *Server) listen(addr *net.UDPAddr, procnums int) error {
 	}
 
 	// producer
-
 	for {
 		var buf [utils.BUFFLEN]byte
 		_, _, err := conn.ReadFromUDP(buf[:])
@@ -471,7 +470,7 @@ func (server *Server) listen(addr *net.UDPAddr, procnums int) error {
 // 	pkt: the packet received from the client
 // Returns:
 // 	error: the error message
-func (server *Server) handle(pkt *ServicePacket) error {
+func (server *Server) handlePkt(pkt *ServicePacket) error {
 	// fmt.Println("SimTime:", pkt.SimulinkTime, " ------ Insert into table record", pkt.Param)
 
 	// // --------- For latency test ---------
