@@ -10,11 +10,11 @@ import (
 )
 
 func init() {
-	err := handler.DatabaseGenerator(0, "db_info_v6.json")
+	err := handler.DatabaseGenerator(utils.SYSTEM_ID["HMS"], "db_info_v6.json")
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = handler.DatabaseGenerator(1, "db_info_v6.json")
+	err = handler.DatabaseGenerator(utils.SYSTEM_ID["GCC"], "db_info_v6.json")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -143,7 +143,7 @@ func main() {
 	// }
 	// --------------- Test for Ground <-- Habitat <--> Subsystem ------------------------
 
-	habitatServer := server.Server{}         // Start Habitat server
+	habitatServer := server.Server{}                  // Start Habitat server
 	err := habitatServer.Init(utils.SYSTEM_ID["HMS"]) // Init Habitat server
 	if err != nil {
 		fmt.Println(err)
@@ -152,7 +152,10 @@ func main() {
 
 	// Start Habitat web service
 	habitatWebServer := server.WebServer{}
-	go habitatWebServer.Init(utils.SYSTEM_ID["HMS"], &habitatServer)
+	err = habitatWebServer.Init(utils.SYSTEM_ID["HMS"], &habitatServer)
+	if err != nil {
+		fmt.Println(err)
+	}
 	fmt.Println("Habitat Web-Service Started")
 
 	// // Start Ground server

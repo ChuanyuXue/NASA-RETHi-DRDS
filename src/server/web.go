@@ -58,40 +58,32 @@ type WebServer struct {
 
 // Init function initializes the web server
 // Args:
-// 	src: the source of the web server
-// 	hmsServer: the pointer to the hms server
+//
+//	src: the source of the web server
+//	hmsServer: the pointer to the hms server
+//
 // Returns:
-// 	err: the error message
+//
+//	err: the error message
 func (server *WebServer) Init(id uint8, udpServer *Server) error {
 	server.LocalSystemID = id
 	server.UDPServer = udpServer
 	server.bufferOutput = make(chan *VisualData, utils.OUTPUT_BUFFER_LEN)
 
-	//------ init data handler
-	err := server.initDBHander()
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
+	// //------ init data handler
+	// err := server.initDBHander()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return err
+	// }
 
 	//------ init http handler
-	err = server.initHttphandler()
+	err := server.initHttphandler()
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 
-	return nil
-}
-
-func (server *WebServer) initDBHander() error {
-	server.DBHandler = &handler.Handler{}
-	err := server.DBHandler.Init(server.LocalSystemID)
-	if err != nil {
-		fmt.Println("Webserver failed to init data handler")
-		fmt.Println(err)
-		return err
-	}
 	return nil
 }
 
@@ -117,9 +109,10 @@ func (server *WebServer) initHttphandler() error {
 
 // The event handler for websocket connection
 // Args:
-// 	- ctx: context
+//   - ctx: context
+//
 // Return:
-// 	- err: error
+//   - err: error
 func (server *WebServer) RealtimeProcess(ctx *sgo.Context) error {
 	// fmt.Println("[4] Debug: wsReadTime")
 	SubscribeCloseSig := false
@@ -171,10 +164,11 @@ func (server *WebServer) RealtimeProcess(ctx *sgo.Context) error {
 // here subscribe is not to directly forward the data from clients to visualization but to read data from database
 //
 // Args:
-// 	- id: data id
-// 	- closeSig: close signal
+//   - id: data id
+//   - closeSig: close signal
+//
 // Return:
-// 	- err: error
+//   - err: error
 func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
 	/* 	------------ CHUANYU APR 19 2022 MODIFICATION----------
 	   	1. No history data for Visualization in the real time part anymore,
@@ -209,11 +203,12 @@ func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
 
 // Append data to the Visualization subsystem output buffer
 // Args:
-// 	- dataID: data id
-// 	- timestamp: timestamp of the data
-// 	- data: data vector
+//   - dataID: data id
+//   - timestamp: timestamp of the data
+//   - data: data vector
+//
 // Return:
-// 	- err: error
+//   - err: error
 func (server *WebServer) writeBufferOutput(dataID uint16, timestamp uint64, data []float64) error {
 
 	for i, col := range data {
@@ -229,9 +224,10 @@ func (server *WebServer) writeBufferOutput(dataID uint16, timestamp uint64, data
 
 // Feed the history data to the Visualization as a list of VisualData
 // Args:
-// 	- ctx: context
+//   - ctx: context
+//
 // Return:
-// 	- err: error
+//   - err: error
 func (server *WebServer) HistoryProcess(ctx *sgo.Context) error {
 	var dlist []VisualData
 	var d VisualData
@@ -256,14 +252,15 @@ func (server *WebServer) HistoryProcess(ctx *sgo.Context) error {
 // Overwrite the function in ServiceStandard instead of using from server.go
 //
 // Args:
-// 	- id: data id
-// 	- timeStart: start time of the data
-// 	- timeEnd: end time of the data
+//   - id: data id
+//   - timeStart: start time of the data
+//   - timeEnd: end time of the data
+//
 // Return:
-// 	- timeSimuVec: simulation time vector
-// 	- timePhyVec: physical time vector
-// 	- dataMat: data matrix
-// 	- err: error
+//   - timeSimuVec: simulation time vector
+//   - timePhyVec: physical time vector
+//   - dataMat: data matrix
+//   - err: error
 func (server *WebServer) RequestRange(id uint16, timeStart uint32, timeEnd uint32) ([]uint32, []uint64, [][]float64, error) {
 	simulationTime, physicalTime, values, err := server.DBHandler.ReadRange(id, timeStart, timeEnd)
 	if err != nil {
@@ -276,9 +273,10 @@ func (server *WebServer) RequestRange(id uint16, timeStart uint32, timeEnd uint3
 
 // MsgHandler handles the set-point command from the client
 // Args:
-// 	- ctx: context
+//   - ctx: context
+//
 // Return:
-// 	- err: error
+//   - err: error
 func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {

@@ -150,6 +150,7 @@ func (handler *Handler) Init(id uint8) error {
 			handler.Tables = append(handler.Tables, tableName)
 		}
 	}
+	// fmt.Println("[DEBUG]: Record ID:", handler.RecordTables)
 
 	// Record the size of each Record tables
 	query = fmt.Sprintf(
@@ -180,8 +181,15 @@ func (handler *Handler) Init(id uint8) error {
 	}
 
 	// Init data buffer
-	handler.DataBuffer = make(map[uint16]chan *Data, utils.BUFFLEN)
-	handler.handleData()
+	handler.DataBuffer = make(map[uint16]chan *Data)
+	for _, id := range handler.RecordTables {
+		handler.DataBuffer[id] = make(chan *Data, utils.BUFFLEN)
+	}
+
+	for _, id := range handler.RecordTables {
+		go handler.handleData(id)
+		time.Sleep(time.Duration(int(1000/len(handler.RecordTables))) * time.Millisecond)
+	}
 
 	return nil
 }
@@ -225,7 +233,7 @@ func (handler *Handler) WriteSynt(id uint16, data *Data) error {
 	columnList = append(columnList, "recv_t")
 
 	for i := 0; i != int(handler.DataShapes[id]); i++ {
-		columnList = append(columnList, "value"+strconv.Itoa(i))
+		columnList = append(columnList, "v"+strconv.Itoa(i))
 	}
 	columnPattern := strings.Join(columnList, ",") // Join the column name by comma
 
@@ -260,10 +268,20 @@ func (handler *Handler) WriteSynt(id uint16, data *Data) error {
 }
 
 func (handler *Handler) WriteRange(id uint16, dataVec []*Data) error {
+	// fmt.Println("[DEBUG]: WriteRange", id, len(dataVec))
 	if !utils.Uint16Contains(handler.RecordTables, id) {
 		fmt.Println("[!] Data Error: Unknown data ", id, " is received")
 		return nil
 	}
+
+	// It seems like there is no problem for WriteRange
+	// iterVec := make([]int, len(dataVec))
+	// for i, data := range dataVec {
+	// 	iterVec[i] = int(data.Iter)
+	// }
+	// if id == 10001 {
+	// 	fmt.Println("[DEBUG]:", id, " Iter: ", iterVec)
+	// }
 
 	tableName := "record" + strconv.Itoa(int(id))
 
@@ -275,13 +293,13 @@ func (handler *Handler) WriteRange(id uint16, dataVec []*Data) error {
 	columnList = append(columnList, "recv_t")
 
 	for i := 0; i != int(handler.DataShapes[id]); i++ {
-		columnList = append(columnList, "value"+strconv.Itoa(i))
+		columnList = append(columnList, "v"+strconv.Itoa(i))
 	}
 	columnPattern := strings.Join(columnList, ",") // Join the column name by comma
 
 	recv_t := strconv.FormatUint(uint64(time.Now().UnixMilli()), 10)
 	for _, data := range dataVec {
-		columnFillin := make([]string, 0)
+		columnFillin := []string{}
 		columnFillin = append(columnFillin, strconv.Itoa(int(data.Iter)))
 		// Need to fix int64 -> unsigned int32?
 		columnFillin = append(columnFillin, strconv.FormatUint(uint64(data.SendT), 10))
@@ -324,11 +342,11 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint64, []float64, err
 	columnSize = handler.DataShapes[id]          // Get the size of the data
 
 	if columnSize == 1 {
-		columnPattern = "value0" // If the data size is 1, then only one column is needed
+		columnPattern = "v0" // If the data size is 1, then only one column is needed
 	} else {
 		var columnList []string
 		for i := 0; i < int(columnSize); i++ {
-			columnList = append(columnList, "value"+strconv.Itoa(i)) // Get the column name
+			columnList = append(columnList, "v"+strconv.Itoa(i)) // Get the column name
 		}
 		columnPattern = strings.Join(columnList, ",") // Join the column name by comma
 	}
@@ -402,11 +420,11 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 	dataSize = handler.DataShapes[id]
 
 	if dataSize == 1 {
-		columnPattern = "value0"
+		columnPattern = "v0"
 	} else {
 		var columnList []string
 		for i := 0; i < int(dataSize); i++ {
-			columnList = append(columnList, "value"+strconv.Itoa(i))
+			columnList = append(columnList, "v"+strconv.Itoa(i))
 		}
 		columnPattern = strings.Join(columnList, ",")
 	}
@@ -551,41 +569,66 @@ func (handler *Handler) QueryFirstSynt(id uint16) uint32 {
 
 func (handler *Handler) WriteToBuffer(id uint16, data *Data) error {
 	// Check if the buffer is full
-	if len(handler.DataBuffer[id]) == int(utils.BUFFLEN) {
-		<-handler.DataBuffer[id] // Pop the oldest data
+	if len(handler.DataBuffer[id]) >= int(utils.BUFFLEN) {
 		return errors.New("buffer is full")
 	}
 	handler.DataBuffer[id] <- data // Push the new data
 	return nil
 }
 
-func (handler *Handler) handleData() {
-	ticker := time.NewTicker(100 * time.Millisecond)
-	buffer := map[uint16][]*Data{}
-	lastWriteTime := map[uint16]time.Time{}
-
-	for id, dataChan := range handler.DataBuffer {
-		go func(id uint16, dataChan <-chan *Data) {
-			for data := range dataChan {
-				buffer[id] = append(buffer[id], data)
-			}
-		}(id, dataChan)
-	}
-
+func (handler *Handler) handleData(id uint16) {
+	buffer := []*Data{}
+	lastWriteTime := time.Now()
 	for {
 		select {
-		case <-ticker.C:
-			for id, data := range buffer {
-				if len(data) > 0 {
-					now := time.Now()
-					lastTime, ok := lastWriteTime[id]
-					if !ok || now.Sub(lastTime) >= 1*time.Second {
-						handler.WriteRange(id, data)
-						buffer[id] = []*Data{}
-						lastWriteTime[id] = now
-					}
+		case data := <-handler.DataBuffer[id]:
+			buffer = append(buffer, data)
+			if len(buffer) > 0 {
+				now := time.Now()
+				if now.Sub(lastWriteTime) >= time.Second || len(buffer) >= 100 {
+					handler.WriteRange(id, buffer)
+					buffer = []*Data{}
+					lastWriteTime = now
+				}
+			}
+		default:
+			if len(buffer) > 0 {
+				now := time.Now()
+				if now.Sub(lastWriteTime) >= time.Second || len(buffer) >= 100 {
+					handler.WriteRange(id, buffer)
+					buffer = []*Data{}
+					lastWriteTime = now
 				}
 			}
 		}
 	}
+
 }
+
+// func (handler *Handler) handleData() {
+
+// 	buffer := map[uint16][]*Data{}
+// 	lastWriteTime := map[uint16]time.Time{}
+
+// 	for id, dataChan := range handler.DataBuffer {
+// 		go func(id uint16, dataChan <-chan *Data) {
+// 			for data := range dataChan {
+// 				buffer[id] = append(buffer[id], data)
+// 			}
+// 		}(id, dataChan)
+// 	}
+
+// 	for {
+// 		for id, data := range buffer {
+// 			if len(data) > 0 {
+// 				now := time.Now()
+// 				lastTime, ok := lastWriteTime[id]
+// 				if !ok || now.Sub(lastTime) >= 1*time.Second {
+// 					go handler.WriteRange(id, data)
+// 					buffer[id] = []*Data{}
+// 					lastWriteTime[id] = now
+// 				}
+// 			}
+// 		}
+// 	}
+// }

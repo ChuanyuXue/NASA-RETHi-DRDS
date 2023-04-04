@@ -29,9 +29,9 @@ type Server struct {
 	AllClientSystemID []uint8
 	AllClientAddr     map[uint8]*net.UDPAddr
 
-	PacketBuffer chan *ServicePacket
-	Sequence     uint16
-	mu           sync.Mutex
+	Buffer   chan *[utils.PKTLEN]byte
+	Sequence uint16
+	mu       sync.Mutex
 
 	publisherRegister  map[uint16][]uint8 // publisherRegister[data_id] = [client_0, ....]
 	subscriberRegister map[uint16][]uint8 // subscriberRegister[data_id] = [client_0, ....]
@@ -107,7 +107,7 @@ func (server *Server) initAddr() error {
 	if err != nil {
 		return fmt.Errorf("unable to resolve remote address for %s", server.Type)
 	}
-	for key := range server.AllClientSystemID {
+	for _, key := range server.AllClientSystemID {
 		server.AllClientAddr[uint8(key)] = remoteAddr
 	}
 
@@ -134,13 +134,11 @@ func (server *Server) initService() {
 	server.Sequence = 0
 	server.publisherRegister = make(map[uint16][]uint8)  // publisherRegister[data_id] = [client_0, ....]
 	server.subscriberRegister = make(map[uint16][]uint8) // subscriberRegister[data_id] = [client_0, ....]
-	server.PacketBuffer = make(chan *ServicePacket, utils.BUFFLEN)
+	server.Buffer = make(chan *[utils.PKTLEN]byte, utils.BUFFLEN)
 
 	for _, localAddr := range server.AllLocalAddr {
 		go server.listen(localAddr, int(utils.PROCNUMS))
 	}
-
-	select {}
 }
 
 // Send Service: Store the data info into the database
@@ -468,37 +466,40 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, service ui
 // Returns:
 //
 //	error: the error message
-func (server *Server) listen(addr *net.UDPAddr, procnums int) error {
-	conn, err := net.ListenUDP("udp", addr)
-	if err != nil {
-		fmt.Println("Failed to bind client", addr, err)
-		return err
-	}
-
+func (server *Server) listen(addr *net.UDPAddr, procnums int) {
 	// consumer
 	for i := 0; i < procnums; i++ {
 		go func() {
 			for {
-				pkt := <-server.PacketBuffer
-				err = server.handlePkt(pkt)
-				if err != nil {
-					fmt.Println(err)
+				select {
+				case buf := <-server.Buffer:
+					pkt := FromServiceBuf(buf[:])
+					err := server.handlePkt(&pkt)
+					if err != nil {
+						fmt.Println(err)
+					}
 				}
+
 			}
 		}()
 	}
 
+	conn, _ := net.ListenUDP("udp", addr)
 	// producer
-	for {
-		var buf [utils.BUFFLEN]byte
-		_, _, err := conn.ReadFromUDP(buf[:])
-		// fmt.Println("[DEBUG]: Read from client", addr)
-		if err != nil {
-			fmt.Println("Failed to listen packet from connection")
-		}
-		pkt := FromServiceBuf(buf[:])
-		server.PacketBuffer <- &pkt
+	for i := 0; i < procnums; i++ {
+		go func() {
+			for {
+				var buf [utils.PKTLEN]byte
+				_, _, err := conn.ReadFromUDP(buf[:])
+				if err != nil {
+					fmt.Println("Failed to listen packet from connection")
+				}
+				server.Buffer <- &buf
+
+			}
+		}()
 	}
+	select {}
 }
 
 // The function that handle the packet received from the client
@@ -520,19 +521,17 @@ func (server *Server) handlePkt(pkt *ServicePacket) error {
 	// server.Mu.Unlock()
 	// // ----------------------------------
 
-	fmt.Printf("[ Simulink Time %d ] Receive %d data from subsystem %d \n", pkt.SimulinkTime, pkt.SubframeNum, pkt.Src)
-	for _, subpkt := range pkt.Subpackets {
-		fmt.Println(subpkt.DataID, subpkt.Row, subpkt.Col, subpkt.Length)
-	}
-
+	// fmt.Printf("[ Simulink Time %d ] Receive %d data from subsystem %d \n", pkt.SimulinkTime, pkt.SubframeNum, pkt.Src)
+	// for _, subpkt := range pkt.Subpackets {
+	// 	fmt.Println(subpkt.DataID, subpkt.Row, subpkt.Col, subpkt.Length)
+	// }
 	switch pkt.Service {
 	case utils.SER_SEND: //Send (data packet)
 		for _, subpkt := range pkt.Subpackets {
-			if subpkt.DataID == 0 {
-				fmt.Println(subpkt)
-			}
-
 			rawData := PayloadBuf2Float(subpkt.Payload)
+			// if subpkt.DataID == 10001 {
+			// 	fmt.Println("[DEBUG] count", pkt.SimulinkTime, subpkt.TimeDiff)
+			// }
 			go server.Send(subpkt.DataID, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
 
 			for _, dst := range server.subscriberRegister[subpkt.DataID] {
@@ -566,10 +565,7 @@ func (server *Server) handlePkt(pkt *ServicePacket) error {
 	case utils.SER_PUBLISH: // Publish (opeartion packet / data packet)
 		rawData := PayloadBuf2Float(pkt.Payload)
 		for _, subpkt := range pkt.Subpackets {
-			err := server.Publish(subpkt.DataID, pkt.Src, subpkt.Row, subpkt.Col, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
-			if err != nil {
-				return err
-			}
+			go server.Publish(subpkt.DataID, pkt.Src, subpkt.Row, subpkt.Col, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
 
 			if subpkt.Length == 0 {
 				return nil

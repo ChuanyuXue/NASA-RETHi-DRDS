@@ -11,6 +11,7 @@ import (
 const (
 	BUFFLEN            uint32 = 65536
 	QUEUELELN          uint32 = 65536
+	PKTLEN             uint32 = 4500
 	PROCNUMS           uint8  = 64
 	FRENQUENCE         uint32 = 10000
 	SUBSNUMS           uint8  = 10
@@ -43,13 +44,13 @@ var SYSTEM_ID = map[string]uint8{
 	"EXT":   7,
 }
 
-//----------- Message Type
+// ----------- Message Type
 const (
 	MSG_INNER uint8 = 0
 	MSG_OUTER uint8 = 1
 )
 
-//----------- Data Type
+// ----------- Data Type
 const (
 	TYPE_NODATA        uint8 = 0
 	TYPE_SENSOR        uint8 = 1
@@ -60,7 +61,7 @@ const (
 	TYPE_OTHER         uint8 = 255
 )
 
-//------------ Priority
+// ------------ Priority
 const (
 	PRIORITY_LOW    uint8 = 1
 	PRIORITY_NORMAL uint8 = 3
@@ -68,17 +69,17 @@ const (
 	PRIORITY_HIGHT  uint8 = 7
 )
 
-//------------ Version
+// ------------ Version
 const (
 	VERSION_V0 uint8 = 0
 )
 
-//------------ Reserved
+// ------------ Reserved
 const (
 	RESERVED uint8 = 0
 )
 
-//------------ OPTION
+// ------------ OPTION
 const (
 	SER_SEND      uint8 = 0
 	SER_REQUEST   uint8 = 1
@@ -87,7 +88,7 @@ const (
 	SER_RESPONSE  uint8 = 0x0A
 )
 
-//------------ FLAG
+// ------------ FLAG
 const (
 	FLAG_SINGLE  uint8 = 0
 	FLAG_STREAM  uint8 = 1
@@ -95,13 +96,13 @@ const (
 	FLAG_ERROR   uint8 = 0xFF
 )
 
-//------------ SIMU TIME
+// ------------ SIMU TIME
 const (
 	TIME_SIMU_START uint32 = 0
-	TIME_SIMU_LAST uint32 = 0xFFFFFFFF
+	TIME_SIMU_LAST  uint32 = 0xFFFFFFFF
 )
 
-//----------- PARAMTER
+// ----------- PARAMTER
 const (
 	PARAMTER_REQUEST_LAST uint16 = 0xFFFF
 	PARAMTER_EMPTY        uint16 = 0
