@@ -175,6 +175,5 @@ func DatabaseGenerator(src uint8, path string) error {
 			fmt.Println(err)
 		}
 	}
-	fmt.Println("Database has been initialized")
 	return nil
 }

@@ -70,13 +70,6 @@ func (server *WebServer) Init(id uint8, udpServer *Server) error {
 	server.UDPServer = udpServer
 	server.bufferOutput = make(chan *VisualData, utils.OUTPUT_BUFFER_LEN)
 
-	// //------ init data handler
-	// err := server.initDBHander()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return err
-	// }
-
 	//------ init http handler
 	err := server.initHttphandler()
 	if err != nil {
@@ -97,13 +90,12 @@ func (server *WebServer) initHttphandler() error {
 
 	app := sgo.New()
 	app.USE(middlewares.CORS(middlewares.CORSOpt{}))
-
 	app.GET("/ws", server.RealtimeProcess)
 	app.GET("/history/:id", server.HistoryProcess)
 	app.POST("/api/c2/:id", server.CommandProcess)
 	app.OPTIONS("/api/c2/:id", sgo.PreflightHandler)
 
-	app.Run(":9999")
+	go app.Run(":9999")
 	return nil
 }
 

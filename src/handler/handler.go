@@ -78,8 +78,6 @@ func (handler *Handler) Init(id uint8) error {
 		time.Sleep(2 * time.Second)
 	}
 
-	fmt.Println("Database " + handler.DBName + " has been connected!")
-
 	// Get all tables
 	query := fmt.Sprintf("SHOW TABLES from %s", handler.DBName)
 	rows, err := handler.DBPointer.Query(query)

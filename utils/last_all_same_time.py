@@ -25,6 +25,8 @@ class ClientDRDS(Thread):
             assert False, "Not subscribed"
         while True:
             data = self.conn.subscribe()
+            if data is None:
+                continue
             self._append_data(data)
             self.current_simulink_time = data.header.simulink_time
 
@@ -33,7 +35,8 @@ class ClientDRDS(Thread):
         self.buffer = self._init_buffer(all_subscribed_data)
         for data_id in all_subscribed_data:
             ## By default subscribe from the beginning
-            self.conn.subscribe_register(data_id, 0)
+            while self.conn.subscribe_register(data_id, 0) is None:
+                time.sleep(0.1)
         self.subscribed = True
 
     def get_latest_all(self, all_subscribed_data: list):
@@ -62,14 +65,22 @@ class ClientDRDS(Thread):
                 self._clean_buffer_before_time(current_simulink_time)
                 return current_simulink_time, latest_all
         return None, -1
-    
+
     def _clean_buffer_before_time(self, time):
         for data_id in self.buffer:
-            while self.buffer[data_id]['time'] and self.buffer[data_id]['time'][0] < time:
+            while self.buffer[data_id][
+                    'time'] and self.buffer[data_id]['time'][0] < time:
                 self.buffer[data_id]['time'].pop(0)
                 self.buffer[data_id]['record'].pop(0)
 
+    def _check_subpacket_exist(self, data):
+        if not data.subpackets:
+            return False
+        return True
+
     def _append_data(self, data):
+        if not self._check_subpacket_exist(data):
+            return
         data_id = data.subpackets[0].header.data_id
         simulink_time = data.header.simulink_time
         values = list(data.subpackets[0].payload)
@@ -109,8 +120,11 @@ if __name__ == '__main__':
     client.start()
 
     ## [client.get_latest_all()]: Get latest data with same timestamp
+    count = 0
     while True:
         t, values = client.get_latest_all(request_id)
         print(f"[GET LATEST DATA]: time-{t}, data-{values}", flush=True)
         time.sleep(1)
+        client.conn.send(65000, count, [15])
+        count += 1
     client.join()

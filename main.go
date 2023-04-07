@@ -174,6 +174,7 @@ func main() {
 	// fmt.Println("Ground Server subscribed Habitat server")
 
 	// Let MCVT subscribe the data Murali asked
+	// fmt.Println("[DEBUG] MCVT subscribed Habitat server")
 	habitatServer.Subscribe(65000, utils.SYSTEM_ID["STR"], 0, 1000)
 
 	select {} // Keep the main thread alive

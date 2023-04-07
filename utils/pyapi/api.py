@@ -11,6 +11,7 @@ Date:
 
 import time
 import socket
+from typing import Tuple
 
 from pyapi.utils import *
 
@@ -40,7 +41,7 @@ class API:
         self.out_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.in_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.in_sock.bind((self.ip_client, self.port_client))
-        self.in_sock.setblocking(True)
+        self.in_sock.setblocking(False)
 
         self.seq = 0
 
@@ -200,8 +201,7 @@ class API:
         count = 0
         while True:
             if count > 1e3:
-                print("[!] Request time out")
-                return Packet()
+                return None
             try:
                 message, _ = self.in_sock.recvfrom(65536)
                 pkt.buf2Pkt(message)
@@ -251,8 +251,6 @@ class API:
         subpkt = SubPacket()
         subpkt.init(_data_id, _timediff, _row, _col, _length, _payload)
 
-        
-
         pkt = Packet()
         pkt.init(
             _src,
@@ -278,8 +276,7 @@ class API:
         count = 0
         while True:
             if count > 1e3:
-                print("[!] Request time out")
-                return Packet()
+                return None
             try:
                 message, _ = self.in_sock.recvfrom(65536)
                 pkt.buf2Pkt(message)
@@ -294,16 +291,10 @@ class API:
 
     def subscribe_register(self, id, synt, priority=7):
         """
-        Subscribe register
+        Request to subscribe to a data-id from DRDS
 
-        Parameters:
-        -----------
-        id          :   
-            ??
-        synt        :
-            ??
-        priority    :
-            ??
+        - Returns the ACK packet from DRDS if successful
+        - Returns None if failed
         """
         _src = self.id_client
         _dst = self.id_server
@@ -332,7 +323,6 @@ class API:
         subpkt = SubPacket()
         subpkt.init(_data_id, _timediff, _row, _col, _length, _payload)
 
-
         pkt = Packet()
         pkt.init(
             _src,
@@ -358,8 +348,7 @@ class API:
         count = 0
         while True:
             if count > 1e3:
-                print("[!] Request time out")
-                return Packet()
+                return None
             try:
                 message, _ = self.in_sock.recvfrom(65536)
                 pkt.buf2Pkt(message)
@@ -371,19 +360,16 @@ class API:
 
     def subscribe(self, ):
         """
-        Subscribe for information
+        Subscribe a data-id from DRDS
 
-        Parameters:
-        -----------
-        id          :       int
-            ??
+        - Returns the data packet from DRDS if successful
+        - Returns None if time out
         """
         pkt = Packet()
         count = 0
         while True:
             if count > 1e3:
-                print("[!] Request time out")
-                return Packet()
+                return None
             try:
                 message, _ = self.in_sock.recvfrom(65536)
                 pkt.buf2Pkt(message)

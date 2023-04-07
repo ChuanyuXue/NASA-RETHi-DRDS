@@ -385,6 +385,8 @@ func (server *Server) sendPkt(dst uint8, priority uint8, synt uint32, flag uint8
 	dstAddr := server.AllClientAddr[dst]
 	conn, err := net.DialUDP("udp", nil, dstAddr)
 
+	// fmt.Println("[DEBUG] Data ID: ", data_id, "is sending")
+
 	if err != nil {
 		fmt.Println("[!] Failed to dial clients")
 		return err
@@ -529,9 +531,6 @@ func (server *Server) handlePkt(pkt *ServicePacket) error {
 	case utils.SER_SEND: //Send (data packet)
 		for _, subpkt := range pkt.Subpackets {
 			rawData := PayloadBuf2Float(subpkt.Payload)
-			// if subpkt.DataID == 10001 {
-			// 	fmt.Println("[DEBUG] count", pkt.SimulinkTime, subpkt.TimeDiff)
-			// }
 			go server.Send(subpkt.DataID, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
 
 			for _, dst := range server.subscriberRegister[subpkt.DataID] {
@@ -539,7 +538,6 @@ func (server *Server) handlePkt(pkt *ServicePacket) error {
 				for i := 0; i < int(subpkt.Row); i++ {
 					dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
 				}
-				// fmt.Println("Send data to", dst, "with priority", pkt.Priority)
 				go server.sendPkt(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
 			}
 		}
