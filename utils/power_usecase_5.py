@@ -1,5 +1,6 @@
 ## This code is for the NAGNA-POWER ALx Series Powerload
 ## Communication follows TCP protocol
+## https://magna-power.com/assets/docs/html_sl/index-scpi.html#
 
 import socket
 import time

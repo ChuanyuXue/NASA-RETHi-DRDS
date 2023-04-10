@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 		eth32result = eth32_input_analog(handle, 0, &value);
 		printf("Current Voltage: %f \n", (value / 1024.0) * 5.0);
 		printf("Refered Value: %d \n", value);
-		sleep(1);
+		usleep(1000000);
 	}
 	// eth32result = eth32_input_analog(handle, pin, &value);
 
