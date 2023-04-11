@@ -68,6 +68,8 @@ type WebServer struct {
 func (server *WebServer) Init(id uint8, udpServer *Server) error {
 	server.LocalSystemID = id
 	server.UDPServer = udpServer
+	// WebServe shared the same handler with the udp server
+	server.DBHandler = server.UDPServer.handler
 	server.bufferOutput = make(chan *VisualData, utils.OUTPUT_BUFFER_LEN)
 
 	//------ init http handler
@@ -228,7 +230,9 @@ func (server *WebServer) HistoryProcess(ctx *sgo.Context) error {
 	id, _ := strconv.ParseUint(reqs[0], 10, 16)
 	col, _ := strconv.Atoi(reqs[1])
 
+	// fmt.Println("[DEBUG]:", uint16(id), server.DBHandler.QueryLastSynt(uint16(id)))
 	_, tVec, vMat, err := server.RequestRange(uint16(id), 0, server.DBHandler.QueryLastSynt(uint16(id)))
+
 	if err != nil {
 		fmt.Println(err)
 		return err

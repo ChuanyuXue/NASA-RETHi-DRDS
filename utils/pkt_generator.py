@@ -5,15 +5,15 @@ import random
 import json
 import random
 
-DURATION = 1
-SIMULATION_TIME = 4000
+DURATION = 10000000000000
+SIMULATION_TIME = 10
 
 ins = api.API(
     local_ip="0.0.0.0",
     local_port=61234,
     to_ip="localhost",
     # to_port=10000 + 3,
-    to_port=65531,
+    to_port=10003,
     # to_port=10000 + int(data['data_subtype1']),
     # to_port=65533, # for local testing
     # to_port=65531,  # for data service testing
@@ -35,7 +35,6 @@ with open("../db_info_v6.json") as f:
                 value=value,
                 priority=3,
             )
-            break
         time.sleep(1 / SIMULATION_TIME)
         print("Simulation time -----------", synt)
 ins.close()
