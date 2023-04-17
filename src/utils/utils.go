@@ -12,7 +12,8 @@ const (
 	BUFFLEN            uint32 = 65536
 	QUEUELELN          uint32 = 65536
 	PKTLEN             uint32 = 4500
-	PROCNUMS           uint8  = 64
+	CONSUMER_NUMS      uint16 = 2000
+	PROCUDER_NUMS      uint16 = 2000
 	FRENQUENCE         uint32 = 10000
 	SUBSNUMS           uint8  = 10
 	TABLENUMS          uint32 = 65536

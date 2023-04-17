@@ -5,8 +5,8 @@ import random
 import json
 import random
 
-DURATION = 10000000000000
-SIMULATION_TIME = 10
+DURATION = 10
+SIMULATION_TIME = 4000
 
 ins = api.API(
     local_ip="0.0.0.0",
@@ -35,6 +35,7 @@ with open("../db_info_v6.json") as f:
                 value=value,
                 priority=3,
             )
+            break
         time.sleep(1 / SIMULATION_TIME)
         print("Simulation time -----------", synt)
 ins.close()

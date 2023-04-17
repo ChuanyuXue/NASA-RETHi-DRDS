@@ -281,7 +281,7 @@ To terminate Subscribe function, send
 | ------- | --------- | ---- | ---- | ------ | ---- |
 | Data ID | 0         | -    | -    | -      | -    |
 
-## 4. Integration Guide
+## 4. MCVT Integration Guide
 
 ### 4.1 How to RUN the closed-loop control between OpenMCT and MCVT v6.2?
 
@@ -413,6 +413,26 @@ conn.subscribe_register(5003, 0)
 ```
 
 ![multi_subscribe](img/multi_subscribe.png)
+
+## 5. CPT Development
+
+### 5.1 Hardware Stack
+
+#### 5.1.1 TSN Bridge: TTTech Evaluation Board
+
+#### 5.1.2 TSN End-Station: RPiTSN
+
+### 5.2 Solfware Stack
+
+#### 5.2.1 API for Time-Triggered Ethernet Communication
+
+#### 5.2.2 API for Serial/Ethernet Communication
+
+#### 5.2.3 API for Analog/Ethernet Communication
+
+
+
+
 
 <img src="./img/nasa_logo.jpg" width="50" height="50"> *This project is supported by the National Aeronautics and Space Administration*
 

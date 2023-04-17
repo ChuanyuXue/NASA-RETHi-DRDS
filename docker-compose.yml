@@ -136,7 +136,6 @@ services:
     image: lovablemahira/rethi_hms_vis
     ports:
       - "8080:8080"
-
   # dummy_c2:
   #   image: xuechuanyu/c2
   #   ports:

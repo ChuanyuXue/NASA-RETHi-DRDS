@@ -583,7 +583,8 @@ func (handler *Handler) handleData(id uint16) {
 			buffer = append(buffer, data)
 			if len(buffer) > 0 {
 				now := time.Now()
-				if now.Sub(lastWriteTime) >= time.Second || len(buffer) >= 100 {
+				if now.Sub(lastWriteTime) >= time.Millisecond*100 || len(buffer) >= 256 {
+					// fmt.Println("[DEBUG]:", len(buffer))
 					handler.WriteRange(id, buffer)
 					buffer = []*Data{}
 					lastWriteTime = now
@@ -592,15 +593,16 @@ func (handler *Handler) handleData(id uint16) {
 		default:
 			if len(buffer) > 0 {
 				now := time.Now()
-				if now.Sub(lastWriteTime) >= time.Second || len(buffer) >= 100 {
+				if now.Sub(lastWriteTime) >= time.Millisecond*100 || len(buffer) >= 256 {
+					// fmt.Println("[DEBUG]:", len(buffer))
 					handler.WriteRange(id, buffer)
 					buffer = []*Data{}
 					lastWriteTime = now
 				}
 			}
+			time.Sleep(time.Millisecond * 100)
 		}
 	}
-
 }
 
 // func (handler *Handler) handleData() {

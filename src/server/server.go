@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	// "errors"
@@ -32,6 +33,8 @@ type Server struct {
 	Buffer   chan *[utils.PKTLEN]byte
 	Sequence uint16
 	mu       sync.Mutex
+
+	count uint64
 
 	publisherRegister  map[uint16][]uint8 // publisherRegister[data_id] = [client_0, ....]
 	subscriberRegister map[uint16][]uint8 // subscriberRegister[data_id] = [client_0, ....]
@@ -63,6 +66,17 @@ func (server *Server) Init(src uint8) error {
 	}
 
 	server.initService()
+
+	// Print the statistics periodically
+	go func() {
+		for {
+			time.Sleep(5 * time.Second)
+			receivedPackets := atomic.LoadUint64(&server.count)
+			currentTime := time.Now().Format("2006-01-02 15:04:05")
+			fmt.Printf("%s - Received packets: %d\n", currentTime, receivedPackets)
+		}
+	}()
+
 	return nil
 }
 
@@ -137,7 +151,7 @@ func (server *Server) initService() {
 	server.Buffer = make(chan *[utils.PKTLEN]byte, utils.BUFFLEN)
 
 	for _, localAddr := range server.AllLocalAddr {
-		go server.listen(localAddr, int(utils.PROCNUMS))
+		go server.listen(localAddr)
 	}
 }
 
@@ -468,9 +482,9 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, service ui
 // Returns:
 //
 //	error: the error message
-func (server *Server) listen(addr *net.UDPAddr, procnums int) {
+func (server *Server) listen(addr *net.UDPAddr) {
 	// consumer
-	for i := 0; i < procnums; i++ {
+	for i := 0; i < int(utils.CONSUMER_NUMS); i++ {
 		go func() {
 			for {
 				select {
@@ -478,6 +492,7 @@ func (server *Server) listen(addr *net.UDPAddr, procnums int) {
 					pkt := FromServiceBuf(buf[:])
 					err := server.handlePkt(&pkt)
 					if err != nil {
+						fmt.Println("Failed to handle packet")
 						fmt.Println(err)
 					}
 				}
@@ -487,17 +502,17 @@ func (server *Server) listen(addr *net.UDPAddr, procnums int) {
 	}
 
 	conn, _ := net.ListenUDP("udp", addr)
-	// producer
-	for i := 0; i < procnums; i++ {
+	for i := 0; i < int(utils.PROCUDER_NUMS); i++ {
 		go func() {
 			for {
 				var buf [utils.PKTLEN]byte
 				_, _, err := conn.ReadFromUDP(buf[:])
+				atomic.AddUint64(&server.count, 1)
 				if err != nil {
 					fmt.Println("Failed to listen packet from connection")
+					fmt.Println(err)
 				}
 				server.Buffer <- &buf
-
 			}
 		}()
 	}
