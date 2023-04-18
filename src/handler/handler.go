@@ -325,6 +325,7 @@ func (handler *Handler) WriteRange(id uint16, dataVec []*Data) error {
 	// Write the data into the database
 	_, err := handler.DBPointer.Exec(query)
 	if err != nil {
+		fmt.Println("[!] WriteRange Error: ", err)
 		return err
 	}
 	return nil
@@ -585,7 +586,10 @@ func (handler *Handler) handleData(id uint16) {
 				now := time.Now()
 				if now.Sub(lastWriteTime) >= time.Millisecond*100 || len(buffer) >= 256 {
 					// fmt.Println("[DEBUG]:", len(buffer))
-					handler.WriteRange(id, buffer)
+					err := handler.WriteRange(id, buffer)
+					if err != nil {
+						fmt.Println(err)
+					}
 					buffer = []*Data{}
 					lastWriteTime = now
 				}
@@ -595,7 +599,10 @@ func (handler *Handler) handleData(id uint16) {
 				now := time.Now()
 				if now.Sub(lastWriteTime) >= time.Millisecond*100 || len(buffer) >= 256 {
 					// fmt.Println("[DEBUG]:", len(buffer))
-					handler.WriteRange(id, buffer)
+					err := handler.WriteRange(id, buffer)
+					if err != nil {
+						fmt.Println(err)
+					}
 					buffer = []*Data{}
 					lastWriteTime = now
 				}
