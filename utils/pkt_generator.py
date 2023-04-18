@@ -28,14 +28,14 @@ with open("../db_info_v6.json") as f:
     data_discript = json.load(f)
     for synt in range(0, DURATION * SIMULATION_TIME):
         for name, data in data_discript.items():
-            value = [random.random() for i in range(data["data_size"])]
-            ins.send(
-                synt=synt,
-                id=data["data_id"],
-                value=value,
-                priority=3,
-            )
-            break
+            if data["data_id"] in [10001]:
+                value = [random.random() for i in range(data["data_size"])]
+                ins.send(
+                    synt=synt,
+                    id=data["data_id"],
+                    value=value,
+                    priority=3,
+                )
         time.sleep(1 / SIMULATION_TIME)
         print("Simulation time -----------", synt)
 ins.close()

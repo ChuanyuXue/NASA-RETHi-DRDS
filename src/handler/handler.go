@@ -262,7 +262,6 @@ func (handler *Handler) WriteSynt(id uint16, data *Data) error {
 		return err
 	}
 	return nil
-
 }
 
 func (handler *Handler) WriteRange(id uint16, dataVec []*Data) error {
@@ -585,7 +584,6 @@ func (handler *Handler) handleData(id uint16) {
 			if len(buffer) > 0 {
 				now := time.Now()
 				if now.Sub(lastWriteTime) >= time.Millisecond*100 || len(buffer) >= 256 {
-					// fmt.Println("[DEBUG]:", len(buffer))
 					err := handler.WriteRange(id, buffer)
 					if err != nil {
 						fmt.Println(err)
@@ -594,48 +592,15 @@ func (handler *Handler) handleData(id uint16) {
 					lastWriteTime = now
 				}
 			}
-		default:
+		case <-time.After(time.Millisecond * 100):
 			if len(buffer) > 0 {
-				now := time.Now()
-				if now.Sub(lastWriteTime) >= time.Millisecond*100 || len(buffer) >= 256 {
-					// fmt.Println("[DEBUG]:", len(buffer))
-					err := handler.WriteRange(id, buffer)
-					if err != nil {
-						fmt.Println(err)
-					}
-					buffer = []*Data{}
-					lastWriteTime = now
+				err := handler.WriteRange(id, buffer)
+				if err != nil {
+					fmt.Println(err)
 				}
+				buffer = []*Data{}
+				lastWriteTime = time.Now()
 			}
-			time.Sleep(time.Millisecond * 100)
 		}
 	}
 }
-
-// func (handler *Handler) handleData() {
-
-// 	buffer := map[uint16][]*Data{}
-// 	lastWriteTime := map[uint16]time.Time{}
-
-// 	for id, dataChan := range handler.DataBuffer {
-// 		go func(id uint16, dataChan <-chan *Data) {
-// 			for data := range dataChan {
-// 				buffer[id] = append(buffer[id], data)
-// 			}
-// 		}(id, dataChan)
-// 	}
-
-// 	for {
-// 		for id, data := range buffer {
-// 			if len(data) > 0 {
-// 				now := time.Now()
-// 				lastTime, ok := lastWriteTime[id]
-// 				if !ok || now.Sub(lastTime) >= 1*time.Second {
-// 					go handler.WriteRange(id, data)
-// 					buffer[id] = []*Data{}
-// 					lastWriteTime[id] = now
-// 				}
-// 			}
-// 		}
-// 	}
-// }
