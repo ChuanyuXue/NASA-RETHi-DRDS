@@ -17,15 +17,15 @@ The core part of the DRDS is developed in the Go language and the data service A
 
 **UDP Server:**
 
-<img src="./img/udp_server.drawio.jpg" style="zoom:50%;" >
+<img src="./img/udp_server.drawio.jpg" style="zoom:30%;" >
 
 **Web Server:**
 
-<img src="./img/webserver.drawio.jpg" style="zoom:50%;" >
+<img src="./img/webserver.drawio.jpg" style="zoom:30%;" >
 
 **Database Handler:**
 
-<img src="./img/handler.drawio.jpg" style="zoom:50%;" >
+<img src="./img/handler.drawio.jpg" style="zoom:30%;" >
 
 ### 2.3 DS - Database schema
 <img src="./img/DDS_SCHEMA.drawio.svg" style="zoom:80%;"  >
