@@ -1,9 +1,11 @@
-# Data Service for NASA RETHi Project
+# NASA-RETHi-DRDS
 
-## 1. Project introduction
-Please see https://www.purdue.edu/rethi
+## 1. Introduction
+The DRDS System in MCVT manages the data exchange among individual subsystems and GCC. It provides a reliable and easy-to-use back-end for data transfer and data storage with proposed service APIs and protocols. With these data services, individual subsystems do not need to know the specific mechanisms for communication with other subsystems or databases, such as creating sockets and encoding/decoding data or retrieving data with specific query language. Instead, the DRDS handles all the details and presents a unified high-level interface for real-time data collection and distribution.
 
-## 2. Current design
+The core part of the DRDS is developed in the Go language and the data service APIs are developed in Go, Python, JavaScript, and Simulink to allow effective interaction with other subsystem developed using different languages. Furthermore, to achieve fast and consistent configuration and integration with other subsystems, we also dockerized the DRDS application with a `docker-compose.yml` file. A subsystem does not need to know the dependencies with other subsystems and can run the integration with a single `docker-compose up` command.
+
+## 2. Architecture
 
 ### 2.1 DS - Overall architecture of MCVT
 <img src="./img/HMS-Design-v6.svg">
@@ -12,7 +14,18 @@ Please see https://www.purdue.edu/rethi
 <img src="./img/cpt.jpg">
 
 ### 2.2 DS - Data flow within DRDS
-<img src="./img/DDS_FLOW.drawio.svg">
+
+**UDP Server:**
+
+<img src="./img/udp_server.drawio.jpg" style="zoom:80%;" >
+
+**Web Server:**
+
+<img src="./img/webserver.drawio.jpg" style="zoom:80%;" >
+
+**Database Handler:**
+
+<img src="./img/handler.drawio.jpg" style="zoom:80%;" >
 
 ### 2.3 DS - Database schema
 <img src="./img/DDS_SCHEMA.drawio.svg" style="zoom:80%;"  >
@@ -413,26 +426,6 @@ conn.subscribe_register(5003, 0)
 ```
 
 ![multi_subscribe](img/multi_subscribe.png)
-
-## 5. CPT Development
-
-### 5.1 Hardware Stack
-
-#### 5.1.1 TSN Bridge: TTTech Evaluation Board
-
-#### 5.1.2 TSN End-Station: RPiTSN
-
-### 5.2 Solfware Stack
-
-#### 5.2.1 API for Time-Triggered Ethernet Communication
-
-#### 5.2.2 API for Serial/Ethernet Communication
-
-#### 5.2.3 API for Analog/Ethernet Communication
-
-
-
-
 
 <img src="./img/nasa_logo.jpg" width="50" height="50"> *This project is supported by the National Aeronautics and Space Administration*
 
