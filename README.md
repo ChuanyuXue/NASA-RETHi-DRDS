@@ -1,9 +1,11 @@
-# Data Service for NASA RETHi Project
+# NASA-RETHi-DRDS
 
-## 1. Project introduction
-Please see https://www.purdue.edu/rethi
+## 1. Introduction
+The DRDS System in MCVT manages the data exchange among individual subsystems and GCC. It provides a reliable and easy-to-use back-end for data transfer and data storage with proposed service APIs and protocols. With these data services, individual subsystems do not need to know the specific mechanisms for communication with other subsystems or databases, such as creating sockets and encoding/decoding data or retrieving data with specific query language. Instead, the DRDS handles all the details and presents a unified high-level interface for real-time data collection and distribution.
 
-## 2. Current design
+The core part of the DRDS is developed in the Go language and the data service APIs are developed in Go, Python, JavaScript, and Simulink to allow effective interaction with other subsystem developed using different languages. Furthermore, to achieve fast and consistent configuration and integration with other subsystems, we also dockerized the DRDS application with a `docker-compose.yml` file. A subsystem does not need to know the dependencies with other subsystems and can run the integration with a single `docker-compose up` command.
+
+## 2. Architecture
 
 ### 2.1 DS - Overall architecture of MCVT
 <img src="./img/HMS-Design-v6.svg">
@@ -12,7 +14,18 @@ Please see https://www.purdue.edu/rethi
 <img src="./img/cpt.jpg">
 
 ### 2.2 DS - Data flow within DRDS
-<img src="./img/DDS_FLOW.drawio.svg">
+
+**UDP Server:**
+
+<img src="./img/udp_server.drawio.jpg" style="zoom:50%;" >
+
+**Web Server:**
+
+<img src="./img/webserver.drawio.jpg" style="zoom:50%;" >
+
+**Database Handler:**
+
+<img src="./img/handler.drawio.jpg" style="zoom:50%;" >
 
 ### 2.3 DS - Database schema
 <img src="./img/DDS_SCHEMA.drawio.svg" style="zoom:80%;"  >
@@ -74,24 +87,7 @@ Data packet is the basic form to send data and also to implement service API:
 |            LENGTH             |             DATA...
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
-**Set-point encoding in Data Service packet DATA field**
-```
-                    1                   2                   3
-0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|           COMMAND_ID          | FLAG  |   -   |   -   |   -   |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                     SIMULINK_TIME_TO_START                    |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                     PHYSICAL_TIME_TO_START                    |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|          SETPOINT_ID          |    ZONE_ID    |     MODE      |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                         COMMAND_DETAILS                       |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                         COMMAND_DETAILS                       
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-```
+
 **Src and Dst**
 
 | **Field** | **Name** | **Value** | **Description**                               |
@@ -281,7 +277,7 @@ To terminate Subscribe function, send
 | ------- | --------- | ---- | ---- | ------ | ---- |
 | Data ID | 0         | -    | -    | -      | -    |
 
-## 4. Integration Guide
+## 4. MCVT Integration Guide
 
 ### 4.1 How to RUN the closed-loop control between OpenMCT and MCVT v6.2?
 

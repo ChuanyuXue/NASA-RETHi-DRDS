@@ -2,6 +2,7 @@ package handler
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -12,6 +13,12 @@ import (
 	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/utils"
 	_ "github.com/go-sql-driver/mysql"
 )
+
+type Data struct {
+	Iter  uint32
+	SendT uint32
+	Value []float64
+}
 
 // Handler is the main struct for the handler
 type Handler struct {
@@ -26,6 +33,7 @@ type Handler struct {
 	RecordTables []uint16
 
 	DataShapes map[uint16]uint8
+	DataBuffer map[uint16]chan *Data
 }
 
 // Init is the function to initialize the handler
@@ -69,8 +77,6 @@ func (handler *Handler) Init(id uint8) error {
 		fmt.Println(err)
 		time.Sleep(2 * time.Second)
 	}
-
-	fmt.Println("Database " + handler.DBName + " has been connected!")
 
 	// Get all tables
 	query := fmt.Sprintf("SHOW TABLES from %s", handler.DBName)
@@ -142,6 +148,7 @@ func (handler *Handler) Init(id uint8) error {
 			handler.Tables = append(handler.Tables, tableName)
 		}
 	}
+	// fmt.Println("[DEBUG]: Record ID:", handler.RecordTables)
 
 	// Record the size of each Record tables
 	query = fmt.Sprintf(
@@ -170,6 +177,18 @@ func (handler *Handler) Init(id uint8) error {
 		}
 		handler.DataShapes[dataId] = dataSize // Record the size of each data
 	}
+
+	// Init data buffer
+	handler.DataBuffer = make(map[uint16]chan *Data)
+	for _, id := range handler.RecordTables {
+		handler.DataBuffer[id] = make(chan *Data, utils.BUFFLEN)
+	}
+
+	for _, id := range handler.RecordTables {
+		go handler.handleData(id)
+		time.Sleep(time.Duration(int(1000/len(handler.RecordTables))) * time.Millisecond)
+	}
+
 	return nil
 }
 
@@ -182,7 +201,7 @@ func (handler *Handler) Init(id uint8) error {
 // Return:
 // 	error: error message
 
-func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []float64) error {
+func (handler *Handler) WriteSynt(id uint16, data *Data) error {
 	// TODO: Security Check:
 	// // 1. ID == 0 is not allowed
 	// if handler.InteTable == id {
@@ -207,26 +226,26 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 	// Construct the query
 	var columnList []string
 	var columnFillin []string
-	columnList = append(columnList, "simulink_time")
-	columnList = append(columnList, "physical_time_s")
-	columnList = append(columnList, "physical_time_d")
+	columnList = append(columnList, "iter")
+	columnList = append(columnList, "send_t")
+	columnList = append(columnList, "recv_t")
 
 	for i := 0; i != int(handler.DataShapes[id]); i++ {
-		columnList = append(columnList, "value"+strconv.Itoa(i))
+		columnList = append(columnList, "v"+strconv.Itoa(i))
 	}
 	columnPattern := strings.Join(columnList, ",") // Join the column name by comma
 
-	columnFillin = append(columnFillin, strconv.Itoa(int(synt)))
+	columnFillin = append(columnFillin, strconv.Itoa(int(data.Iter)))
 	// Need to fix int64 -> unsigned int32?
-	columnFillin = append(columnFillin, strconv.FormatUint(uint64(phyt), 10))
+	columnFillin = append(columnFillin, strconv.FormatUint(uint64(data.SendT), 10))
 	columnFillin = append(columnFillin, strconv.FormatUint(uint64(time.Now().UnixMilli()), 10))
 
-	if int(handler.DataShapes[id]) != len(value) {
-		return fmt.Errorf("[!] Data #%d has inconsistent data shape %d rather than %d", id, len(value), int(handler.DataShapes[id]))
+	if int(handler.DataShapes[id]) != len(data.Value) {
+		return fmt.Errorf("[!] Data #%d has inconsistent data shape %d rather than %d", id, len(data.Value), int(handler.DataShapes[id]))
 	}
 
 	for i := 0; i != int(handler.DataShapes[id]); i++ {
-		columnFillin = append(columnFillin, fmt.Sprintf("%f", value[i]))
+		columnFillin = append(columnFillin, fmt.Sprintf("%f", data.Value[i]))
 	}
 	columnValue := strings.Join(columnFillin, ",")
 
@@ -245,6 +264,72 @@ func (handler *Handler) WriteSynt(id uint16, synt uint32, phyt uint32, value []f
 	return nil
 }
 
+func (handler *Handler) WriteRange(id uint16, dataVec []*Data) error {
+	// fmt.Println("[DEBUG]: WriteRange", id, len(dataVec))
+	if !utils.Uint16Contains(handler.RecordTables, id) {
+		fmt.Println("[!] Data Error: Unknown data ", id, " is received")
+		return nil
+	}
+
+	// It seems like there is no problem for WriteRange
+	// iterVec := make([]int, len(dataVec))
+	// for i, data := range dataVec {
+	// 	iterVec[i] = int(data.Iter)
+	// }
+	// if id == 10001 {
+	// 	fmt.Println("[DEBUG]:", id, " Iter: ", iterVec)
+	// }
+
+	tableName := "record" + strconv.Itoa(int(id))
+
+	// Construct the query
+	var columnList []string
+	var columnFillinVec []string
+	columnList = append(columnList, "iter")
+	columnList = append(columnList, "send_t")
+	columnList = append(columnList, "recv_t")
+
+	for i := 0; i != int(handler.DataShapes[id]); i++ {
+		columnList = append(columnList, "v"+strconv.Itoa(i))
+	}
+	columnPattern := strings.Join(columnList, ",") // Join the column name by comma
+
+	recv_t := strconv.FormatUint(uint64(time.Now().UnixMilli()), 10)
+	for _, data := range dataVec {
+		columnFillin := []string{}
+		columnFillin = append(columnFillin, strconv.Itoa(int(data.Iter)))
+		// Need to fix int64 -> unsigned int32?
+		columnFillin = append(columnFillin, strconv.FormatUint(uint64(data.SendT), 10))
+		columnFillin = append(columnFillin, recv_t)
+
+		if int(handler.DataShapes[id]) != len(data.Value) {
+			return fmt.Errorf("[!] Data #%d has inconsistent data shape %d rather than %d", id, len(data.Value), int(handler.DataShapes[id]))
+		}
+
+		for k := 0; k != int(handler.DataShapes[id]); k++ {
+			columnFillin = append(columnFillin, fmt.Sprintf("%f", data.Value[k]))
+		}
+		columnValue := "(" + strings.Join(columnFillin, ",") + ")"
+		columnFillinVec = append(columnFillinVec, columnValue)
+	}
+	columnFillinStr := strings.Join(columnFillinVec, ",")
+
+	// Construct the query
+	query := fmt.Sprintf(
+		"INSERT INTO %s.%s ("+columnPattern+") VALUES "+columnFillinStr+";",
+		handler.DBName,
+		tableName,
+	)
+
+	// Write the data into the database
+	_, err := handler.DBPointer.Exec(query)
+	if err != nil {
+		fmt.Println("[!] WriteRange Error: ", err)
+		return err
+	}
+	return nil
+}
+
 func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint64, []float64, error) {
 	var tableName string
 	var columnSize uint8
@@ -255,18 +340,18 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint64, []float64, err
 	columnSize = handler.DataShapes[id]          // Get the size of the data
 
 	if columnSize == 1 {
-		columnPattern = "value0" // If the data size is 1, then only one column is needed
+		columnPattern = "v0" // If the data size is 1, then only one column is needed
 	} else {
 		var columnList []string
 		for i := 0; i < int(columnSize); i++ {
-			columnList = append(columnList, "value"+strconv.Itoa(i)) // Get the column name
+			columnList = append(columnList, "v"+strconv.Itoa(i)) // Get the column name
 		}
 		columnPattern = strings.Join(columnList, ",") // Join the column name by comma
 	}
 
 	// Construct the query
 	query := fmt.Sprintf(
-		"SELECT physical_time_d, %s FROM %s.%s WHERE simulink_time = %s;",
+		"SELECT recv_t, %s FROM %s.%s WHERE iter = %s;",
 		columnPattern,
 		handler.DBName,
 		tableName,
@@ -312,14 +397,15 @@ func (handler *Handler) ReadSynt(id uint16, synt uint32) (uint64, []float64, err
 // Read multiple rows of data from database
 //
 // Args:
-// 	- id: data id
-// 	- start: start simulation timestamp
-// 	- end: end simulation timestamp
+//   - id: data id
+//   - start: start simulation timestamp
+//   - end: end simulation timestamp
+//
 // Return:
-// 	- simulation time 1D vector
-// 	- physical time 1D vector
-// 	- data matrix (2D)
-// 	- err: error
+//   - simulation time 1D vector
+//   - physical time 1D vector
+//   - data matrix (2D)
+//   - err: error
 func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32, []uint64, [][]float64, error) {
 	var tableName string
 	var dataSize uint8
@@ -332,18 +418,18 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 	dataSize = handler.DataShapes[id]
 
 	if dataSize == 1 {
-		columnPattern = "value0"
+		columnPattern = "v0"
 	} else {
 		var columnList []string
 		for i := 0; i < int(dataSize); i++ {
-			columnList = append(columnList, "value"+strconv.Itoa(i))
+			columnList = append(columnList, "v"+strconv.Itoa(i))
 		}
 		columnPattern = strings.Join(columnList, ",")
 	}
 
 	// Construct the query with condition of time range
 	query := fmt.Sprintf(
-		"SELECT physical_time_d, simulink_time, %s FROM %s.%s WHERE (simulink_time >= %s) AND (simulink_time < %s);",
+		"SELECT recv_t, iter, %s FROM %s.%s WHERE (iter >= %s) AND (iter < %s);",
 		columnPattern,
 		handler.DBName,
 		tableName,
@@ -397,11 +483,14 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 
 // QueryInfo query the information of the data
 // Args:
-// 	id: the id of the data
-// 	column: the column name of the data
+//
+//	id: the id of the data
+//	column: the column name of the data
+//
 // Return:
-// 	para: the value of the column
-// 	err: the error of the query
+//
+//	para: the value of the column
+//	err: the error of the query
 func (handler *Handler) QueryInfo(id uint16, column string) (int, error) {
 
 	// Construct the query with condition of table name and data id
@@ -427,14 +516,17 @@ func (handler *Handler) QueryInfo(id uint16, column string) (int, error) {
 
 // QueryLastSynt query the last time of the data
 // Args:
-// 	id: the id of the data
+//
+//	id: the id of the data
+//
 // Return:
-// 	time: the last time of the data
+//
+//	time: the last time of the data
 func (handler *Handler) QueryLastSynt(id uint16) uint32 {
 	var time string
 	tableName := "record" + strconv.Itoa(int(id))
 	query := fmt.Sprintf(
-		"SELECT simulink_time FROM %s.%s ORDER BY simulink_time DESC LIMIT 1;",
+		"SELECT iter FROM %s.%s ORDER BY iter DESC LIMIT 1;",
 		handler.DBName,
 		tableName,
 	) // Sort the data by simulink time and get the last one
@@ -450,14 +542,17 @@ func (handler *Handler) QueryLastSynt(id uint16) uint32 {
 
 // QueryFirstSynt query the first time of the data
 // Args:
-// 	id: the id of the data
+//
+//	id: the id of the data
+//
 // Return:
-// 	time: the first time of the data
+//
+//	time: the first time of the data
 func (handler *Handler) QueryFirstSynt(id uint16) uint32 {
 	var time string
 	tableName := "record" + strconv.Itoa(int(id))
 	query := fmt.Sprintf(
-		"SELECT simulink_time FROM %s.%s ORDER BY simulink_time LIMIT 1;",
+		"SELECT iter FROM %s.%s ORDER BY iter LIMIT 1;",
 		handler.DBName,
 		tableName,
 	) // Sort the data by simulink time and get the first one
@@ -468,4 +563,44 @@ func (handler *Handler) QueryFirstSynt(id uint16) uint32 {
 	}
 	result, _ := utils.StringToInt(time)
 	return uint32(result)
+}
+
+func (handler *Handler) WriteToBuffer(id uint16, data *Data) error {
+	// Check if the buffer is full
+	if len(handler.DataBuffer[id]) >= int(utils.BUFFLEN) {
+		return errors.New("buffer is full")
+	}
+	handler.DataBuffer[id] <- data // Push the new data
+	return nil
+}
+
+func (handler *Handler) handleData(id uint16) {
+	buffer := []*Data{}
+	lastWriteTime := time.Now()
+	for {
+		select {
+		case data := <-handler.DataBuffer[id]:
+			buffer = append(buffer, data)
+			if len(buffer) > 0 {
+				now := time.Now()
+				if now.Sub(lastWriteTime) >= time.Millisecond*100 || len(buffer) >= 256 {
+					err := handler.WriteRange(id, buffer)
+					if err != nil {
+						fmt.Println(err)
+					}
+					buffer = []*Data{}
+					lastWriteTime = now
+				}
+			}
+		case <-time.After(time.Millisecond * 100):
+			if len(buffer) > 0 {
+				err := handler.WriteRange(id, buffer)
+				if err != nil {
+					fmt.Println(err)
+				}
+				buffer = []*Data{}
+				lastWriteTime = time.Now()
+			}
+		}
+	}
 }

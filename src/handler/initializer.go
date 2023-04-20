@@ -1,13 +1,14 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
+
 	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/utils"
-	"database/sql"
 )
 
 // TableInfo struct defines the structure of the data information table
@@ -26,9 +27,12 @@ type TableInfo struct {
 
 // ReadDataInfo function reads the data information from the specified file path
 // Args:
-// 	path: the path of the data information file
+//
+//	path: the path of the data information file
+//
 // Returns:
-// 	dataList: the list of data information
+//
+//	dataList: the list of data information
 func ReadDataInfo(path string) ([]TableInfo, error) {
 	var dataList []TableInfo
 	var objmap map[string]json.RawMessage // map of data information
@@ -79,14 +83,14 @@ func DatabaseGenerator(src uint8, path string) error {
 	var err error
 	var db *sql.DB
 	var dbName string
-	if src == utils.SRC_GCC { // gcc
+	if src == utils.SYSTEM_ID["GCC"] { // gcc
 		db, err = sql.Open("mysql", fmt.Sprintf("%v:%v@(ground_db:3306)/%v", // "hms_db" is the database container's name in the docker-compose.yml
 			os.Getenv("DB_USER_GROUND"),
 			os.Getenv("DB_PASSWORD_GROUND"),
 			os.Getenv("DB_NAME_GROUND")))
 		dbName = "ground"
 
-	} else if src == utils.SRC_HMS { // hms
+	} else if src == utils.SYSTEM_ID["HMS"] { // hms
 		db, err = sql.Open("mysql", fmt.Sprintf("%v:%v@(habitat_db:3306)/%v", // "hms_db" is the database container's name in the docker-compose.yml
 			os.Getenv("DB_USER_HABITAT"),
 			os.Getenv("DB_PASSWORD_HABITAT"),
@@ -157,13 +161,14 @@ func DatabaseGenerator(src uint8, path string) error {
 		drop := fmt.Sprintf(`DROP TABLE IF EXISTS %s`, tableName)
 		db.Exec(drop)
 		act := fmt.Sprintf("create table `%s` (", tableName)
-		act = act + "simulink_time int unsigned NOT NULL,"
-		act = act + "physical_time_s bigint unsigned NOT NULL,"
-		act = act + "physical_time_d bigint unsigned NOT NULL,"
+		act = act + "iter int unsigned NOT NULL,"
+		act = act + "send_t bigint unsigned NOT NULL,"
+		act = act + "recv_t bigint unsigned NOT NULL,"
 		for i := 0; i != int(info.Size); i++ {
-			act = act + fmt.Sprintf("value%d float,", i)
+			act = act + fmt.Sprintf("v%d float,", i)
 		}
-		act = act + "primary key (simulink_time), UNIQUE KEY simulink_time (simulink_time)"
+		// act = act + "primary key (iter), UNIQUE KEY (iter)"
+		act = act[:len(act)-1]
 		act = act + ")ENGINE=InnoDB" // ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci"
 
 		_, err = db.Exec(act)
@@ -171,7 +176,5 @@ func DatabaseGenerator(src uint8, path string) error {
 			fmt.Println(err)
 		}
 	}
-	fmt.Println("Database has been initialized")
 	return nil
-
 }

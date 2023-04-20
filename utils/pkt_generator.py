@@ -5,28 +5,30 @@ import random
 import json
 import random
 
+DURATION = 10
+SIMULATION_TIME = 4000
+
+ins = api.API(
+    local_ip="0.0.0.0",
+    local_port=61234,
+    to_ip="localhost",
+    # to_port=10000 + 3,
+    to_port=10003,
+    # to_port=10000 + int(data['data_subtype1']),
+    # to_port=65533, # for local testing
+    # to_port=65531,  # for data service testing
+    # client_id=int(data["data_subtype1"]),
+    client_id=3,
+    server_id=1,
+    # set_blocking=
+    # False,  # Setting it to "True" causes issues when testing
+)
+
 with open("../db_info_v6.json") as f:
     data_discript = json.load(f)
-
-    # Simulation for 600 seconds
-    for synt in range(99, 99 * 600 + 1, 100):
+    for synt in range(0, DURATION * SIMULATION_TIME):
         for name, data in data_discript.items():
-            if name != "Health_Management_System":
-                ins = api.API(
-                    local_ip="0.0.0.0",
-                    local_port=61234,
-                    to_ip="localhost",
-                    to_port=10000 + 3,
-                    # to_port=10000 + int(data['data_subtype1']),
-                    # to_port=65533, # for local testing
-                    # to_port=65531,  # for data service testing
-                    # client_id=int(data["data_subtype1"]),
-                    client_id=3,
-                    server_id=1,
-                    # set_blocking=
-                    # False,  # Setting it to "True" causes issues when testing
-                )
-
+            if data["data_id"] in [10001]:
                 value = [random.random() for i in range(data["data_size"])]
                 ins.send(
                     synt=synt,
@@ -34,11 +36,9 @@ with open("../db_info_v6.json") as f:
                     value=value,
                     priority=3,
                 )
-                time.sleep(1e-3)
-                ins.close()
-                time.sleep(1e-6)
-        time.sleep(1)
+        time.sleep(1 / SIMULATION_TIME)
         print("Simulation time -----------", synt)
+ins.close()
 
 # server_id : 1 -> Habitat database
 # server_id : 0 -> Ground Database

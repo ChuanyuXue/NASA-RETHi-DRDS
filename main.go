@@ -1,26 +1,24 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/handler"
 	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/server"
 	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/utils"
-	"fmt"
 	// "time"
 )
 
-
-
 func init() {
-	err := handler.DatabaseGenerator(0, "db_info_v6.json")
+	err := handler.DatabaseGenerator(utils.SYSTEM_ID["HMS"], "db_info_v6.json")
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = handler.DatabaseGenerator(1, "db_info_v6.json")
+	err = handler.DatabaseGenerator(utils.SYSTEM_ID["GCC"], "db_info_v6.json")
 	if err != nil {
 		fmt.Println(err)
 	}
 }
-
 
 // Usage: go run main.go
 // NOTE: This program can only run in the docker container with correct docker-compose.yml file
@@ -144,9 +142,9 @@ func main() {
 	// 	fmt.Print(nil)
 	// }
 	// --------------- Test for Ground <-- Habitat <--> Subsystem ------------------------
-	
-	habitatServer := server.Server{} // Start Habitat server
-	err := habitatServer.Init(utils.SRC_HMS) // Init Habitat server
+
+	habitatServer := server.Server{}                  // Start Habitat server
+	err := habitatServer.Init(utils.SYSTEM_ID["HMS"]) // Init Habitat server
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -154,7 +152,10 @@ func main() {
 
 	// Start Habitat web service
 	habitatWebServer := server.WebServer{}
-	go habitatWebServer.Init(utils.SRC_HMS, &habitatServer)
+	err = habitatWebServer.Init(utils.SYSTEM_ID["HMS"], &habitatServer)
+	if err != nil {
+		fmt.Println(err)
+	}
 	fmt.Println("Habitat Web-Service Started")
 
 	// // Start Ground server
@@ -172,8 +173,9 @@ func main() {
 	// habitatServer.Subscribe(8016, groundServer.LocalSrc, 0, 1000)
 	// fmt.Println("Ground Server subscribed Habitat server")
 
-	// Let MCVT subscribe Habitat server
-	// habitatServer.Subscribe(4001, utils.SRC_AGT, 0, 1000)
+	// Let MCVT subscribe the data Murali asked
+	// fmt.Println("[DEBUG] MCVT subscribed Habitat server")
+	habitatServer.Subscribe(65000, utils.SYSTEM_ID["STR"], 0, 1000)
 
 	select {} // Keep the main thread alive
 
