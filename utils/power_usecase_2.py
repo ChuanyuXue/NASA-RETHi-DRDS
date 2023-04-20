@@ -4,12 +4,13 @@
 
 from pyapi.utils import Header, Packet
 from ctypes import *
+import time
 from struct import error, pack
 import subprocess
 import socket
 
 LOCAL_IP = "0.0.0.0"
-LOCAL_PORT = 12345
+LOCAL_PORT = 23002
 
 
 try:
@@ -28,15 +29,16 @@ while True:
     re = Packet()
     data, addr = sock.recvfrom(1500)  # buffer size is 1024 bytes
     re.buf2Pkt(data)
-    print(re.header.simulink_time)
-    print("Receive the packets from Simulink")
-    for i in re.subpackets:
-        print(i.header.data_id)
-        print(i.header.col, i.header.row, i.header.length)
-        print(i.payload[0])
-        
-        subprocess.call(["./eth32/eth32-example/comm", str(0), str(1), str(i.payload[0])])
+    print("[---------------------------------------------]")
+    print("Iteration: ", re.header.simulink_time)
 
+    for i in re.subpackets:
+        print("Data ID: ", i.header.data_id)
+        print("Data Length: ", i.header.col, i.header.row, i.header.length)
+        print("Signal Value: ", i.payload[0])
+        
+        # subprocess.call(["./eth32/eth32-example/comm", str(0), str(1), str(i.payload[0])])
         # Check the command status and call the C program 
         pass
+    # time.sleep(1)
     
