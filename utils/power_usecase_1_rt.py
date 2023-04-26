@@ -6,20 +6,16 @@
 import serial
 import time
 import datetime
+import struct
 
 from pyapi.api import API
 from ctypes import *
 import socket
 
-REMOTE_IP = "192.168.0.96"
-REMOTE_PORT = 12345
+REMOTE_IP = "192.168.10.101"
 
-ins = API(local_ip="0.0.0.0",
-              local_port=65533,
-              to_ip=REMOTE_IP,
-              to_port=REMOTE_PORT,
-              client_id=1,
-              server_id=6)
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
 # count = 0
 # while True:
 #     print("Send the packets to Simulink")
@@ -42,7 +38,6 @@ time.sleep(1)
 
 # ser.write(b'CURR 1\n')
 # ser.write(b'VOLT 10\n')
-
 
 ser.write(b'OUTP:START\n')
 
@@ -72,8 +67,11 @@ while True:
         cali_curr = eval(resp.replace('\n',''))
         print("%s -----> Current Calibration Curr: "%time.ctime(), cali_curr)
 
-        ins.send(10001, count, [volt, curr, cali_volt, cali_curr, 0])
+        # ins.send(10001, count, [volt, curr, cali_volt, cali_curr, 0])
+        sock.sendto(struct.pack('d', volt), (REMOTE_IP, 54112))
+        sock.sendto(struct.pack('d', curr), (REMOTE_IP, 54113))
         count += 1
+
         time.sleep(1)
     except KeyboardInterrupt:
         break

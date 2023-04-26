@@ -8,6 +8,8 @@ import time
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect(('192.168.0.98', 50505))
 
+s.sendall('VOLT 50\n'.encode())
+
 while True:
     s.sendall('MEAS:VOLT?\n'.encode())
     volt = float(s.recv(4096).decode().strip())
