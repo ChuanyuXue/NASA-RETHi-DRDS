@@ -4,45 +4,55 @@
 ## https://magna-power.com/assets/files/manuals/manual_ts_1.0.pdf
 
 import socket
+import time
 
 MODE_MAP = {"rotary": 0, "keypad": 1, "ext_pgm": 2, "remote": 3}
 
 
-class hil_serial:
+class hil_tcp:
     def __init__(self, ip="192.168.0.98", port=50505):
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.conn.connect((ip, port))
 
     def __del__(self):
-        self.ser.close()
+        self.conn.close()
 
     def set_mode(self, mode="remote"):
-        self.sendall(b'CONF SETUP %d\n' % MODE_MAP[mode])
+        self.conn.sendall(b'CONF SETUP %d\n' % MODE_MAP[mode])
+        time.sleep(0.1)
 
     def set_voltage_trigger(self, volt="MAX"):
-        self.sendall(b'VOLT:TRIG %s\n' % str(volt))
+        self.conn.sendall(b'VOLT:TRIG %s\n' % str(volt).encode())
+        time.sleep(0.1)
 
     def set_current_trigger(self, curr="MAX"):
-        self.sendall(b'CURR:TRIG %s\n' % str(curr))
+        self.conn.sendall(b'CURR:TRIG %s\n' % str(curr).encode())
+        time.sleep(0.1)
 
     def set_voltage(self, volt):
-        self.sendall(b'VOLT %f\n' % volt)
+        self.conn.sendall(b'VOLT %s\n' % str(volt).encode())
+        time.sleep(0.1)
 
     def set_current(self, curr):
-        self.sendall(b'CURR %f\n' % curr)
+        self.conn.sendall(b'CURR %s\n' %str(curr).encode())
+        time.sleep(0.1)
     
     def start(self):
-        self.sendall(b'OUTP:START\n')
+        self.conn.sendall(b'OUTP:START\n')
+        time.sleep(0.1)
     
     def stop(self):
-        self.sendall(b'OUTP:STOP\n')
+        self.conn.sendall(b'OUTP:STOP\n')
+        time.sleep(0.1)
 
     def get_voltage(self):
-        self.sendall(b'MEAS:VOLT?\n')
+        self.conn.sendall(b'MEAS:VOLT?\n')
+        time.sleep(0.1)
         resp = float(self.conn.recv(4096).decode().strip())
         return resp
 
     def get_current(self):
-        self.sendall(b'MEAS:CURR?\n')
+        self.conn.sendall(b'MEAS:CURR?\n')
+        time.sleep(0.1)
         resp = float(self.conn.recv(4096).decode().strip())
         return resp

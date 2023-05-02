@@ -8,7 +8,7 @@ import time
 import datetime
 import struct
 
-from pyapi.api import API
+# from pyapi.api import API
 from ctypes import *
 import socket
 
@@ -23,24 +23,26 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 #     count += 1
 #     time.sleep(1)
 
-ser = serial.Serial("/dev/ttyUSB0", 19200, parity=serial.PARITY_NONE,
+ser = serial.Serial("/dev/ttyUSB1", 19200, parity=serial.PARITY_NONE,
         stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS)
 ser.timeout = 5
 time.sleep(1)
 
 # print(ser.is_open)
 
-# ser.write(b'CONF:SETPT 1\n')
-# # time.sleep(0.5)
+ser.write(b'CONF:SETPT 1\n')
+time.sleep(0.5)
 
-# ser.write(b'VOLT:TRIG MAX\n')
-# ser.write(b'CURR:TRIG MAX\n')
-
-# ser.write(b'CURR 1\n')
-# ser.write(b'VOLT 10\n')
-
+ser.write(b'VOLT:TRIG MAX\n')
+time.sleep(0.5)
+ser.write(b'CURR:TRIG MAX\n')
+time.sleep(0.5)
+ser.write(b'CURR 2\n')
+time.sleep(0.5)
+ser.write(b'VOLT 10\n')
+time.sleep(0.5)
 ser.write(b'OUTP:START\n')
-
+time.sleep(0.5)
 # time.sleep(0.5)
 # ser.write(b'CURR 1\n')
 
