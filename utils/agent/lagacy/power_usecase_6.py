@@ -19,7 +19,6 @@ def set_pin (CS, SCK, SO, UNIT):
     GPIO.setup(SO, GPIO.IN)
 
 def read_temp(cs_no):
-    
     GPIO.output(cs_no, GPIO.LOW)
     time.sleep(0.002)
     GPIO.output(cs_no, GPIO.HIGH)
