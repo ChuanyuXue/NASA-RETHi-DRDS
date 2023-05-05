@@ -7,8 +7,15 @@ import time
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 flag = s.connect(("192.168.10.98", 50505))
+# time.sleep(1)
+# s.sendall('INP:START\n'.encode())
 
-s.sendall('INP:START\n'.encode())
+# s.sendall('OUTP:START\n'.encode())
+
+# s.sendall('INP:STOP\n'.encode())
+
+# s.sendall('OUTP:STOP\n'.encode())
+
 
 # s.sendall('CONF:REST 1\n'.encode())
 
@@ -21,18 +28,18 @@ s.sendall('INP:START\n'.encode())
 
 # s.sendall('VOLT 1\n'.encode())
 # time.sleep(0.1)
-# s.sendall('CURR 1\n'.encode())
+# s.sendall('CURR 0.7\n'.encode())
 # time.sleep(0.1
 
-time.sleep(0.1)
-print("Into the loop")
+# time.sleep(0.1)
+# print("Into the loop")
 
-while True:
-    s.sendall('MEAS:VOLT?\n'.encode())
-    volt = float(s.recv(4096).decode().strip())
+# while True:
+#     s.sendall('MEAS:VOLT?\n'.encode())
+#     volt = float(s.recv(4096).decode().strip())
 
-    s.sendall('MEAS:CURR?\n'.encode())
-    curr = float(s.recv(4096).decode().strip())
+#     s.sendall('MEAS:CURR?\n'.encode())
+#     curr = float(s.recv(4096).decode().strip())
 
-    print(f"Voltage: {volt:4.5f} V ---- Current: {curr:4.5f} A")
-    time.sleep(1)
+#     print(f"Voltage: {volt:4.5f} V ---- Current: {curr:4.5f} A")
+#     time.sleep(1)

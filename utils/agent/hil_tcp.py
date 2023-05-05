@@ -38,11 +38,11 @@ class hil_tcp:
         time.sleep(0.1)
     
     def start(self):
-        self.conn.sendall(b'OUTP:START\n')
+        self.conn.sendall(b'INP:START\n')
         time.sleep(0.1)
     
     def stop(self):
-        self.conn.sendall(b'OUTP:STOP\n')
+        self.conn.sendall(b'INP:STOP\n')
         time.sleep(0.1)
 
     def get_voltage(self):
