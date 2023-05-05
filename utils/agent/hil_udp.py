@@ -4,6 +4,13 @@ import sys
 import time
 from threading import Thread
 
+def send(sock, ip, port, data):
+    '''
+    sock is like:
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    '''
+    packed_data = struct.pack('d' * len(data), *data)
+    sock.sendto(packed_data, (ip, port))
 
 class hil_udp(Thread):
     def __init__(self, local_ip, local_port):
@@ -11,14 +18,6 @@ class hil_udp(Thread):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind((local_ip, local_port))
         self.buffer = []
-
-    def send(self, ip, port, data):
-        '''
-        sock is like:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        '''
-        packed_data = struct.pack('d' * len(data), *data)
-        self.sock.sendto(packed_data, (ip, port))
 
     def receive(self, size=1):
         '''
