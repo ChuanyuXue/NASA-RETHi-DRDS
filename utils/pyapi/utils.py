@@ -12,7 +12,7 @@ Date:
 
 from calendar import c
 from ctypes import *
-from curses.ascii import SUB
+# from curses.ascii import SUB
 
 HEADER_LEN = 16
 SERVICE_HEADER_LEN = 6

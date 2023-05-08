@@ -1,10 +1,11 @@
 ## This program acts as a gateway on RaspberryPi for ETH32 A/D converter
 ## It listens the UDP packets from Simulink 
 ## and use the eth32 API to send the command to A/D converter
+import sys
+sys.path.append("../")
 
-from pyapi.utils import Header, Packet
+from pyapi import Packet
 from ctypes import *
-import time
 from struct import error, pack
 import subprocess
 import socket

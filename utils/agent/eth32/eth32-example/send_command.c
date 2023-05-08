@@ -8,18 +8,22 @@
 #include <unistd.h>
 #include "eth32.h"
 
+// Usage: ./receive_state <ip> <pin> <value>
+
 int main(int argc, char *argv[])
 {
 	char hostname[200];
 	int eth32result;
 	eth32 handle;
 
-	strcpy(hostname, "192.168.0.64");
+	char *ip = argv[1];
+	strcpy(hostname, ip);
 
-	char *pin_arg = argv[1];
+	char *pin_arg = argv[2];
 	int pin = atoi(pin_arg);
-	char *direction_arg = argv[2];
-	int direction = atoi(direction_arg);
+	// char *direction_arg = argv[3];
+	// int direction = atoi(direction_arg);
+	int direction = 1;
 	char *value_arg = argv[3];
 	int value = atoi(value_arg);
 

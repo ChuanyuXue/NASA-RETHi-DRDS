@@ -8,9 +8,7 @@
 #include <unistd.h>
 #include "eth32.h"
 
-// void voltage_monitor(eth32 handle, eth32_event *event, void *extra){
-
-// }
+// Usage: ./receive_state <ip> <pin>
 
 int main(int argc, char *argv[])
 {
@@ -18,9 +16,10 @@ int main(int argc, char *argv[])
 	int eth32result;
 	eth32 handle;
 
-	strcpy(hostname, "192.168.0.64");
+	char *ip = argv[1];
+	strcpy(hostname, ip);
 
-	char *pin_arg = argv[1];
+	char *pin_arg = argv[2];
 	int pin = atoi(pin_arg);
 
 	int direction = 0;
