@@ -19,8 +19,8 @@ class Agent:
     def __init__(self, local_ip = None, remote_ip = None):
         self.local_ip = "0.0.0.0"
         self.local_ports = {
-            "L1_Votage": 10001,
-            "L1_Current": 10002,
+            "L1_Current": 10001,
+            "L1_Votage": 10002,
             "Swith_Compre": 10003,
             "Swith_Heatpad": 10004,
         }
@@ -92,6 +92,7 @@ class Agent:
                 for data_name, sock in self.OpalRT_udp.items():
                     data = sock.receive_latest()
                     if data_name == "L1_Current" and data != None:
+                        print("Set-point", round(data[0], 2))
                         self.Load_1.set_current(round(data[0], 2))
                 time.sleep(0.5)
 
