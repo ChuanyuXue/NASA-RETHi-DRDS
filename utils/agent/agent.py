@@ -129,7 +129,7 @@ class Agent:
             try:
                 temp = self.Temp_Sensor.read_temp()
                 send(self.udp_sock, self.remote_ip, self.local_ports["Temp_1"], [temp])
-
+                print("Temp_1 --> Temperature: %f"%(temp))
                 ## Get the command from OpalRT
                 for data_name, sock in self.OpalRT_udp.items():
                     data = sock.receive_latest()
