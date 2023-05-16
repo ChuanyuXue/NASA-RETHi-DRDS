@@ -33,12 +33,12 @@ int main(int argc, char *argv[])
 	// printf("%d\n", eth32result);
 
 	// printf("Set up the direction: \n");
-	eth32result = eth32_set_direction_bit(handle, 3, pin, direction);
+	eth32result = eth32_set_direction_bit(handle, 0, pin, direction);
 
 	// printf("%d\n", eth32result);
 
 	// printf("Change the voltage to on pin %d as value %d \n", pin, value);
-	eth32result = eth32_output_bit(handle, 3, pin, value);
+	eth32result = eth32_output_bit(handle, 0, pin, value);
 
 	// printf("%d\n", eth32result);
 	// Close the board and exit.

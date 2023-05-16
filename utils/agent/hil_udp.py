@@ -62,7 +62,6 @@ if __name__ == '__main__':
     # elif sys.argv[1] == 'r':
     #     print(receive(get_recv_socket("localhost", 54113), 3))
 
-
     listenr = hil_udp("0.0.0.0", 10003)
     listenr.start()
     while True:
