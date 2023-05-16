@@ -38,11 +38,6 @@ class Agent:
         self.remote_ip = remote_ip
         self.remote_ports = {}
 
-        self.PV_simulator = hil_serial("/dev/ttyUSB0")
-        self.Amplifier = hil_serial("/dev/ttyUSB1")
-        self.Load_1 = hil_tcp("192.168.10.98", port=50505)
-        self.Temp_Sensor = hil_gpio()
-
         self.udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.OpalRT_udp = {
             data_name: hil_udp(self.local_ip, self.local_ports[data_name])
@@ -61,6 +56,9 @@ class Agent:
         self.udp_sock.close()
     
     def power_agent(self):
+        self.PV_simulator = hil_serial("/dev/ttyUSB0")
+        self.Amplifier = hil_serial("/dev/ttyUSB1")
+        self.Load_1 = hil_tcp("192.168.10.98", port=50505)
         #### Don't set trigger!!!!!!!
         # self.PV_simulator.set_voltage_trigger("MAX")
         # self.PV_simulator.set_current_trigger("MAX")
@@ -123,6 +121,7 @@ class Agent:
         self.Load_1.stop()
 
     def str_agent(self):
+        self.Temp_Sensor = hil_gpio()
         for data_name in self.OpalRT_udp:
             self.OpalRT_udp[data_name].start()
         while True:            
