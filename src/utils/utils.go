@@ -45,6 +45,14 @@ var SYSTEM_ID = map[string]uint8{
 	"EXT":   7,
 }
 
+var TIME_OFFSET = map[string]uint64{
+	"0":   1672574400000,
+	"45":  1672941600000,
+	"90":  1673222400000,
+	"135": 1673589600000,
+	"180": 1673870400000,
+}
+
 // ----------- Message Type
 const (
 	MSG_INNER uint8 = 0

@@ -79,7 +79,8 @@ services:
 
       DS_LOCAL_LOOP_HABITAT: ":65531"
       DS_REMOTE_LOOP_HABITAT: "host.docker.internal:65533"
-      # DS_REMOTE_LOOP_HABITAT: "rethi-c2:65533"
+
+      DS_TIMEOFFSET: "0"
 
       DB_NAME_GROUND: ground
       DB_USER_GROUND: uu

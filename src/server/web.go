@@ -336,6 +336,7 @@ func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 		uint16(id),
 		dataMat,
 	)
+	
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -346,6 +347,7 @@ func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 		uint32(utils.RESERVED),
 		uint32(time.Now().UnixMilli()/1e3),
 		dataMat[0])
+
 	if err != nil {
 		fmt.Println(err)
 		return err

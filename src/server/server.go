@@ -34,7 +34,8 @@ type Server struct {
 	Sequence uint16
 	mu       sync.Mutex
 
-	count uint64
+	count       uint64
+	currentTime uint64
 
 	publisherRegister  map[uint16][]uint8 // publisherRegister[data_id] = [client_0, ....]
 	subscriberRegister map[uint16][]uint8 // subscriberRegister[data_id] = [client_0, ....]
@@ -76,6 +77,7 @@ func (server *Server) Init(src uint8) error {
 			fmt.Printf("%s - Received packets: %d\n", currentTime, receivedPackets)
 		}
 	}()
+
 
 	return nil
 }
@@ -153,6 +155,11 @@ func (server *Server) initService() {
 	for _, localAddr := range server.AllLocalAddr {
 		go server.listen(localAddr)
 	}
+}
+
+func (server *Server) initTimeOffset() {
+	// os.Getenv("DS_REMOTE_ADDR_"+server.Type)
+	server.currentTime = utils.TIME_OFFSET[os.Getenv("DS_TIMEOFFSET")]
 }
 
 // Send Service: Store the data info into the database
@@ -542,6 +549,7 @@ func (server *Server) handlePkt(pkt *ServicePacket) error {
 	// for _, subpkt := range pkt.Subpackets {
 	// 	fmt.Println(subpkt.DataID, subpkt.Row, subpkt.Col, subpkt.Length)
 	// }
+	
 	switch pkt.Service {
 	case utils.SER_SEND: //Send (data packet)
 		for _, subpkt := range pkt.Subpackets {
