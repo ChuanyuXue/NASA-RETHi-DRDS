@@ -59,7 +59,6 @@ def read_temp(cs_no):
 
 
 class hil_gpio:
-
     def __init__(self) -> None:
         GPIO.setmode(GPIO.BOARD)
         GPIO.setwarnings(False)
