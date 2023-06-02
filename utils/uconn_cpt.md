@@ -2,18 +2,19 @@
 
 | Name                 | ID   | Interface                         | IP                                                | Ports         | Note |
 | -------------------- | ---- | --------------------------------- | ------------------------------------------------- | ------------- | ---- |
-| Ubuntu@RPi4B         | 17   | - Ethernet<br />- WiFi<br />- USB | - Ether: 192.168.1.12<br />- WiFi: 192.168.10.121 | 20000 - 20127 |      |
-| OpalRT-Server        | 18   |                                   |                                                   |               |      |
-| OpalRT-Host          | 19   |                                   |                                                   |               |      |
+| Ubuntu@RPi4B (Power) | 17   | - Ethernet<br />- WiFi<br />- USB | - WiFi: 192.168.1.12<br />- Ether: 192.168.10.121 | 20000 - 20127 |      |
+| Ubuntu@RPi4B (Power) | 29   | - Ethernet<br />- WiFi<br />- USB | - WiFi: 192.168.1.14<br />- Ether: 192.168.10.140 |               |      |
+| OpalRT-Server        | 18   |                                   | - Ether: 192.168.10.101                           |               |      |
+| OpalRT-Host          | 19   |                                   | - Ether: 192.168.10.111                           |               |      |
 | Power Source [large] | 20   |                                   |                                                   |               |      |
 | Power Source [small] | 21   |                                   |                                                   |               |      |
-| Power Load           | 22   |                                   |                                                   |               |      |
-| A/D Converter        | 23   |                                   |                                                   |               |      |
+| Power Load           | 22   |                                   | - Ether: 192.168.10.98                            |               |      |
+| A/D Converter        | 23   |                                   | - Ether: 192.168.10.99                            |               |      |
 | Power Relay (bump)   | 24   |                                   |                                                   |               |      |
 | Pressure Sensor      | 25   |                                   |                                                   |               |      |
 | Thermal Couple       | 26   |                                   |                                                   |               |      |
 | Str-Server           | 27   |                                   |                                                   |               |      |
-| Robotic Arm          | 28   |                                   |                                                   |               |      |
+| Robotic Arm          | 28   |                                   | - Ether: 192.168.10.119                           |               |      |
 
 
 
