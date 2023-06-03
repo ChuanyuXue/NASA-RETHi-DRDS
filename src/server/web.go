@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -52,10 +53,22 @@ type WebServer struct {
 	bufferOutput chan *VisualData
 
 	CommandSequnce map[uint16]uint16
+	currentTime    uint64
+	simulationTime uint64
 
 	upgrader  websocket.Upgrader
 	DBHandler *handler.Handler
 	UDPServer *Server
+}
+
+func (server *WebServer) initTimeOffset() {
+	// os.Getenv("DS_REMOTE_ADDR_"+server.Type)
+	server.currentTime = utils.TIME_OFFSET[os.Getenv("DS_TIMEOFFSET")]
+	simuTime, err := strconv.ParseUint(os.Getenv("DS_SIMULATIONTIME"), 10, 64)
+	if err != nil {
+		fmt.Println(err)
+	}
+	server.simulationTime = simuTime
 }
 
 // Init function initializes the web server
@@ -81,6 +94,8 @@ func (server *WebServer) Init(id uint8, udpServer *Server) error {
 		fmt.Println(err)
 		return err
 	}
+
+	server.initTimeOffset()
 
 	return nil
 }
@@ -179,7 +194,7 @@ func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
 			return nil
 		}
 		currentTime := server.DBHandler.QueryLastSynt(id)
-		_, timeVec, dataMat, err := server.DBHandler.ReadRange(id, lastTime, currentTime)
+		timeVec, _, dataMat, err := server.DBHandler.ReadRange(id, lastTime, currentTime)
 		if err != nil {
 			fmt.Println(err)
 			return err
@@ -187,7 +202,7 @@ func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
 		for i, t := range timeVec {
 			server.writeBufferOutput(
 				id,
-				t,
+				(uint64(t) / server.simulationTime) + uint64(server.currentTime),
 				dataMat[i],
 			)
 		}
@@ -336,7 +351,7 @@ func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 		uint16(id),
 		dataMat,
 	)
-	
+
 	if err != nil {
 		fmt.Println(err)
 		return err

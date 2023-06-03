@@ -35,8 +35,6 @@ type Server struct {
 	mu       sync.Mutex
 
 	count       uint64
-	currentTime uint64
-
 	publisherRegister  map[uint16][]uint8 // publisherRegister[data_id] = [client_0, ....]
 	subscriberRegister map[uint16][]uint8 // subscriberRegister[data_id] = [client_0, ....]
 }
@@ -157,10 +155,6 @@ func (server *Server) initService() {
 	}
 }
 
-func (server *Server) initTimeOffset() {
-	// os.Getenv("DS_REMOTE_ADDR_"+server.Type)
-	server.currentTime = utils.TIME_OFFSET[os.Getenv("DS_TIMEOFFSET")]
-}
 
 // Send Service: Store the data info into the database
 // Note that Send func is different from send. send is a private func to send the data to one remote client.

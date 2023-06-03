@@ -81,6 +81,7 @@ services:
       DS_REMOTE_LOOP_HABITAT: "host.docker.internal:65533"
 
       DS_TIMEOFFSET: "0"
+      DS_SIMULATIONTIME: "1000"
 
       DB_NAME_GROUND: ground
       DB_USER_GROUND: uu
