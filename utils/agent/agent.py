@@ -98,19 +98,12 @@ class Agent:
                 send(self.udp_sock, self.remote_ip, self.local_ports["L1_Voltage"], [volt])
                 print("Load_1 --> Voltage: %f, Current: %f"%(volt, curr))
 
-                _, pres = read_analog("192.168.10.99", 1)
-                send(self.udp_sock, self.remote_ip, self.local_ports["Pressure_1"], [pres * 0.7])
-                print("Pressure_1 --> Pressure: %f"%(pres * 0.7))
-
                 ## Get the command from OpalRT
                 for data_name, sock in self.OpalRT_udp.items():
                     data = sock.receive_latest()
                     if data_name == "L1_Current_Set" and data != None:
                         print("Set-point", round(data[0], 2))
                         self.Load_1.set_current(round(data[0], 2))
-                    if data_name == "Swith_Compre" and data != None:
-                        print("Set-point", round(data[0], 2))
-                        write_analog("192.168.10.99", 0, int(data[0]))
                 time.sleep(0.5)
 
             except KeyboardInterrupt:
@@ -122,6 +115,10 @@ class Agent:
 
     def str_agent(self):
         self.Temp_Sensor = hil_gpio()
+        self.Press_Sensor_Recv = hil_adc('/dev/ttyACM0')
+        self.Press_Sensor_Send = hil_adc('/dev/ttyACM1')
+        self.Press_Sensor_Send.allOutput()
+
         for data_name in self.OpalRT_udp:
             self.OpalRT_udp[data_name].start()
         while True:            
@@ -129,10 +126,32 @@ class Agent:
                 temp = self.Temp_Sensor.read_temp()
                 send(self.udp_sock, self.remote_ip, self.local_ports["Temp_1"], [temp])
                 print("Temp_1 --> Temperature: %f"%(temp))
+
+                pres = self.Press_Sensor_Recv.readAnalog()
+                send(self.udp_sock, self.remote_ip, self.local_ports["Pressure_1"], [pres * 0.7])
+                print("Pressure_1 --> Pressure: %f"%(pres * 0.7))
+
                 ## Get the command from OpalRT
                 for data_name, sock in self.OpalRT_udp.items():
                     data = sock.receive_latest()
-                    pass
+                    if data_name == "Swith_Compre" and data != None:
+                        if data[0] == 0:
+                            self.Press_Sensor_Send.clearPin(7)
+                        elif data[0] == 1:
+                            self.Press_Sensor_Send.setPin(7)
+                        else:
+                            print("Wrong command")
+                        print("Set-point Compress", round(data[0], 2))
+                    elif data_name == "Swith_Heatpad" and data != None:
+                        if data[0] == 0:
+                            self.Press_Sensor_Send.clearPin(6)
+                        elif data[0] == 1:
+                            self.Press_Sensor_Send.setPin(6)
+                        else:
+                            print("Wrong command")
+                        print("Set-point Headpad", round(data[0], 2))
+                    elif data != None:
+                        print("Other Command ->", data_name, data[0])
                 time.sleep(0.5)
 
             except KeyboardInterrupt:
@@ -147,7 +166,6 @@ class Agent:
             print("Invalid argument")
 
 if __name__ == '__main__':
-    
     # for i in range(5, 16):
     #     hil_udp.send(sock, "192.168.10.101", 10000 + i,  [i])
     agent = Agent(remote_ip="192.168.10.101")

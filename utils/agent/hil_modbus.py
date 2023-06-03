@@ -4,7 +4,6 @@ import modbus_tk
 
 
 class hil_modbus:
-
     def __init__(self, port="/dev/ttyUSB0") -> None:
         self.PORT = port
 

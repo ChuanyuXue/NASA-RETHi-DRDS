@@ -10,7 +10,6 @@ MODE_MAP = {"rotary": 0, "keypad": 1, "ext_pgm": 2, "remote": 3}
 
 
 class hil_serial:
-
     def __init__(self, device="/dev/ttyUSB0"):
         self.ser = serial.Serial(device,
                                  19200,
