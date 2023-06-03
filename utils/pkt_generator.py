@@ -6,7 +6,8 @@ import json
 import random
 
 DURATION = 10
-SIMULATION_TIME = 4000
+SIMULATION_TIME = 1000
+SLOW_DOWN = 100
 
 ins = api.API(
     local_ip="0.0.0.0",
@@ -31,12 +32,12 @@ with open("../db_info_v6.json") as f:
             if data["data_id"] in [10001]:
                 value = [random.random() for i in range(data["data_size"])]
                 ins.send(
-                    synt=synt,
+                    synt=synt * SIMULATION_TIME,
                     id=data["data_id"],
                     value=value,
                     priority=3,
                 )
-        time.sleep(1 / SIMULATION_TIME)
+        time.sleep(1 / SIMULATION_TIME * SLOW_DOWN)
         print("Simulation time -----------", synt)
 ins.close()
 
