@@ -308,7 +308,7 @@ To send asynchronous data, first set up headers:
 ======= ========= === === ====== ====
 DATA_ID TIME_DIFF ROW COL LENGTH DATA
 ======= ========= === === ====== ====
--                                -
+-       -         -   -   -      -
 ======= ========= === === ====== ====
 
 Finally send this packet by UDP channel to server.
@@ -342,7 +342,7 @@ To require asynchronous data, first set up headers:
 ======= ================ === === ====== ====
 Data ID Time Diff        Row Col Length Data
 ======= ================ === === ====== ====
-Data ID Request Duration                -
+Data ID Request Duration -   -   -      -
 ======= ================ === === ====== ====
 
 Then send this packet by UDP channel to server.
@@ -386,7 +386,7 @@ registering publish first:
 ======= ========= === === ====== ====
 Data ID Time Diff Row Col Length Data
 ======= ========= === === ====== ====
-Data ID Data Rate                -
+Data ID Data Rate -   -   -      -
 ======= ========= === === ====== ====
 
 Keep listening from server, a **same** packet will be send back which
@@ -418,7 +418,7 @@ To terminate publishing, send to server:
 ======= ========= === === ====== ====
 Data ID Time Diff Row Col Length Data
 ======= ========= === === ====== ====
-Data ID 0                        -
+Data ID Data rate -   -   -      -
 ======= ========= === === ====== ====
 
 .. _35-subscribe:
@@ -450,7 +450,7 @@ subscribe first:
 ======= ========= === === ====== ====
 Data ID Time Diff Row Col Length Data
 ======= ========= === === ====== ====
-Data ID Data rate                -
+Data ID Data rate -   -   -      -
 ======= ========= === === ====== ====
 
 Next keep listening from server, a continous packet flow followd by
@@ -480,7 +480,7 @@ To terminate Subscribe function, send
 ======= ========= === === ====== ====
 Data ID Time Diff Row Col Length Data
 ======= ========= === === ====== ====
-Data ID 0                        -
+Data ID 0         -   -   -      -
 ======= ========= === === ====== ====
 
 .. _4-mcvt-integration-guide:
