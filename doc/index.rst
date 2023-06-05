@@ -35,18 +35,16 @@ the integration with a single ``docker-compose up`` command.
 2.1 DS - Overall architecture of MCVT
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. raw:: html
-
-   <img src="../img/HMS-Design-v6.svg">
+.. image:: ../img/HMS-Design-v6.svg
 
 .. _22-ds---overall-architecture-of-cpt:
+
+
 
 2.2 DS - Overall architecture of CPT
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. raw:: html
-
-   <img src="../img/cpt.jpg">
+.. image:: ../img/cpt.jpg
 
 .. _22-ds---data-flow-within-drds:
 
@@ -55,39 +53,29 @@ the integration with a single ``docker-compose up`` command.
 
 **UDP Server:**
 
-.. raw:: html
-
-   <img src="../img/udp_server.drawio.jpg" style="zoom:50%;" >
+.. image:: ../img/udp_server.drawio.jpg
 
 **Web Server:**
 
-.. raw:: html
-
-   <img src="../img/webserver.drawio.jpg" style="zoom:50%;" >
+.. image:: ../img/webserver.drawio.jpg
 
 **Database Handler:**
 
-.. raw:: html
-
-   <img src="../img/handler.drawio.jpg" style="zoom:50%;" >
+.. image:: ../img/handler.drawio.jpg
 
 .. _23-ds---database-schema:
 
 2.3 DS - Database schema
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. raw:: html
-
-   <img src="../img/DDS_SCHEMA.drawio.svg" style="zoom:80%;"  >
+.. image:: ../img/DDS_SCHEMA.drawio.svg
 
 .. _24-ds---program-architecture:
 
 2.4 DS - Program architecture
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. raw:: html
-
-   <img src="../img/DS_UML.drawio.svg">
+.. image:: ../img/DS_UML.drawio.svg
 
 .. _3-service-protocol:
 
