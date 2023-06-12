@@ -63,12 +63,25 @@ type WebServer struct {
 
 func (server *WebServer) initTimeOffset() {
 	// os.Getenv("DS_REMOTE_ADDR_"+server.Type)
-	server.currentTime = utils.TIME_OFFSET[os.Getenv("DS_TIMEOFFSET")]
-	simuTime, err := strconv.ParseUint(os.Getenv("DS_SIMULATIONTIME"), 10, 64)
-	if err != nil {
-		fmt.Println(err)
+
+	var defaultTimeOffset = "0"
+	var defaultSimulationTime = 1000
+
+	timeOffsetStr := os.Getenv("DS_TIMEOFFSET")
+	if timeOffsetStr == "" {
+		server.currentTime = utils.TIME_OFFSET[defaultTimeOffset]
+	} else {
+		server.currentTime = utils.TIME_OFFSET[timeOffsetStr]
 	}
-	server.simulationTime = simuTime
+
+	server.currentTime = utils.TIME_OFFSET[os.Getenv("DS_TIMEOFFSET")]
+
+	simulationTimeStr := os.Getenv("DS_SIMULATIONTIME")
+	if simulationTimeStr == "" {
+		server.simulationTime = uint64(defaultSimulationTime)
+	} else {
+		server.simulationTime = uint64(defaultSimulationTime)
+	}
 }
 
 // Init function initializes the web server
@@ -202,7 +215,7 @@ func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
 		for i, t := range timeVec {
 			server.writeBufferOutput(
 				id,
-				(uint64(t) / server.simulationTime)+uint64(server.currentTime),
+				(uint64(t)/server.simulationTime)+uint64(server.currentTime),
 				dataMat[i],
 			)
 		}
