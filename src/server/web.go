@@ -43,6 +43,16 @@ type MohsenMsg struct {
 	Value4 uint64 `jaso:"value4"`
 }
 
+type CommandEchoData struct {
+	CommandID       uint16 `json:"command_id"`
+	CommandSequence uint16 `json:"sequence"`
+	Value0          uint64 `json:"value0"`
+	Value1          uint64 `json:"value1"`
+	Value2          uint64 `json:"value2"`
+	Value3          uint64 `json:"value3"`
+	Value4          uint64 `json:"value4"`
+}
+
 type WebServer struct {
 	utils.JsonStandard
 	utils.ServiceStandard
@@ -55,6 +65,8 @@ type WebServer struct {
 	CommandSequnce map[uint16]uint16
 	currentTime    uint64
 	simulationTime uint64
+
+	commandEchoBuffer []CommandEchoData
 
 	upgrader  websocket.Upgrader
 	DBHandler *handler.Handler
@@ -125,7 +137,9 @@ func (server *WebServer) initHttphandler() error {
 	app.USE(middlewares.CORS(middlewares.CORSOpt{}))
 	app.GET("/ws", server.RealtimeProcess)
 	app.GET("/history/:id", server.HistoryProcess)
+
 	app.POST("/api/c2/:id", server.CommandProcess)
+	app.GET("/api/echo", server.CommandEcho)
 	app.OPTIONS("/api/c2/:id", sgo.PreflightHandler)
 
 	go app.Run(":9999")
@@ -370,16 +384,34 @@ func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 		return err
 	}
 
+	// Save the command to the database accroding to the command-ID
 	err = server.UDPServer.Send(
 		uint16(id),
 		uint32(utils.RESERVED),
 		uint32(time.Now().UnixMilli()/1e3),
 		dataMat[0])
 
+	server.commandEchoBuffer = append(server.commandEchoBuffer, CommandEchoData{
+		CommandID:       uint16(id),
+		CommandSequence: seq,
+		Value0:          msg.Value0,
+		Value1:          msg.Value1,
+		Value2:          msg.Value2,
+		Value3:          msg.Value3,
+		Value4:          msg.Value4,
+	})
+
+	// Save the command to the
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 
 	return ctx.Text(200, "command received and forwarded")
+}
+
+// This function reterives all history command and get back to the HCI
+
+func (server *WebServer) CommandEcho(ctx *sgo.Context) error {
+	return ctx.JSON(200, 1, "success", server.commandEchoBuffer)
 }
