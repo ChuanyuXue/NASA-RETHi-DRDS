@@ -61,7 +61,7 @@ services:
       - comm-network
 
   data_service:
-    image: xuechuanyu/rethi-drds
+    image: xuechuanyu/rethi-drds:main
     ports:
       - "20000-20001:20000-20001/udp"
       - "65530-65531:65530-65531/udp"
@@ -87,7 +87,10 @@ services:
       DB_NAME_HABITAT: habitat
       DB_USER_HABITAT: uu
       DB_PASSWORD_HABITAT: password
-      version: "3.7"
+
+      DB_PRODUCER_NUM: "2000"
+      DB_CONSUMER_NUM: "2000"
+
     volumes:
       - type: bind
         # source: ./db_info_v6.json

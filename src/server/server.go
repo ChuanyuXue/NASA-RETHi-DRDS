@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"os"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -26,6 +27,9 @@ type Server struct {
 
 	LocalSystemID uint8
 	AllLocalAddr  []*net.UDPAddr
+
+	UDPProcduerNums uint16
+	UDPConsumerNums uint16
 
 	AllClientSystemID []uint8
 	AllClientAddr     map[uint8]*net.UDPAddr
@@ -149,6 +153,20 @@ func (server *Server) initService() {
 	server.publisherRegister = make(map[uint16][]uint8)  // publisherRegister[data_id] = [client_0, ....]
 	server.subscriberRegister = make(map[uint16][]uint8) // subscriberRegister[data_id] = [client_0, ....]
 	server.Buffer = make(chan *[utils.PKTLEN]byte, utils.BUFFLEN)
+
+	producerNum, err := strconv.ParseUint(os.Getenv("DB_PRODUCER_NUM"), 10, 16)
+	if err != nil {
+		server.UDPProcduerNums = utils.PROCUDER_NUMS
+	} else {
+		server.UDPProcduerNums = uint16(producerNum)
+	}
+
+	consumerNum, err := strconv.ParseUint(os.Getenv("DB_CONSUMER_NUM"), 10, 16)
+	if err != nil {
+		server.UDPConsumerNums = utils.CONSUMER_NUMS
+	} else {
+		server.UDPConsumerNums = uint16(consumerNum)
+	}
 
 	for _, localAddr := range server.AllLocalAddr {
 		go server.listen(localAddr)
@@ -484,7 +502,7 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, service ui
 //	error: the error message
 func (server *Server) listen(addr *net.UDPAddr) {
 	// consumer
-	for i := 0; i < int(utils.CONSUMER_NUMS); i++ {
+	for i := 0; i < int(server.UDPConsumerNums); i++ {
 		go func() {
 			for {
 				select {
@@ -502,7 +520,7 @@ func (server *Server) listen(addr *net.UDPAddr) {
 	}
 
 	conn, _ := net.ListenUDP("udp", addr)
-	for i := 0; i < int(utils.PROCUDER_NUMS); i++ {
+	for i := 0; i < int(server.UDPProcduerNums); i++ {
 		go func() {
 			for {
 				var buf [utils.PKTLEN]byte

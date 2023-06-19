@@ -566,10 +566,19 @@ func (handler *Handler) QueryFirstSynt(id uint16) uint32 {
 }
 
 func (handler *Handler) WriteToBuffer(id uint16, data *Data) error {
+	// Check if the dataID is valid
+	if handler.DataBuffer[id] == nil {
+		// fmt.Printf("[Error] Unexpected Data with ID %d is received \n", id)
+		// return errors.New("data id is invalid")
+		return nil
+	}
+
 	// Check if the buffer is full
 	if len(handler.DataBuffer[id]) >= int(utils.BUFFLEN) {
+		fmt.Println("Buffer is full")
 		return errors.New("buffer is full")
 	}
+	// Check if
 	handler.DataBuffer[id] <- data // Push the new data
 	return nil
 }

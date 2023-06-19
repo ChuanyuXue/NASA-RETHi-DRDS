@@ -51,8 +51,6 @@ type WebServer struct {
 
 	bufferOutput chan *VisualData
 
-	CommandSequnce map[uint16]uint16
-
 	upgrader  websocket.Upgrader
 	DBHandler *handler.Handler
 	UDPServer *Server
@@ -73,7 +71,6 @@ func (server *WebServer) Init(id uint8, udpServer *Server) error {
 	// WebServe shared the same handler with the udp server
 	server.DBHandler = server.UDPServer.handler
 	server.bufferOutput = make(chan *VisualData, utils.OUTPUT_BUFFER_LEN)
-	server.CommandSequnce = make(map[uint16]uint16)
 
 	//------ init http handler
 	err := server.initHttphandler()
@@ -295,24 +292,14 @@ func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 	var dataMat [][]float64
 	var rawData []float64
 
-	seq, ok := server.CommandSequnce[uint16(id)]
-	if !ok {
-		server.CommandSequnce[uint16(id)] = 0
-		seq = 0
-	}
-
-	// I don't like this design that lets me modify payload, but it is what it is
 	rawData = append(
 		rawData,
-		float64(msg.Value0+uint64(seq)*1e7),
+		float64(msg.Value0),
 		float64(msg.Value1),
 		float64(msg.Value2),
 		float64(msg.Value3),
 		float64(msg.Value4),
 	)
-
-	server.CommandSequnce[uint16(id)]++
-
 	// rawData = append(
 	// 	rawData,
 	// 	msg.DoOrCancel,
@@ -346,6 +333,7 @@ func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 		uint32(utils.RESERVED),
 		uint32(time.Now().UnixMilli()/1e3),
 		dataMat[0])
+
 	if err != nil {
 		fmt.Println(err)
 		return err
