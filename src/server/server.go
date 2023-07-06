@@ -40,8 +40,10 @@ type Server struct {
 
 	count uint64
 
-	publisherRegister  map[uint16][]uint8 // publisherRegister[data_id] = [client_0, ....]
-	subscriberRegister map[uint16][]uint8 // subscriberRegister[data_id] = [client_0, ....]
+	publisherRegister      map[uint16][]uint8 // publisherRegister[data_id] = [client_0, ....]
+	publisherRegisterLock  sync.RWMutex
+	subscriberRegister     map[uint16][]uint8 // subscriberRegister[data_id] = [client_0, ....]
+	subscriberRegisterLock sync.RWMutex
 }
 
 // Init function initializes the server by setting its source, client sources,
@@ -152,6 +154,8 @@ func (server *Server) initService() {
 	server.Sequence = 0
 	server.publisherRegister = make(map[uint16][]uint8)  // publisherRegister[data_id] = [client_0, ....]
 	server.subscriberRegister = make(map[uint16][]uint8) // subscriberRegister[data_id] = [client_0, ....]
+	server.publisherRegisterLock = sync.RWMutex{}
+	server.subscriberRegisterLock = sync.RWMutex{}
 	server.Buffer = make(chan *[utils.PKTLEN]byte, utils.BUFFLEN)
 
 	producerNum, err := strconv.ParseUint(os.Getenv("DB_PRODUCER_NUM"), 10, 16)
@@ -289,7 +293,11 @@ func (server *Server) RequestRange(id uint16, timeStart uint32, timeDiff uint16,
 //
 //	error: the error message
 func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt uint32, physical_time uint32, rawData []float64) error {
-	if utils.Uint8Contains(server.publisherRegister[id], dst) { // if publisher registered
+	server.publisherRegisterLock.RLock()
+	isPublisherRegistered := utils.Uint8Contains(server.publisherRegister[id], dst)
+	server.publisherRegisterLock.RUnlock()
+
+	if isPublisherRegistered { // if publisher registered
 		// if para2 is stop streaming
 		lastSynt := server.handler.QueryLastSynt(id)
 		if synt < lastSynt {
@@ -312,7 +320,9 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 		}
 
 	} else {
+		server.publisherRegisterLock.Lock()
 		server.publisherRegister[id] = append(server.publisherRegister[id], dst)
+		server.publisherRegisterLock.Unlock()
 
 		server.sendOpt(dst, utils.PRIORITY_HIGHT, synt, utils.SER_RESPONSE,
 			utils.FLAG_SINGLE, utils.RESERVED, utils.RESERVED)
@@ -333,7 +343,10 @@ func (server *Server) Publish(id uint16, dst uint8, rows uint8, cols uint8, synt
 //
 //	error: the error message
 func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) error {
-	if utils.Uint8Contains(server.subscriberRegister[id], dst) { // if subscriber registered
+	server.subscriberRegisterLock.RLock()
+	isSubscriberRegistered := utils.Uint8Contains(server.subscriberRegister[id], dst)
+	server.subscriberRegisterLock.RUnlock()
+	if isSubscriberRegistered { // if subscriber registered
 		lastSynt := server.handler.QueryLastSynt(id)
 		if synt <= lastSynt {
 			dataMap := make([][]float64, 0)
@@ -343,11 +356,14 @@ func (server *Server) Subscribe(id uint16, dst uint8, synt uint32, rate uint16) 
 			}
 			server.sendPkt(dst, utils.PRIORITY_MEDIUM, synt, utils.FLAG_SINGLE, id, dataMap)
 		}
-
 	} else {
+		server.subscriberRegisterLock.Lock()
 		server.subscriberRegister[id] = append(server.subscriberRegister[id], dst)
-		server.sendOpt(dst, utils.PRIORITY_HIGHT, synt,
-			utils.SER_RESPONSE, utils.FLAG_SINGLE, utils.RESERVED, utils.RESERVED)
+		server.subscriberRegisterLock.Unlock()
+	}
+	err := server.sendOpt(dst, utils.PRIORITY_HIGHT, synt, utils.SER_RESPONSE, utils.FLAG_SINGLE, utils.RESERVED, utils.RESERVED)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -478,6 +494,10 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, service ui
 	}
 	defer conn.Close()
 
+	fmt.Println("[DEBUG]: Send OPT to", dst)
+	fmt.Println("[DEBUG]:", dstAddr.IP)
+	fmt.Println("[DEBUG]:", dstAddr.Port)
+
 	_, err = conn.Write(pkt.ToServiceBuf())
 	if err != nil {
 		fmt.Println("Failed to send data to clients")
@@ -514,7 +534,6 @@ func (server *Server) listen(addr *net.UDPAddr) {
 						fmt.Println(err)
 					}
 				}
-
 			}
 		}()
 	}
@@ -566,12 +585,18 @@ func (server *Server) handlePkt(pkt *ServicePacket) error {
 			rawData := PayloadBuf2Float(subpkt.Payload)
 			go server.Send(subpkt.DataID, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
 
-			for _, dst := range server.subscriberRegister[subpkt.DataID] {
-				var dataMat [][]float64
-				for i := 0; i < int(subpkt.Row); i++ {
-					dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
+			server.subscriberRegisterLock.RLock()
+			subscribers, ok := server.subscriberRegister[subpkt.DataID]
+			server.subscriberRegisterLock.RUnlock()
+
+			if ok {
+				for _, dst := range subscribers {
+					var dataMat [][]float64
+					for i := 0; i < int(subpkt.Row); i++ {
+						dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
+					}
+					go server.sendPkt(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
 				}
-				go server.sendPkt(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
 			}
 		}
 
@@ -601,12 +626,19 @@ func (server *Server) handlePkt(pkt *ServicePacket) error {
 			if subpkt.Length == 0 {
 				return nil
 			}
-			for _, dst := range server.subscriberRegister[subpkt.DataID] {
-				var dataMat [][]float64
-				for i := 0; i < int(subpkt.Row); i++ {
-					dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
+
+			server.subscriberRegisterLock.RLock()
+			subscribers, ok := server.subscriberRegister[subpkt.DataID]
+			server.subscriberRegisterLock.RUnlock()
+
+			if ok {
+				for _, dst := range subscribers {
+					var dataMat [][]float64
+					for i := 0; i < int(subpkt.Row); i++ {
+						dataMat = append(dataMat, rawData[i*int(subpkt.Col):(i+1)*int(subpkt.Col)])
+					}
+					go server.sendPkt(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
 				}
-				go server.sendPkt(dst, pkt.Priority, pkt.SimulinkTime, pkt.Flag, subpkt.DataID, dataMat)
 			}
 
 		}
