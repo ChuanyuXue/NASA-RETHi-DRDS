@@ -78,6 +78,15 @@ func (handler *Handler) Init(id uint8) error {
 		time.Sleep(2 * time.Second)
 	}
 
+	consumerNum, err := strconv.ParseUint(os.Getenv("DB_CONSUMER_NUM"), 10, 16)
+	if err != nil {
+		handler.DBPointer.SetMaxOpenConns(512)
+		handler.DBPointer.SetMaxIdleConns(512)
+	} else {
+		handler.DBPointer.SetMaxOpenConns(int(consumerNum * 2))
+		handler.DBPointer.SetMaxIdleConns(int(consumerNum * 2))
+	}
+
 	// Get all tables
 	query := fmt.Sprintf("SHOW TABLES from %s", handler.DBName)
 	rows, err := handler.DBPointer.Query(query)
