@@ -42,7 +42,7 @@ The core part of the DRDS is developed in the Go language and the data service A
 - **For other Language, please implement by following standards:**
 
 
-*Please following standard is only for developers to implement the API. MCVT modelers can use above already implemented API in different programming languages, more detail usages can be found in [/doc/RETHi_Communication_Network_Guide.pdf](doc/RETHi_Communication_Network_Guide.pdf)*
+*Please following standard is only for developers to implement the API. MCVT modelers can use above already implemented API in different programming languages, more detail usages can be found in the user manual [/doc/RETHi_Communication_Network_Guide.pdf](doc/RETHi_Communication_Network_Guide.pdf)*
 
 
 ### 3.1 Packet Format
