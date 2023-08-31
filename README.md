@@ -7,13 +7,13 @@ The core part of the DRDS is developed in the Go language and the data service A
 
 ## 2. Architecture
 
-### 2.1 DS - Overall architecture of MCVT
+### 2.1 Overall architecture of MCVT
 <img src="./img/HMS-Design-v6.svg">
 
-### 2.2 DS - Overall architecture of CPT
+### 2.2 Overall architecture of CPT
 <img src="./img/cpt.jpg">
 
-### 2.2 DS - Data flow within DRDS
+### 2.2 Data flow within DRDS
 
 **UDP Server:**
 
@@ -27,11 +27,10 @@ The core part of the DRDS is developed in the Go language and the data service A
 
 <img src="./img/handler.drawio.jpg" style="zoom:50%;" >
 
-### 2.3 DS - Database schema
+### 2.3 Database schema
 <img src="./img/DDS_SCHEMA.drawio.svg" style="zoom:80%;"  >
 
-
-### 2.4 DS - Program architecture
+### 2.4 Program architecture
 <img src="./img/DS_UML.drawio.svg">
 
 ## 3. Service Protocol
