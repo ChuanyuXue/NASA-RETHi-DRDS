@@ -3,7 +3,7 @@
 | Name                 | ID   | Interface                         | IP                                                | Ports         | Note |
 | -------------------- | ---- | --------------------------------- | ------------------------------------------------- | ------------- | ---- |
 | Ubuntu@RPi4B (Power) | 17   | - Ethernet<br />- WiFi<br />- USB | - WiFi: 192.168.1.12<br />- Ether: 192.168.10.121 | 20000 - 20127 |      |
-| Ubuntu@RPi4B (Power) | 29   | - Ethernet<br />- WiFi<br />- USB | - WiFi: 192.168.1.14<br />- Ether: 192.168.10.140 |               |      |
+| Ubuntu@RPi4B (Power) | 29   | - Ethernet<br />- WiFi<br />- USB | - WiFi: 192.168.1.14<br />- Ether: 192.168.10.104 |               |      |
 | OpalRT-Server        | 18   |                                   | - Ether: 192.168.10.101                           |               |      |
 | OpalRT-Host          | 19   |                                   | - Ether: 192.168.10.111                           |               |      |
 | Power Source [large] | 20   |                                   |                                                   |               |      |
