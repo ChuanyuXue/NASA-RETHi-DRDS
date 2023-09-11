@@ -204,12 +204,19 @@ func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
 // Return:
 //   - err: error
 func (server *WebServer) writeBufferOutput(dataID uint16, timestamp uint64, data []float64) error {
+	var fakeDelay = 1000 * 60 * 10
+	var fakeFactor = 0.9
 
 	for i, col := range data {
 		data := VisualData{
 			Timestamp: timestamp,
 			Value:     col,
 			ID:        fmt.Sprintf("%d.%d", dataID, i),
+		}
+
+		if dataID == 3015 {
+			data.Value = col * fakeFactor
+			data.Timestamp = timestamp + uint64(fakeDelay)
 		}
 		server.bufferOutput <- &data
 	}
@@ -237,9 +244,16 @@ func (server *WebServer) HistoryProcess(ctx *sgo.Context) error {
 		fmt.Println(err)
 		return err
 	}
+
+	var fakeDelay = 1000 * 60 * 10
+	var fakeFactor = 0.9
 	for i, t := range tVec {
 		// fmt.Println(uint64(t)*1000, vMat[i][col], strconv.Itoa(int(id))+"."+reqs[1])
 		d = VisualData{Timestamp: uint64(t), Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." + reqs[1]}
+		if id == 3015 {
+			d.Value = vMat[i][col] * fakeFactor
+			d.Timestamp = uint64(t) + uint64(fakeDelay)
+		}
 		dlist = append(dlist, d)
 	}
 	return ctx.JSON(200, 1, "success", dlist)

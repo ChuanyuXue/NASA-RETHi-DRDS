@@ -585,6 +585,10 @@ func (server *Server) handlePkt(pkt *ServicePacket) error {
 			rawData := PayloadBuf2Float(subpkt.Payload)
 			go server.Send(subpkt.DataID, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
 
+			if subpkt.DataID == 3006 {
+				go server.Send(3015, pkt.SimulinkTime+uint32(subpkt.TimeDiff), pkt.PhysicalTime, rawData)
+			}
+
 			server.subscriberRegisterLock.RLock()
 			subscribers, ok := server.subscriberRegister[subpkt.DataID]
 			server.subscriberRegisterLock.RUnlock()
