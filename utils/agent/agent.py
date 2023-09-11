@@ -13,12 +13,13 @@ from hil_udp import hil_udp, send
 from hil_adc import *
 from hil_gpio import *
 
+from subprocess import Popen
 import time
 
 
-
 class Agent:
-    def __init__(self, local_ip = None, remote_ip = None):
+
+    def __init__(self, local_ip=None, remote_ip=None):
         self.local_ip = "0.0.0.0"
         self.local_ports = {
             "L1_Current_set": 10001,
@@ -41,7 +42,7 @@ class Agent:
         self.udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.OpalRT_udp = {
             data_name: hil_udp(self.local_ip, self.local_ports[data_name])
-            for data_name in self.local_ports 
+            for data_name in self.local_ports
         }
 
     def __del__(self):
@@ -54,7 +55,7 @@ class Agent:
         for data_name in self.OpalRT_udp:
             self.OpalRT_udp[data_name].stop()
         self.udp_sock.close()
-    
+
     def power_agent(self):
         self.PV_simulator = hil_serial("/dev/ttyUSB0")
         self.Amplifier = hil_serial("/dev/ttyUSB1")
@@ -70,7 +71,7 @@ class Agent:
         # self.Amplifier.set_voltage(10)
         # self.Amplifier.set_current(1)
 
-        # self.Load_1.set_voltage(10) 
+        # self.Load_1.set_voltage(10)
         # self.Load_1.set_current(1)
 
         self.Amplifier.start()
@@ -81,22 +82,27 @@ class Agent:
         for data_name in self.OpalRT_udp:
             self.OpalRT_udp[data_name].start()
 
-        while True:            
+        while True:
             try:
                 ## Receive the data from sensors
                 volt = self.PV_simulator.get_voltage()
                 curr = self.PV_simulator.get_current()
-                send(self.udp_sock, self.remote_ip, self.local_ports["PV_Current"], [curr])
-                send(self.udp_sock, self.remote_ip, self.local_ports["PV_Voltage"], [volt])
-                print("PV_simulator --> Voltage: %f, Current: %f"%(volt, curr))
+                send(self.udp_sock, self.remote_ip,
+                     self.local_ports["PV_Current"], [curr])
+                send(self.udp_sock, self.remote_ip,
+                     self.local_ports["PV_Voltage"], [volt])
+                print("PV_simulator --> Voltage: %f, Current: %f" %
+                      (volt, curr))
                 # volt = self.Amplifier.get_voltage()
                 # curr = self.Amplifier.get_current()
                 # print("Amplifier --> Voltage: %f, Current: %f"%(volt, curr))
                 volt = self.Load_1.get_voltage()
                 curr = self.Load_1.get_current()
-                send(self.udp_sock, self.remote_ip, self.local_ports["L1_Current"], [curr])
-                send(self.udp_sock, self.remote_ip, self.local_ports["L1_Voltage"], [volt])
-                print("Load_1 --> Voltage: %f, Current: %f"%(volt, curr))
+                send(self.udp_sock, self.remote_ip,
+                     self.local_ports["L1_Current"], [curr])
+                send(self.udp_sock, self.remote_ip,
+                     self.local_ports["L1_Voltage"], [volt])
+                print("Load_1 --> Voltage: %f, Current: %f" % (volt, curr))
 
                 ## Get the command from OpalRT
                 for data_name, sock in self.OpalRT_udp.items():
@@ -121,15 +127,22 @@ class Agent:
 
         for data_name in self.OpalRT_udp:
             self.OpalRT_udp[data_name].start()
-        while True:            
+        while True:
             try:
                 temp = self.Temp_Sensor.read_temp()
-                send(self.udp_sock, self.remote_ip, self.local_ports["Temp_1"], [temp])
-                print("Temp_1 --> Temperature: %f"%(temp))
+                send(self.udp_sock, self.remote_ip, self.local_ports["Temp_1"],
+                     [temp])
+                print("Temp_1 --> Temperature: %f" % (temp))
 
                 pres = self.Press_Sensor_Recv.readAnalog()
-                send(self.udp_sock, self.remote_ip, self.local_ports["Pressure_1"], [pres * 0.7])
-                print("Pressure_1 --> Pressure: %f"%(pres * 0.7))
+                send(self.udp_sock, self.remote_ip,
+                     self.local_ports["Pressure_1"], [pres * 0.7])
+                print("Pressure_1 --> Pressure: %f" % (pres * 0.7))
+                if pres < 1.3:
+                    subprocess.Popen([
+                        "python3", "utils/agent/lagacy/robot.py",
+                        "192.168.10.180"
+                    ])
 
                 ## Get the command from OpalRT
                 for data_name, sock in self.OpalRT_udp.items():
@@ -141,6 +154,7 @@ class Agent:
                             self.Press_Sensor_Send.setPin(7)
                         else:
                             print("Wrong command")
+
                         print("Set-point Compress", round(data[0], 2))
                     elif data_name == "Swith_Heatpad" and data != None:
                         if data[0] == 0:
@@ -164,6 +178,7 @@ class Agent:
             self.str_agent()
         else:
             print("Invalid argument")
+
 
 if __name__ == '__main__':
     # for i in range(5, 16):
