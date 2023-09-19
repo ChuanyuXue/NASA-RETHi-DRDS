@@ -183,9 +183,9 @@ To send asynchronous data, first set up headers:
 | **SEQUENCE** | **LENGTH** | **SERVICE** | **FLAG**     | **OPTION_1** | **OPTION_2** | **SUBFRAME** |               |
 | -            | -          | 0x00        | 0x00         | 0x00         | 0x00         | -            |               |
 
-| DATA_ID | TIME_DIFF | ROW  | COL  | LENGTH | DATA |
-| ------- | --------- | ---- | ---- | ------ | ---- |
-| -       | -         | -    | -    | -      | -    |
+| DATA_ID | TIME_DIFF | ROW | COL | LENGTH | DATA |
+| ------- | --------- | --- | --- | ------ | ---- |
+| -       | -         | -   | -   | -      | -    |
 
 Finally send this packet by UDP channel to server.
 
@@ -203,9 +203,9 @@ To require asynchronous data, first set up headers:
 | **Sequence** | **Length** | **Service** | **Flag**     | **Opt1**    | **Opt2**     | **Subframe** |                    |
 | -            | -          | 0x01        | 0x00         | 0x00        | 0x00         | -            |                    |
 
-| Data ID | Time Diff        | Row  | Col  | Length | Data |
-| ------- | ---------------- | ---- | ---- | ------ | ---- |
-| Data ID | Request Duration | -    | -    | -      | -    |
+| Data ID | Time Diff        | Row | Col | Length | Data |
+| ------- | ---------------- | --- | --- | ------ | ---- |
+| Data ID | Request Duration | -   | -   | -      | -    |
 
 Then send this packet by UDP channel to server.
 
@@ -227,9 +227,9 @@ To publish data synchronously, set up headers and send to server for registering
 | **Sequence** | **Length** | **Service** | **Flag**     | **Opt1**    | **Opt2**     | **Subframe** |                       |
 | -            | -          | 0x02        | 0x00         | 0x00        | 0x00         | -            |                       |
 
-| Data ID | Time Diff | Row  | Col  | Length | Data |
-| ------- | --------- | ---- | ---- | ------ | ---- |
-| Data ID | Data Rate | -    | -    | -      | -    |
+| Data ID | Time Diff | Row | Col | Length | Data |
+| ------- | --------- | --- | --- | ------ | ---- |
+| Data ID | Data Rate | -   | -   | -      | -    |
 
 Keep listening from server, a **same** packet will be send back which means the client is successully registered for publish.
 
@@ -243,9 +243,9 @@ To terminate publishing, send to server:
 | **Sequence** | **Length** | **Service** | **Flag**     | **Opt1**    | **Opt2**     | **Subframe** |                     |
 | -            | -          | 0x02        | 0x00         | 0x00        | 0x00         | -            |                     |
 
-| Data ID | Time Diff | Row  | Col  | Length | Data |
-| ------- | --------- | ---- | ---- | ------ | ---- |
-| Data ID | 0         | -    | -    | -      | -    |
+| Data ID | Time Diff | Row | Col | Length | Data |
+| ------- | --------- | --- | --- | ------ | ---- |
+| Data ID | 0         | -   | -   | -      | -    |
 
 
 
@@ -261,9 +261,9 @@ To subscribe data synchronously, set up headers for registering subscribe first:
 | **Sequence** | **Length** | **Service** | **Flag**     | **Opt1**    | **Opt2**     | **Subframe** |                         |
 | -            | -          | 0x03        | 0x00         | 0x00        | 0x00         | -            |                         |
 
-| Data ID | Time Diff | Row  | Col  | Length | Data |
-| ------- | --------- | ---- | ---- | ------ | ---- |
-| Data ID | Data rate | -    | -    | -      | -    |
+| Data ID | Time Diff | Row | Col | Length | Data |
+| ------- | --------- | --- | --- | ------ | ---- |
+| Data ID | Data rate | -   | -   | -      | -    |
 
 Next keep listening from server, a continous packet flow followd by `send` service API will send back with required data rate. Please note the length of returned data should be decoded by its shape [Row * Col].
 
@@ -275,9 +275,9 @@ To terminate Subscribe function, send
 | **Sequence** | **Length** | **Service** | **Flag**     | **Opt1**    | **Opt2**     | **Subframe** |                       |
 | -            | -          | 0x03        | 0x00         | 0x00        | 0x00         | -            |                       |
 
-| Data ID | Time Diff | Row  | Col  | Length | Data |
-| ------- | --------- | ---- | ---- | ------ | ---- |
-| Data ID | 0         | -    | -    | -      | -    |
+| Data ID | Time Diff | Row | Col | Length | Data |
+| ------- | --------- | --- | --- | ------ | ---- |
+| Data ID | 0         | -   | -   | -      | -    |
 
 ## 4. MCVT Integration Guide
 
@@ -325,6 +325,8 @@ Using `api.init` function to set ip and port of local and remote server.
 import api
 
 ## The local port and remote port address are hard-code for local testing.
+## Make sure the `to_ip` is consistent with the server IP address, and the `to_port` is consistent with the port server is listening on.
+
 api.init(
     local_ip = "127.0.0.1",
     local_port= 65533,
@@ -349,6 +351,12 @@ re = api.request(synt=(1, 5), id=3)
 
 ## Request data(SPG DUST) whose ID == 3 from simulink time 1 to the lasted update value (this method severely rely on the correct setting of data frequency)
 re = api.request(synt=(1, 0xffff), id=3)
+```
+
+```
+## The return value 're' is the Packet object defined in utils.py
+## You can use re.subpackets[k].payload to access the data in double64 of the `k`-th subpacket. 
+## Also you can use `re.field` like `re.length` to reterive the header field.
 ```
 
 Using `api.send(Data_ID, Simulink_Time, Data, Priority, type) -> None`  send data to server (You can send to different subsystems by `api.init` function, but currently only AGENT and COMMUNICATION subsystems implemented with Simulink Receiving API).
