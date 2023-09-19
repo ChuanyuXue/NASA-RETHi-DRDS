@@ -158,8 +158,8 @@ Priority(priority): Quality of Service (QoS) prioritizes network traffic and man
 **Others**
 
 
-- SimulinkTime(simulink_time): Simulink time from 0 to 4294967295
-- PhysicalTime(physical_time): Physical Unix time from 0 to 4294967295
+- SimulinkTime(simulink_time): Simulink time from 0 to 4294967295, which is the iteration of simulink when packet is genereated.
+- PhysicalTime(physical_time): Physical Unix time from 0 to 4294967295, which is the clock on the host of simulink when packet is genereated.
 - Row(raw): Length of data
 - Col(col): Width of data
 - Length(length): Flatten length of data (Row * Col)
