@@ -61,7 +61,7 @@ services:
       - comm-network
 
   data_service:
-    image: xuechuanyu/rethi-drds:main
+    image: xuechuanyu/rethi-drds:cdcm
     ports:
       - "20000-20001:20000-20001/udp"
       - "65530-65531:65530-65531/udp"
@@ -96,6 +96,10 @@ services:
         # source: ./db_info_v6.json
         source: ./db_info_v6.json
         target: /db_info_v6.json
+      - type: bind
+        source: ./utils/cdcm/thermal_dt_script.py
+        target: /cdcm.py
+
     depends_on:
       - ground_db
       - habitat_db

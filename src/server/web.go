@@ -96,7 +96,7 @@ func (server *WebServer) initHttphandler() error {
 	app.GET("/history/:id", server.HistoryProcess)
 	app.POST("/api/c2/:id", server.CommandProcess)
 	app.OPTIONS("/api/c2/:id", sgo.PreflightHandler)
-
+	app.GET("/ws/cdcm", CDCM)
 	go app.Run(":9999")
 	return nil
 }
