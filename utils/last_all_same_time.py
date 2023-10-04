@@ -104,8 +104,6 @@ def load_dataID(path):
             all_data.append(data['data_id'])
     return all_data
 
-
-## How to use this API?
 if __name__ == '__main__':
     ## Initialize client
     client = ClientDRDS(local_ip="0.0.0.0",
@@ -127,4 +125,3 @@ if __name__ == '__main__':
         time.sleep(1)
         client.conn.send(65000, count, [15])
         count += 1
-    client.join()

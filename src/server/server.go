@@ -83,6 +83,7 @@ func (server *Server) Init(src uint8) error {
 		}
 	}()
 
+
 	return nil
 }
 
@@ -176,6 +177,7 @@ func (server *Server) initService() {
 		go server.listen(localAddr)
 	}
 }
+
 
 // Send Service: Store the data info into the database
 // Note that Send func is different from send. send is a private func to send the data to one remote client.
@@ -579,6 +581,7 @@ func (server *Server) handlePkt(pkt *ServicePacket) error {
 	// for _, subpkt := range pkt.Subpackets {
 	// 	fmt.Println(subpkt.DataID, subpkt.Row, subpkt.Col, subpkt.Length)
 	// }
+	
 	switch pkt.Service {
 	case utils.SER_SEND: //Send (data packet)
 		for _, subpkt := range pkt.Subpackets {

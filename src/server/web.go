@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -42,6 +43,16 @@ type MohsenMsg struct {
 	Value4 uint64 `jaso:"value4"`
 }
 
+type CommandEchoData struct {
+	CommandID       uint16 `json:"command_id"`
+	CommandSequence uint16 `json:"sequence"`
+	Value0          uint64 `json:"value0"`
+	Value1          uint64 `json:"value1"`
+	Value2          uint64 `json:"value2"`
+	Value3          uint64 `json:"value3"`
+	Value4          uint64 `json:"value4"`
+}
+
 type WebServer struct {
 	utils.JsonStandard
 	utils.ServiceStandard
@@ -51,9 +62,38 @@ type WebServer struct {
 
 	bufferOutput chan *VisualData
 
+	CommandSequnce map[uint16]uint16
+	currentTime    uint64
+	simulationTime uint64
+
+	commandEchoBuffer []CommandEchoData
+
 	upgrader  websocket.Upgrader
 	DBHandler *handler.Handler
 	UDPServer *Server
+}
+
+func (server *WebServer) initTimeOffset() {
+	// os.Getenv("DS_REMOTE_ADDR_"+server.Type)
+
+	var defaultTimeOffset = "0"
+	var defaultSimulationTime = 1000
+
+	timeOffsetStr := os.Getenv("DS_TIMEOFFSET")
+	if timeOffsetStr == "" {
+		server.currentTime = utils.TIME_OFFSET[defaultTimeOffset]
+	} else {
+		server.currentTime = utils.TIME_OFFSET[timeOffsetStr]
+	}
+
+	server.currentTime = utils.TIME_OFFSET[os.Getenv("DS_TIMEOFFSET")]
+
+	simulationTimeStr := os.Getenv("DS_SIMULATIONTIME")
+	if simulationTimeStr == "" {
+		server.simulationTime = uint64(defaultSimulationTime)
+	} else {
+		server.simulationTime = uint64(defaultSimulationTime)
+	}
 }
 
 // Init function initializes the web server
@@ -79,6 +119,8 @@ func (server *WebServer) Init(id uint8, udpServer *Server) error {
 		return err
 	}
 
+	server.initTimeOffset()
+
 	return nil
 }
 
@@ -94,7 +136,9 @@ func (server *WebServer) initHttphandler() error {
 	app.USE(middlewares.CORS(middlewares.CORSOpt{}))
 	app.GET("/ws", server.RealtimeProcess)
 	app.GET("/history/:id", server.HistoryProcess)
+
 	app.POST("/api/c2/:id", server.CommandProcess)
+	app.GET("/api/echo", server.CommandEcho)
 	app.OPTIONS("/api/c2/:id", sgo.PreflightHandler)
 	app.GET("/ws/cdcm", CDCM)
 	go app.Run(":9999")
@@ -176,7 +220,7 @@ func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
 			return nil
 		}
 		currentTime := server.DBHandler.QueryLastSynt(id)
-		_, timeVec, dataMat, err := server.DBHandler.ReadRange(id, lastTime, currentTime)
+		timeVec, _, dataMat, err := server.DBHandler.ReadRange(id, lastTime, currentTime)
 		if err != nil {
 			fmt.Println(err)
 			return err
@@ -184,7 +228,7 @@ func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
 		for i, t := range timeVec {
 			server.writeBufferOutput(
 				id,
-				t,
+				(uint64(t)/server.simulationTime)+uint64(server.currentTime),
 				dataMat[i],
 			)
 		}
@@ -231,7 +275,7 @@ func (server *WebServer) HistoryProcess(ctx *sgo.Context) error {
 	col, _ := strconv.Atoi(reqs[1])
 
 	// fmt.Println("[DEBUG]:", uint16(id), server.DBHandler.QueryLastSynt(uint16(id)))
-	_, tVec, vMat, err := server.RequestRange(uint16(id), 0, server.DBHandler.QueryLastSynt(uint16(id)))
+	tVec, _, vMat, err := server.RequestRange(uint16(id), 0, server.DBHandler.QueryLastSynt(uint16(id)))
 
 	if err != nil {
 		fmt.Println(err)
@@ -239,7 +283,7 @@ func (server *WebServer) HistoryProcess(ctx *sgo.Context) error {
 	}
 	for i, t := range tVec {
 		// fmt.Println(uint64(t)*1000, vMat[i][col], strconv.Itoa(int(id))+"."+reqs[1])
-		d = VisualData{Timestamp: uint64(t), Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." + reqs[1]}
+		d = VisualData{Timestamp: uint64(t/uint32(server.simulationTime) + uint32(server.currentTime)), Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." + reqs[1]}
 		dlist = append(dlist, d)
 	}
 	return ctx.JSON(200, 1, "success", dlist)
@@ -323,21 +367,40 @@ func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 		uint16(id),
 		dataMat,
 	)
+
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 
+	// Save the command to the database accroding to the command-ID
 	err = server.UDPServer.Send(
 		uint16(id),
 		uint32(utils.RESERVED),
 		uint32(time.Now().UnixMilli()/1e3),
 		dataMat[0])
 
+	server.commandEchoBuffer = append(server.commandEchoBuffer, CommandEchoData{
+		CommandID:       uint16(id),
+		CommandSequence: seq,
+		Value0:          msg.Value0,
+		Value1:          msg.Value1,
+		Value2:          msg.Value2,
+		Value3:          msg.Value3,
+		Value4:          msg.Value4,
+	})
+
+	// Save the command to the
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 
 	return ctx.Text(200, "command received and forwarded")
+}
+
+// This function reterives all history command and get back to the HCI
+
+func (server *WebServer) CommandEcho(ctx *sgo.Context) error {
+	return ctx.JSON(200, 1, "success", server.commandEchoBuffer)
 }
