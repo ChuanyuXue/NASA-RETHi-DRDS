@@ -86,13 +86,11 @@ func (server *WebServer) initTimeOffset() {
 		server.currentTime = utils.TIME_OFFSET[timeOffsetStr]
 	}
 
-	server.currentTime = utils.TIME_OFFSET[os.Getenv("DS_TIMEOFFSET")]
-
-	simulationTimeStr := os.Getenv("DS_SIMULATIONTIME")
-	if simulationTimeStr == "" {
+	simulationTimeNum, err := strconv.ParseUint(os.Getenv("DS_SIMULATIONTIME"), 10, 64)
+	if err != nil {
 		server.simulationTime = uint64(defaultSimulationTime)
 	} else {
-		server.simulationTime = uint64(defaultSimulationTime)
+		server.simulationTime = simulationTimeNum
 	}
 }
 
