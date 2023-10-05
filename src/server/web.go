@@ -220,7 +220,8 @@ func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
 			return nil
 		}
 		currentTime := server.DBHandler.QueryLastSynt(id)
-		timeVec, _, dataMat, err := server.DBHandler.ReadRange(id, lastTime, currentTime)
+		// timeVec, _, dataMat, err := server.DBHandler.ReadRange(id, lastTime, currentTime)  [Sun Time]
+		_, timeVec, dataMat, err := server.DBHandler.ReadRange(id, lastTime, currentTime)
 		if err != nil {
 			fmt.Println(err)
 			return err
@@ -228,7 +229,8 @@ func (server *WebServer) Subscribe(id uint16, closeSig *bool) error {
 		for i, t := range timeVec {
 			server.writeBufferOutput(
 				id,
-				(uint64(t)/server.simulationTime)+uint64(server.currentTime),
+				// (uint64(t)/server.simulationTime)+uint64(server.currentTime),  [Sun Time]
+				t,
 				dataMat[i],
 			)
 		}
@@ -275,15 +277,17 @@ func (server *WebServer) HistoryProcess(ctx *sgo.Context) error {
 	col, _ := strconv.Atoi(reqs[1])
 
 	// fmt.Println("[DEBUG]:", uint16(id), server.DBHandler.QueryLastSynt(uint16(id)))
-	tVec, _, vMat, err := server.RequestRange(uint16(id), 0, server.DBHandler.QueryLastSynt(uint16(id)))
-
+	// tVec, _, vMat, err := server.RequestRange(uint16(id), 0, server.DBHandler.QueryLastSynt(uint16(id))) [Sun Time]
+	_, tVec, vMat, err := server.RequestRange(uint16(id), 0, server.DBHandler.QueryLastSynt(uint16(id)))
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 	for i, t := range tVec {
 		// fmt.Println(uint64(t)*1000, vMat[i][col], strconv.Itoa(int(id))+"."+reqs[1])
-		d = VisualData{Timestamp: uint64(t/uint32(server.simulationTime) + uint32(server.currentTime)), Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." + reqs[1]}
+		// d = VisualData{Timestamp: uint64(t/uint32(server.simulationTime) + uint32(server.currentTime)), Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." + reqs[1]} [SUN TIME]
+		d = VisualData{Timestamp: uint64(t), Value: vMat[i][col], ID: strconv.Itoa(int(id)) + "." +
+			reqs[1]}
 		dlist = append(dlist, d)
 	}
 	return ctx.JSON(200, 1, "success", dlist)
