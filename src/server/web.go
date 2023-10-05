@@ -86,13 +86,11 @@ func (server *WebServer) initTimeOffset() {
 		server.currentTime = utils.TIME_OFFSET[timeOffsetStr]
 	}
 
-	server.currentTime = utils.TIME_OFFSET[os.Getenv("DS_TIMEOFFSET")]
-
-	simulationTimeStr := os.Getenv("DS_SIMULATIONTIME")
-	if simulationTimeStr == "" {
+	simulationTimeNum, err := strconv.ParseUint(os.Getenv("DS_SIMULATIONTIME"), 10, 64)
+	if err != nil {
 		server.simulationTime = uint64(defaultSimulationTime)
 	} else {
-		server.simulationTime = uint64(defaultSimulationTime)
+		server.simulationTime = simulationTimeNum
 	}
 }
 
@@ -340,14 +338,25 @@ func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 	var dataMat [][]float64
 	var rawData []float64
 
+	seq, ok := server.CommandSequnce[uint16(id)]
+	if !ok {
+		server.CommandSequnce[uint16(id)] = 0
+		seq = 0
+	}
+
+	// I don't like this design that lets me modify payload, but it is what it is
+
 	rawData = append(
 		rawData,
-		float64(msg.Value0),
+		float64(msg.Value0+uint64(seq)*1e7),
 		float64(msg.Value1),
 		float64(msg.Value2),
 		float64(msg.Value3),
 		float64(msg.Value4),
 	)
+
+	server.CommandSequnce[uint16(id)]++
+
 	// rawData = append(
 	// 	rawData,
 	// 	msg.DoOrCancel,
