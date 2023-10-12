@@ -21,11 +21,11 @@ type PyFuncParams struct {
 	CurrentTime            float64 `json:"current_time"`
 	CurrentTemperature     float64 `json:"current_temperature"`
 	BatteryStateOfCharge   float64 `json:"battery_state_of_charge"`
-	CurrentHVACMode        float64 `json:"current_hvac_mode"`
+	CurrentHVACMode        string  `json:"current_hvac_mode"`
 	CurrentHeatingSetpoint float64 `json:"current_heating_setpoint"`
 	CurrentCoolingSetpoint float64 `json:"current_cooling_setpoint"`
 	TimeOfNewSetPoint      float64 `json:"time_of_new_setpoint"`
-	NewHVACMode            float64 `json:"new_hvac_mode"`
+	NewHVACMode            string  `json:"new_hvac_mode"`
 	NewHeatingSetpoint     float64 `json:"new_heating_setpoint"`
 	NewCoolingSetpoint     float64 `json:"new_cooling_setpoint"`
 	FinalTime              float64 `json:"final_time"`
@@ -101,7 +101,7 @@ func call(params PyFuncParams) (PyFuncOutput, error) {
 	output := PyFuncOutput{}
 	inputJSON, _ := json.Marshal(params)
 	fmt.Println(string(inputJSON))
-	outputJSON, err := exec.Command("python3", "-u", "cdcm.py", string(inputJSON)).Output()
+	outputJSON, err := exec.Command("python3", "-u", "./cdcm/cdcm_hab/examples/HCI_CDCM_DT/thermal_dt_script.py", string(inputJSON)).Output()
 	if err != nil {
 		return output, err
 	}
