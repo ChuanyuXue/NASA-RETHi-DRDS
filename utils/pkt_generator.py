@@ -24,11 +24,11 @@ ins = api.API(
     # False,  # Setting it to "True" causes issues when testing
 )
 
-with open("../db_info_v6.json") as f:
+with open("../db_info_hci.json") as f:
     data_discript = json.load(f)
     for synt in range(0, DURATION * SIMULATION_TIME):
         for name, data in data_discript.items():
-            if data["data_id"] in [10001]:
+            if data["data_id"] in [3023]:
                 value = [random.random() for i in range(data["data_size"])]
                 ins.send(
                     synt=synt,

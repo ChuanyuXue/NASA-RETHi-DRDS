@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/handler"
 	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/server"
@@ -152,20 +153,29 @@ func main() {
 
 	// Start Habitat web service
 	habitatWebServer := server.WebServer{}
-	err = habitatWebServer.Init(utils.SYSTEM_ID["HMS"], &habitatServer)
+	err = habitatWebServer.Init(utils.SYSTEM_ID["HMS"], &habitatServer, ":9999")
 	if err != nil {
 		fmt.Println(err)
 	}
 	fmt.Println("Habitat Web-Service Started")
 
 	// // Start Ground server
-	// groundServer := server.Server{}
-	// go groundServer.Init(utils.SRC_GCC)
-	// fmt.Println("Ground Server Started")
-	// time.Sleep(2 * time.Second)
+	groundServer := server.Server{}
+	err = groundServer.Init(utils.SYSTEM_ID["GCC"])
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("Ground Data-Service Started")
+	groundWebServer := server.WebServer{}
+	err = groundWebServer.Init(utils.SYSTEM_ID["GCC"], &groundServer, ":9998")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("Ground Web-Server Started")
+	time.Sleep(2 * time.Second)
 
 	// // Let Ground server subscribe Habitat server
-	// habitatServer.Subscribe(8011, groundServer.LocalSrc, 0, 1000)
+	habitatServer.Subscribe(3023, utils.SYSTEM_ID["GCC"], 0, 1000)
 	// habitatServer.Subscribe(8012, groundServer.LocalSrc, 0, 1000)
 	// habitatServer.Subscribe(8013, groundServer.LocalSrc, 0, 1000)
 	// habitatServer.Subscribe(8014, groundServer.LocalSrc, 0, 1000)
