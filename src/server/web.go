@@ -103,7 +103,7 @@ func (server *WebServer) initTimeOffset() {
 // Returns:
 //
 //	err: the error message
-func (server *WebServer) Init(id uint8, udpServer *Server) error {
+func (server *WebServer) Init(id uint8, udpServer *Server, port string) error {
 	server.LocalSystemID = id
 	server.UDPServer = udpServer
 	// WebServe shared the same handler with the udp server
@@ -111,7 +111,7 @@ func (server *WebServer) Init(id uint8, udpServer *Server) error {
 	server.bufferOutput = make(chan *VisualData, utils.OUTPUT_BUFFER_LEN)
 
 	//------ init http handler
-	err := server.initHttphandler()
+	err := server.initHttphandler(port)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -122,7 +122,7 @@ func (server *WebServer) Init(id uint8, udpServer *Server) error {
 	return nil
 }
 
-func (server *WebServer) initHttphandler() error {
+func (server *WebServer) initHttphandler(port string) error {
 	// Init Http service: Please contact Jiachen if any questions
 	server.upgrader = websocket.Upgrader{
 		CheckOrigin:     func(r *http.Request) bool { return true },
@@ -139,7 +139,7 @@ func (server *WebServer) initHttphandler() error {
 	app.GET("/api/echo", server.CommandEcho)
 	app.OPTIONS("/api/c2/:id", sgo.PreflightHandler)
 	app.GET("/ws/cdcm", CDCM)
-	go app.Run(":9999")
+	go app.Run(port)
 	return nil
 }
 
