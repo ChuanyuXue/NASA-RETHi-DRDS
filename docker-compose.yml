@@ -98,9 +98,9 @@ services:
         # source: ./db_info_v6.json
         source: ./db_info_v6.json
         target: /db_info_v6.json
-      - type: bind
-        source: ./utils/cdcm/thermal_dt_script.py
-        target: /cdcm.py
+      # - type: bind
+      #   source: ./utils/cdcm/thermal_dt_script.py
+      #   target: /cdcm.py
 
     depends_on:
       - ground_db

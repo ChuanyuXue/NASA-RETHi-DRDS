@@ -101,11 +101,11 @@ func call(params PyFuncParams) (PyFuncOutput, error) {
 	output := PyFuncOutput{}
 	inputJSON, _ := json.Marshal(params)
 	fmt.Println(string(inputJSON))
-	outputJSON, err := exec.Command("python3", "-u", "./cdcm/cdcm_hab/examples/HCI_CDCM_DT/thermal_dt_script.py", string(inputJSON)).Output()
+	outputJSON, err := exec.Command("python3", "-u", "/utils/cdcm/cdcm_hab/examples/HCI_CDCM_DT/thermal_dt_script.py", string(inputJSON)).Output()
 	if err != nil {
 		return output, err
 	}
-	fmt.Println(string(outputJSON))
+	// fmt.Println(string(outputJSON))
 	err = json.Unmarshal(outputJSON, &output)
 	if err != nil {
 		fmt.Println(err)
