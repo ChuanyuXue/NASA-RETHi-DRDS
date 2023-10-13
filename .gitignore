@@ -14,6 +14,3 @@ __pycache__/
 *.rar
 *.gz
 *.tar
-
-## Code not belonging to the project
-.utils/cdcm/
