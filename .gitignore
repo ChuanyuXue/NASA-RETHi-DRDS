@@ -8,3 +8,12 @@ __pycache__/
 
 ## Miscellanuous files
 *.drawio
+
+## Compresed files
+*.zip
+*.rar
+*.gz
+*.tar
+
+## Code not belonging to the project
+.utils/cdcm/
