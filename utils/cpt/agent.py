@@ -12,9 +12,12 @@ from hil_tcp import *
 from hil_udp import hil_udp, send
 from hil_adc import *
 from hil_gpio import *
+from hil_vxi11 import *
 
 from subprocess import Popen
 import time
+
+ROBOT_ARM_ENABLE = False
 
 
 class Agent:
@@ -34,6 +37,18 @@ class Agent:
             "Pressure_2": 10016,
             "Temp_1": 10017,
             "Temp_2": 10018,
+            "PV_1_Voltage": 10019,
+            "PV_1_Current": 10020,
+            "PV_1_Power": 10021,
+            "PV_2_Voltage": 10022,
+            "PV_2_Current": 10023,
+            "PV_2_Power": 10024,
+            "PV_3_Voltage": 10025,
+            "PV_3_Current": 10026,
+            "PV_3_Power": 10027,
+            "PV_4_Voltage": 10028,
+            "PV_4_Current": 10029,
+            "PV_4_Power": 10030,
         }
 
         self.remote_ip = remote_ip
@@ -60,6 +75,8 @@ class Agent:
         self.PV_simulator = hil_serial("/dev/ttyUSB0")
         self.Amplifier = hil_serial("/dev/ttyUSB1")
         self.Load_1 = hil_tcp("192.168.10.98", port=50505)
+        self.Power_meter = hil_vxi11("192.168.10.120")
+                                
         #### Don't set trigger!!!!!!!
         # self.PV_simulator.set_voltage_trigger("MAX")
         # self.PV_simulator.set_current_trigger("MAX")
@@ -103,6 +120,20 @@ class Agent:
                 send(self.udp_sock, self.remote_ip,
                      self.local_ports["L1_Voltage"], [volt])
                 print("Load_1 --> Voltage: %f, Current: %f" % (volt, curr))
+                
+                ## Get the data from the solar panel
+                for PV_chanel in [1,2,3,4]:
+                    volt = self.Power_meter.get_voltage(PV_chanel)
+                    curr = self.Power_meter.get_current(PV_chanel)
+                    power = self.Power_meter.get_power(PV_chanel)
+                    send(self.udp_sock, self.remote_ip,
+                        self.local_ports[f"PV_{PV_chanel}_Voltage"], [volt])
+                    send(self.udp_sock, self.remote_ip,
+                            self.local_ports[f"PV_{PV_chanel}_Current"], [curr])
+                    send(self.udp_sock, self.remote_ip,
+                            self.local_ports[f"PV_{PV_chanel}_Power"], [power])
+                    print(f"PV_{PV_chanel} --> Voltage: {volt}, Current: {curr}, Power: {power}")
+                
 
                 ## Get the command from OpalRT
                 for data_name, sock in self.OpalRT_udp.items():
@@ -138,7 +169,7 @@ class Agent:
                 send(self.udp_sock, self.remote_ip,
                      self.local_ports["Pressure_1"], [pres * 0.7])
                 print("Pressure_1 --> Pressure: %f" % (pres * 0.7))
-                if pres < 1.3:
+                if pres < 1.3 and ROBOT_ARM_ENABLE:
                     subprocess.Popen([
                         "python3", "utils/agent/lagacy/robot.py",
                         "192.168.10.180"
