@@ -40,7 +40,7 @@ type MohsenMsg struct {
 	Value1 uint64 `json:"value1"`
 	Value2 uint64 `json:"value2"`
 	Value3 uint64 `json:"value3"`
-	Value4 uint64 `jaso:"value4"`
+	Value4 uint64 `json:"value4"`
 }
 
 type CommandEchoData struct {
