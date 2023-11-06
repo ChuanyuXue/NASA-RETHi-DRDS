@@ -435,7 +435,7 @@ func (server *Server) sendPkt(dst uint8, priority uint8, synt uint32, flag uint8
 	dstAddr := server.AllClientAddr[dst]
 	conn, err := net.DialUDP("udp", nil, dstAddr)
 
-	// fmt.Println("[DEBUG] Data ID: ", data_id, "is sending")
+	//fmt.Println("[DEBUG] Data ID: ", data_id, "is sending")
 
 	if err != nil {
 		fmt.Println("[!] Failed to dial clients")
@@ -448,6 +448,7 @@ func (server *Server) sendPkt(dst uint8, priority uint8, synt uint32, flag uint8
 		return err
 	}
 
+	//fmt.Println("[DEBUG]: Finish Send")
 	return nil
 }
 

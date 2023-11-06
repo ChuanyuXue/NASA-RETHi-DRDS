@@ -61,6 +61,7 @@ func CDCM(ctx *sgo.Context) error {
 	ws, err := upgrader.Upgrade(ctx.Resp, ctx.Req, nil)
 	exitSig := make(chan bool)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	fmt.Println("ws/comm connected")
@@ -72,22 +73,30 @@ func CDCM(ctx *sgo.Context) error {
 		for {
 			_, p, err := ws.ReadMessage()
 			if err != nil {
+				fmt.Println("[DEBUG]:read error")
+				fmt.Println(err)
 				exitSig <- true
 			} else {
 				params := PyFuncParams{}
 				err = json.Unmarshal(p, &params)
 				if err != nil {
+					fmt.Println("[DEBUG]:json unmarshal error")
 					fmt.Println(err)
 					exitSig <- true
 				}
 				output, err := call(params)
 				if err != nil {
+					fmt.Println("[DEBUG]:call error")
 					fmt.Println(err)
 					exitSig <- true
 				} else {
-					ws.WriteJSON(output)
+					err = ws.WriteJSON(output)
+					if err != nil {
+						fmt.Print("[DEBUG]:write error")
+						fmt.Println(err)
+						exitSig <- true
+					}
 				}
-
 			}
 		}
 	}()
@@ -103,6 +112,7 @@ func call(params PyFuncParams) (PyFuncOutput, error) {
 	fmt.Println(string(inputJSON))
 	outputJSON, err := exec.Command("python3", "-u", "/utils/cdcm/cdcm_hab/examples/HCI_CDCM_DT/thermal_dt_script.py", string(inputJSON)).Output()
 	if err != nil {
+		fmt.Println(err)
 		return output, err
 	}
 	// fmt.Println(string(outputJSON))

@@ -109,7 +109,7 @@ func (server *WebServer) Init(id uint8, udpServer *Server, port string) error {
 	// WebServe shared the same handler with the udp server
 	server.DBHandler = server.UDPServer.handler
 	server.bufferOutput = make(chan *VisualData, utils.OUTPUT_BUFFER_LEN)
-
+	server.CommandSequnce = make(map[uint16]uint16)
 	//------ init http handler
 	err := server.initHttphandler(port)
 	if err != nil {
@@ -332,6 +332,7 @@ func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 	}
 	var msg MohsenMsg
 	if err = json.Unmarshal(body, &msg); err != nil {
+		fmt.Println(err)
 		return err
 	}
 
@@ -349,6 +350,7 @@ func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 	rawData = append(
 		rawData,
 		float64(msg.Value0+uint64(seq)*1e7),
+		// float64(msg.Value0),
 		float64(msg.Value1),
 		float64(msg.Value2),
 		float64(msg.Value3),

@@ -6,25 +6,25 @@
   <title>Call Python Function</title>
 </head>
 
-<body style="max-width: 100%;">
+<body>
   <p id="input"></p>
   <button onclick="call()">Call</button>
   <p id="output"></p>
   <script>
     const params = {
-      current_time: 10,
-      current_temperature: 23,
-      battery_state_of_charge: 100,
-      current_hvac_mode: 'auto',
-      current_heating_setpoint: 23,
-      current_cooling_setpoint: 25,
-      time_of_new_setpoint: 14.5,
-      new_hvac_mode: 'heat',
-      new_heating_setpoint: 27,
-      new_cooling_setpoint: 30,
-      final_time: 19,
-      num_time_steps: 20,
-      num_samples: 10,
+      current_time: 0,
+      current_temperature: 0,
+      battery_state_of_charge: 0,
+      current_hvac_mode: "auto",
+      current_heating_setpoint: 0,
+      current_cooling_setpoint: 0,
+      time_of_new_setpoint: 0,
+      new_hvac_mode: "heat",
+      new_heating_setpoint: 0,
+      new_cooling_setpoint: 0,
+      final_time: 0,
+      num_time_steps: 2,
+      num_samples: 5,
     };
     document.getElementById("input").innerHTML = JSON.stringify(params);
     const socket = new WebSocket("ws://localhost:9999/ws/cdcm");
