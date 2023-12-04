@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"time"
+
 	//"time"
 
 	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/handler"
@@ -159,36 +161,29 @@ func main() {
 	}
 	fmt.Println("Habitat Web-Service Started")
 
-	// // Start Ground server
-	// groundServer := server.Server{}
-	// err = groundServer.Init(utils.SYSTEM_ID["GCC"])
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println("Ground Data-Service Started")
-	// groundWebServer := server.WebServer{}
-	// err = groundWebServer.Init(utils.SYSTEM_ID["GCC"], &groundServer, ":9998")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println("Ground Web-Server Started")
-	// time.Sleep(2 * time.Second)
+	// Start Ground server
+	groundServer := server.Server{}
+	err = groundServer.Init(utils.SYSTEM_ID["GCC"])
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("Ground Data-Service Started")
+	groundWebServer := server.WebServer{}
+	err = groundWebServer.Init(utils.SYSTEM_ID["GCC"], &groundServer, ":9998")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("Ground Web-Server Started")
+	time.Sleep(2 * time.Second)
 
-	// // // Start Ground server
-	// // groundServer := server.Server{}
-	// // go groundServer.Init(utils.SRC_GCC)
-	// // fmt.Println("Ground Server Started")
-	// // time.Sleep(2 * time.Second)
+	// // Let Ground server subscribe Habitat server
+	groundServerRequiredData := []int{5001, 5002, 5003, 5004, 5005, 5006, 5007, 5008, 5009, 5010, 2001, 11001, 8001, 8002, 8028, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009, 3010, 3011, 3012, 3013, 3014, 10995, 10996, 10997, 10998, 10994, 5071, 5072, 5073, 5074, 5075, 5076, 5077, 5078, 8003, 8007, 8011, 8014, 8027, 5070, 5079, 5059, 5080, 3052, 3026, 3020, 3023, 3029, 3030, 8030}
 
-	// // // Let Ground server subscribe Habitat server
+	for _, id := range groundServerRequiredData{
+		habitatServer.Subscribe(uint16(id), utils.SYSTEM_ID["GCC"], 0, 1000)
+	}
 	// habitatServer.Subscribe(3023, utils.SYSTEM_ID["GCC"], 0, 1000)
-	// habitatServer.Subscribe(8011, groundServer.LocalSrc, 0, 1000)
-	// habitatServer.Subscribe(8012, groundServer.LocalSrc, 0, 1000)
-	// habitatServer.Subscribe(8013, groundServer.LocalSrc, 0, 1000)
-	// habitatServer.Subscribe(8014, groundServer.LocalSrc, 0, 1000)
-	// habitatServer.Subscribe(8015, groundServer.LocalSrc, 0, 1000)
-	// habitatServer.Subscribe(8016, groundServer.LocalSrc, 0, 1000)
-	// fmt.Println("Ground Server subscribed Habitat server")
+
 
 	// Let MCVT subscribe the data Murali asked
 	// fmt.Println("[DEBUG] MCVT subscribed Habitat server")

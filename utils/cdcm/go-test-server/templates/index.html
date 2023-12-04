@@ -1,0 +1,47 @@
+{{define "index"}}
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Call Python Function</title>
+  </head>
+  <body>
+    <p id="input"></p>
+    <button onclick="call()">Call</button>
+    <p id="output"></p>
+    <script>
+      const params = {
+        current_time: 10,
+        current_temperature: 10,
+        battery_state_of_charge: 23,
+        current_hvac_mode: "auto",
+        current_heating_setpoint: 23,
+        current_cooling_setpoint: 25,
+        time_of_new_setpoint: 14.5,
+        new_hvac_mode: "heat",
+        new_heating_setpoint: 27,
+        new_cooling_setpoint: 30,
+        final_time: 19,
+        num_time_steps: 10,
+        num_samples: 10,
+      };
+      document.getElementById("input").innerHTML = JSON.stringify(params);
+      const socket = new WebSocket("ws://localhost:10123/ws");
+
+      // Connection opened
+      socket.addEventListener("open", (event) => {
+        console.log("Connected");
+      });
+
+      // Listen for messages
+      socket.addEventListener("message", (event) => {
+        console.log("Message from server", event.data);
+        document.getElementById("output").innerHTML = event.data;
+      });
+
+      function call() {
+        socket.send(JSON.stringify(params));
+      }
+    </script>
+  </body>
+</html>
+{{end}}

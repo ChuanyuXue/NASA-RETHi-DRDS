@@ -1,0 +1,102 @@
+edges:
+- edge1:
+  - room1
+  - env5
+- edge2:
+  - env5
+  - sky
+model: rc_lumped
+nodes:
+  envelopes:
+  - name: env5
+    segments:
+    - corners:
+      - - 0.0
+        - 0.0
+        - 4.5
+      - - -10.0
+        - 0.0
+        - 4.5
+      - - -10.0
+        - 10.0
+        - 4.5
+      - - 0.0
+        - 10.0
+        - 4.5
+      envelope_segment:
+        layers:
+        - conductivity:
+            description: null
+            name: null
+            type: DeterministicParameter
+            units: W/m/degC
+            value: 0.0036777186756343644
+          density:
+            description: null
+            name: null
+            type: DeterministicParameter
+            units: kg/m**3
+            value: 2121.9892364714538
+          description: lumped_layer
+          emissivity:
+            description: null
+            name: null
+            type: DeterministicParameter
+            units: null
+            value: 0.1
+          name: lumped_layer
+          solar_absorptance:
+            description: null
+            name: null
+            type: DeterministicParameter
+            units: null
+            value: 0.11920760607149822
+          solar_transmittance:
+            description: null
+            name: null
+            type: DeterministicParameter
+            units: null
+            value: 0.0
+          specific_heat:
+            description: null
+            name: null
+            type: DeterministicParameter
+            units: J / kg / degC
+            value: 709.1256103590836
+          thickness:
+            description: null
+            name: null
+            type: DeterministicParameter
+            units: m
+            value: 0.012476085183954952
+          type: Layer
+        name: lumped_facade
+      name: segment1
+      type:
+      - roof
+  environment: !!set
+    sky: null
+  rooms:
+  - name: room1
+    occupants:
+    - occupant1
+    - occupant2
+param_vals:
+  P_hvac_cool: -9.076347504196725
+  P_hvac_heat: 234.0445436354565
+  Pdelta_c: 0.5006040543630939
+  Pgen_const: 0.18257662101579808
+  a: 1438.6101684226855
+  b: -0.00010025078817328682
+  ddr: 0.09561934267782801
+  ea_c: 3.0879644388088785
+  power_load: 337.14721544870036
+site:
+  a_solar: 0.87
+  altitude: 0.0
+  eps: 0.97
+  hext_val: 100.0
+  hint_val: 0.08853733309418729
+  lat: 0.0
+  long: 0.0
+  orientation: 0.0
