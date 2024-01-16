@@ -61,7 +61,7 @@ services:
       - comm-network
 
   data_service:
-    image: xuechuanyu/rethi-drds:cdcm_ground
+    image: xuechuanyu/rethi-drds:cdcm
     ports:
       - "20000-20001:20000-20001/udp"
       - "65530-65531:65530-65531/udp"
@@ -92,6 +92,8 @@ services:
 
       DB_PRODUCER_NUM: "2000"
       DB_CONSUMER_NUM: "2000"
+
+      VERBOSE: "false"
 
     volumes:
       - type: bind

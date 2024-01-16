@@ -7,8 +7,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
-	// "errors"
 	"fmt"
 	"net"
 
@@ -103,7 +101,7 @@ func (server *Server) initID(src uint8) error {
 		}
 		server.AllClientSystemID = append(server.AllClientSystemID, value)
 	}
-	// fmt.Println("[DEBUG]:", server.AllClientSystemID)
+	utils.DevLog(server.AllClientSystemID)
 	return nil
 }
 
@@ -137,7 +135,7 @@ func (server *Server) initAddr() error {
 		return errors.New("unable to resolve remote loop")
 	}
 	server.AllClientAddr[server.LocalSystemID] = remoteAddrLoop
-	// fmt.Println("[DEBUG]:", server.AllClientAddr, server.AllLocalAddr)
+	utils.DevLog(server.AllClientAddr, server.AllLocalAddr)
 	return nil
 }
 
@@ -435,7 +433,7 @@ func (server *Server) sendPkt(dst uint8, priority uint8, synt uint32, flag uint8
 	dstAddr := server.AllClientAddr[dst]
 	conn, err := net.DialUDP("udp", nil, dstAddr)
 
-	//fmt.Println("[DEBUG] Data ID: ", data_id, "is sending")
+	utils.DevLog("Data ID: ", data_id, "is sending from", server.LocalSystemID, "to", dst)
 
 	if err != nil {
 		fmt.Println("[!] Failed to dial clients")
@@ -444,11 +442,10 @@ func (server *Server) sendPkt(dst uint8, priority uint8, synt uint32, flag uint8
 	defer conn.Close()
 	_, err = conn.Write(pkt.ToServiceBuf())
 	if err != nil {
-		fmt.Println("[!] Failed to send data to clients")
+		fmt.Println("Failed to send data to clients")
 		return err
 	}
-
-	//fmt.Println("[DEBUG]: Finish Send")
+	utils.DevLog("Finish send (sendPkt)")
 	return nil
 }
 
@@ -497,9 +494,9 @@ func (server *Server) sendOpt(dst uint8, priority uint8, synt uint32, service ui
 	}
 	defer conn.Close()
 
-	fmt.Println("[DEBUG]: Send OPT to", dst)
-	fmt.Println("[DEBUG]:", dstAddr.IP)
-	fmt.Println("[DEBUG]:", dstAddr.Port)
+	utils.DevLog("[DEBUG]: Send OPT to", dst)
+	utils.DevLog("[DEBUG]:", dstAddr.IP)
+	utils.DevLog("[DEBUG]:", dstAddr.Port)
 
 	_, err = conn.Write(pkt.ToServiceBuf())
 	if err != nil {

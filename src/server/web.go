@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"sync"
 
 	"github.com/AmyangXYZ/sgo"
 	"github.com/AmyangXYZ/sgo/middlewares"
@@ -63,6 +64,7 @@ type WebServer struct {
 	bufferOutput chan *VisualData
 
 	CommandSequnce map[uint16]uint16
+	commandSequnceMutex sync.Mutex
 	currentTime    uint64
 	simulationTime uint64
 
@@ -338,13 +340,13 @@ func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 
 	var dataMat [][]float64
 	var rawData []float64
-
+	server.commandSequnceMutex.Lock()
 	seq, ok := server.CommandSequnce[uint16(id)]
 	if !ok {
 		server.CommandSequnce[uint16(id)] = 0
 		seq = 0
 	}
-
+	server.commandSequnceMutex.Unlock()
 	// I don't like this design that lets me modify payload, but it is what it is
 
 	rawData = append(
@@ -357,7 +359,9 @@ func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 		float64(msg.Value4),
 	)
 
+	server.commandSequnceMutex.Lock()
 	server.CommandSequnce[uint16(id)]++
+	server.commandSequnceMutex.Unlock()
 
 	// rawData = append(
 	// 	rawData,

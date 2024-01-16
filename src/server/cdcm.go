@@ -9,6 +9,7 @@ import (
 
 	"github.com/AmyangXYZ/sgo"
 	"github.com/gorilla/websocket"
+	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/utils"
 )
 
 var upgrader = websocket.Upgrader{
@@ -67,7 +68,7 @@ func CDCM(ctx *sgo.Context) error {
 	fmt.Println("ws/comm connected")
 	defer func() {
 		ws.Close()
-		fmt.Println("ws/comm client closed")
+		utils.DevLog("ws/comm client closed")
 	}()
 	go func() {
 		for {

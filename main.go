@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"time"
-
-	//"time"
+	"strings"
+	"os"
 
 	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/handler"
 	"github.com/ChuanyuXue/NASA-RETHi-DRDS/src/server"
@@ -146,12 +146,14 @@ func main() {
 	// }
 	// --------------- Test for Ground <-- Habitat <--> Subsystem ------------------------
 
+	utils.VERBOSE = strings.ToLower(os.Getenv("VERBOSE")) == "true"
+
 	habitatServer := server.Server{}                  // Start Habitat server
 	err := habitatServer.Init(utils.SYSTEM_ID["HMS"]) // Init Habitat server
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("Habitat Data-Service Started")
+	utils.DevLog("Habitat Data-Service Started")
 
 	// Start Habitat web service
 	habitatWebServer := server.WebServer{}
@@ -159,7 +161,7 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("Habitat Web-Service Started")
+	utils.DevLog("Habitat Web-Service Started")
 
 	// Start Ground server
 	groundServer := server.Server{}
@@ -167,13 +169,13 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("Ground Data-Service Started")
+	utils.DevLog("Ground Data-Service Started")
 	groundWebServer := server.WebServer{}
 	err = groundWebServer.Init(utils.SYSTEM_ID["GCC"], &groundServer, ":9998")
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("Ground Web-Server Started")
+	utils.DevLog("Ground Web-Server Started")
 	time.Sleep(2 * time.Second)
 
 	// // Let Ground server subscribe Habitat server
@@ -181,12 +183,9 @@ func main() {
 
 	for _, id := range groundServerRequiredData{
 		habitatServer.Subscribe(uint16(id), utils.SYSTEM_ID["GCC"], 0, 1000)
+		utils.DevLog("Ground server subscribed data: ", id)
 	}
-	// habitatServer.Subscribe(3023, utils.SYSTEM_ID["GCC"], 0, 1000)
 
-
-	// Let MCVT subscribe the data Murali asked
-	// fmt.Println("[DEBUG] MCVT subscribed Habitat server")
 	habitatServer.Subscribe(65000, utils.SYSTEM_ID["STR"], 0, 1000)
 
 	select {} // Keep the main thread alive

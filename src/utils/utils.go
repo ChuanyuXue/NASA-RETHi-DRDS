@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"fmt"
 	"strconv"
 )
 
@@ -117,6 +118,10 @@ const (
 	PARAMTER_EMPTY        uint16 = 0
 )
 
+var VERBOSE bool = false
+
+// ----------- Service Type
+
 type JsonStandard interface {
 }
 
@@ -207,4 +212,11 @@ func DoubleContains(s []float64, i float64) bool {
 		}
 	}
 	return false
+}
+
+func DevLog(args ...interface{}) {
+    if VERBOSE {
+        fmt.Print("[DEVLOG]: ")
+        fmt.Println(args...)
+    }
 }
