@@ -265,6 +265,8 @@ To subscribe data synchronously, set up headers for registering subscribe first:
 | ------- | --------- | --- | --- | ------ | ---- |
 | Data ID | Data rate | -   | -   | -      | -    |
 
+*Note: Use `SiTime = 0x0` to get all data, and `SiTime = 0xffffffff` subscribing  to get only future data (ignore historical data)*
+
 Next keep listening from server, a continous packet flow followd by `send` service API will send back with required data rate. Please note the length of returned data should be decoded by its shape [Row * Col].
 
 To terminate Subscribe function, send
