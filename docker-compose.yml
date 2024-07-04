@@ -26,7 +26,7 @@ services:
       ADDR_REMOTE_EXT: "host.docker.internal:20007"
       ADDR_REMOTE_IE: "host.docker.internal:20008"
       ADDR_REMOTE_DTB: "host.docker.internal:20009"
-      ADDR_REMOTE_CORRD: "host.docker.internal:20010"
+      ADDR_REMOTE_COORD: "host.docker.internal:20010"
 
       ANIMATION_ENABLED: "false"
       CONSOLE_ENABLED: "true"
