@@ -16,11 +16,12 @@ ignore_patterns = None
 ignore_directories = False
 case_sensitive = True
 my_event_handler = PatternMatchingEventHandler(
-    patterns, ignore_patterns, ignore_directories, case_sensitive)
+    patterns, ignore_patterns, ignore_directories, case_sensitive
+)
 
 
 def send(event):
-    if event.src_path.split('.')[-1] == 'mat':
+    if event.src_path.split(".")[-1] == "mat":
         print("Updates on %s is detected" % event.src_path)
         try:
             mat = scipy.io.loadmat(event.src_path)
@@ -32,10 +33,10 @@ def send(event):
             ins = api.API(
                 local_ip="127.0.0.1",
                 local_port=61234,
-                to_ip="127.0.0.1",
-                to_port=10002,
-                client_id=2,
-                server_id=1
+                remote_ip="127.0.0.1",
+                remote_port=10002,
+                src_id=2,
+                dst_id=1,
             )
 
             for row in data:

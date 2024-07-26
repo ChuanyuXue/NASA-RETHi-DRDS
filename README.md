@@ -327,15 +327,15 @@ Using `api.init` function to set ip and port of local and remote server.
 import api
 
 ## The local port and remote port address are hard-code for local testing.
-## Make sure the `to_ip` is consistent with the server IP address, and the `to_port` is consistent with the port server is listening on.
+## Make sure the `remote_ip` is consistent with the server IP address, and the `remote_port` is consistent with the port server is listening on.
 
 api.init(
     local_ip = "127.0.0.1",
     local_port= 65533,
-    to_ip = "127.0.0.1",
-    to_port = 65531,
-    client_id = 1,
-    server_id = 1
+    remote_ip = "127.0.0.1",
+    remote_port = 65531,
+    src_id = 1,
+    dst_id = 1
 )
 ```
 

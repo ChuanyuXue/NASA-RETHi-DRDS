@@ -21,20 +21,16 @@ class API:
 
     """
 
-    def __init__(self,
-                 local_ip,
-                 local_port,
-                 to_ip,
-                 to_port,
-                 client_id=1,
-                 server_id=0):
+    def __init__(
+        self, local_ip, local_port, remote_ip, remote_port, src_id=1, dst_id=0
+    ):
 
-        self.id_client = client_id
-        self.id_server = server_id
+        self.id_client = src_id
+        self.id_server = dst_id
         self.ip_client = local_ip
-        self.ip_server = to_ip
+        self.ip_server = remote_ip
         self.port_client = local_port
-        self.port_server = to_port
+        self.port_server = remote_port
 
         self.out_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.in_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -356,7 +352,9 @@ class API:
                 count += 1
                 continue
 
-    def subscribe(self, ):
+    def subscribe(
+        self,
+    ):
         """
         Subscribe a data-id from DRDS
 

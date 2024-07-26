@@ -1,12 +1,14 @@
 import time
 import pyapi.api as api
 
-ins = api.API(local_ip="0.0.0.0",
-              local_port=65533,
-              to_ip="127.0.0.1",
-              to_port=65531,
-              client_id=1,
-              server_id=1)
+ins = api.API(
+    local_ip="0.0.0.0",
+    local_port=65533,
+    remote_ip="127.0.0.1",
+    remote_port=65531,
+    src_id=1,
+    dst_id=1,
+)
 
 ins.send(65000, 0, [15])
 

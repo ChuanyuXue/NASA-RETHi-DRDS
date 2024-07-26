@@ -11,15 +11,15 @@ SIMULATION_TIME = 4000
 ins = api.API(
     local_ip="0.0.0.0",
     local_port=61234,
-    to_ip="localhost",
-    # to_port=10000 + 3,
-    to_port=10003,
-    # to_port=10000 + int(data['data_subtype1']),
-    # to_port=65533, # for local testing
-    # to_port=65531,  # for data service testing
-    # client_id=int(data["data_subtype1"]),
-    client_id=3,
-    server_id=1,
+    remote_ip="localhost",
+    # remote_port=10000 + 3,
+    remote_port=10003,
+    # remote_port=10000 + int(data['data_subtype1']),
+    # remote_port=65533, # for local testing
+    # remote_port=65531,  # for data service testing
+    # src_id=int(data["data_subtype1"]),
+    src_id=3,
+    dst_id=1,
     # set_blocking=
     # False,  # Setting it to "True" causes issues when testing
 )
@@ -40,17 +40,17 @@ with open("../db_info_hci.json") as f:
         print("Simulation time -----------", synt)
 ins.close()
 
-# server_id : 1 -> Habitat database
-# server_id : 0 -> Ground Database
+# dst_id : 1 -> Habitat database
+# dst_id : 0 -> Ground Database
 # df = pd.read_csv("data.csv")
 # for _, df in pd.read_csv("data.csv").groupby('time'):
 #     for _, row in df.iterrows():
 #         ins = api.API(local_ip="127.0.0.1",
 #                       local_port=61234,
-#                       to_ip="127.0.0.1",
-#                       to_port=10000 + row['src'],
-#                       client_id=row['src'],
-#                       server_id=1)
+#                       remote_ip="127.0.0.1",
+#                       remote_port=10000 + row['src'],
+#                       src_id=row['src'],
+#                       dst_id=1)
 #         value = eval(row['data'])
 #         ins.send(synt=row['time'],
 #                  id=row['dataId'],

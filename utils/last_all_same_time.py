@@ -6,14 +6,15 @@ from threading import Thread
 
 class ClientDRDS(Thread):
 
-    def __init__(self, local_ip, local_port, to_ip, to_port, client_id,
-                 server_id):
-        self.conn = api.API(local_ip=local_ip,
-                            local_port=local_port,
-                            to_ip=to_ip,
-                            to_port=to_port,
-                            client_id=client_id,
-                            server_id=server_id)
+    def __init__(self, local_ip, local_port, remote_ip, remote_port, src_id, dst_id):
+        self.conn = api.API(
+            local_ip=local_ip,
+            local_port=local_port,
+            remote_ip=remote_ip,
+            remote_port=remote_port,
+            src_id=src_id,
+            dst_id=dst_id,
+        )
         self.buffer = None
         self.current_simulink_time = 0
         self.subscribed = False
@@ -40,11 +41,11 @@ class ClientDRDS(Thread):
         self.subscribed = True
 
     def get_latest_all(self, all_subscribed_data: list):
-        '''
+        """
         Return:
         - time: int
         - latest_all: A list of 1-D vectors ordered by input all_subscribed_data
-        '''
+        """
         current_simulink_time = self.current_simulink_time
         latest_find = False
 
@@ -53,13 +54,15 @@ class ClientDRDS(Thread):
             for data_id in all_subscribed_data:
                 if data_id not in self.buffer:
                     assert False, "Data ID not subscribed"
-                if current_simulink_time not in self.buffer[data_id]['time']:
+                if current_simulink_time not in self.buffer[data_id]["time"]:
                     current_simulink_time -= 1
                     break
                 else:
-                    latest_all.append(self.buffer[data_id]['record'][
-                        self.buffer[data_id]['time'].index(
-                            current_simulink_time)])
+                    latest_all.append(
+                        self.buffer[data_id]["record"][
+                            self.buffer[data_id]["time"].index(current_simulink_time)
+                        ]
+                    )
             else:
                 latest_find = True
                 self._clean_buffer_before_time(current_simulink_time)
@@ -68,10 +71,11 @@ class ClientDRDS(Thread):
 
     def _clean_buffer_before_time(self, time):
         for data_id in self.buffer:
-            while self.buffer[data_id][
-                    'time'] and self.buffer[data_id]['time'][0] < time:
-                self.buffer[data_id]['time'].pop(0)
-                self.buffer[data_id]['record'].pop(0)
+            while (
+                self.buffer[data_id]["time"] and self.buffer[data_id]["time"][0] < time
+            ):
+                self.buffer[data_id]["time"].pop(0)
+                self.buffer[data_id]["record"].pop(0)
 
     def _check_subpacket_exist(self, data):
         if not data.subpackets:
@@ -84,15 +88,15 @@ class ClientDRDS(Thread):
         data_id = data.subpackets[0].header.data_id
         simulink_time = data.header.simulink_time
         values = list(data.subpackets[0].payload)
-        self.buffer[data_id]['time'].append(simulink_time)
-        self.buffer[data_id]['record'].append(values)
+        self.buffer[data_id]["time"].append(simulink_time)
+        self.buffer[data_id]["record"].append(values)
 
     def _init_buffer(self, all_subscribed_data: list):
         buffer = {}
         for data_id in all_subscribed_data:
             buffer[data_id] = {}
-            buffer[data_id]['time'] = []
-            buffer[data_id]['record'] = []
+            buffer[data_id]["time"] = []
+            buffer[data_id]["record"] = []
         return buffer
 
 
@@ -101,19 +105,21 @@ def load_dataID(path):
     with open(path) as f:
         data_discript = json.load(f)
         for name, data in data_discript.items():
-            all_data.append(data['data_id'])
+            all_data.append(data["data_id"])
     return all_data
 
 
 ## How to use this API?
-if __name__ == '__main__':
+if __name__ == "__main__":
     ## Initialize client
-    client = ClientDRDS(local_ip="0.0.0.0",
-                        local_port=65533,
-                        to_ip="127.0.0.1",
-                        to_port=65531,
-                        client_id=1,
-                        server_id=1)
+    client = ClientDRDS(
+        local_ip="0.0.0.0",
+        local_port=65533,
+        remote_ip="127.0.0.1",
+        remote_port=65531,
+        src_id=1,
+        dst_id=1,
+    )
     ## [client.subscribe()]: Let client subscribe required data
     request_id = load_dataID("../db_info_v6.json")
     client.subscribe(request_id)
