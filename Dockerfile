@@ -1,3 +1,6 @@
+# docker buildx build -t xuechuanyu/rethi-drds:main --platform linux/arm64,linux/amd64 --push .
+# docker build -t rethi-drds:main .
+
 FROM golang:alpine AS builder
 RUN apk add --no-cache make build-base git
 WORKDIR /go/src/app

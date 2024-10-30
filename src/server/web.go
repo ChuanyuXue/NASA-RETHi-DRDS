@@ -22,26 +22,6 @@ type VisualData struct {
 	ID        string  `json:"id"`
 }
 
-// type MohsenMsg struct {
-// 	DoOrCancel  float64 `json:"do_or_cancel"`
-// 	CommandID   float64 `json:"command_id"`
-// 	TimeToStart float64 `json:"time_to_start"`
-// 	SystemID    float64 `json:"system_id"`
-// 	CommandType float64 `jason:"command_type"`
-// 	ZoneID      float64 `json:"zone_id"`
-// 	Mode        float64 `json:"mode"`
-// 	TSpHeat     float64 `json:"t_sp_heat"`
-// 	TSpCool     float64 `json:"t_sp_cool"`
-// }
-
-type MohsenMsg struct {
-	Value0 uint64 `json:"value0"`
-	Value1 uint64 `json:"value1"`
-	Value2 uint64 `json:"value2"`
-	Value3 uint64 `json:"value3"`
-	Value4 uint64 `json:"value4"`
-}
-
 type WebServer struct {
 	utils.JsonStandard
 	utils.ServiceStandard
@@ -284,39 +264,24 @@ func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 		fmt.Println(err)
 		return err
 	}
-	var msg MohsenMsg
+
+	var msg struct {
+		Dst         uint8     `json:"dst"`
+		Values      []float64 `json:"values"`
+	}
 	if err = json.Unmarshal(body, &msg); err != nil {
 		return err
 	}
 
-	var dataMat [][]float64
-	var rawData []float64
+	// Check if the destination is valid
+	if !utils.IsValidSystemID(msg.Dst) {
+		return fmt.Errorf("invalid destination: %d", msg.Dst)
+	}
 
-	rawData = append(
-		rawData,
-		float64(msg.Value0),
-		float64(msg.Value1),
-		float64(msg.Value2),
-		float64(msg.Value3),
-		float64(msg.Value4),
-	)
-	// rawData = append(
-	// 	rawData,
-	// 	msg.DoOrCancel,
-	// 	msg.CommandID,
-	// 	msg.TimeToStart,
-	// 	msg.SystemID,
-	// 	msg.CommandType,
-	// 	msg.ZoneID,
-	// 	msg.Mode,
-	// 	msg.TSpHeat,
-	// 	msg.TSpCool,
-	// )
-
-	dataMat = append(dataMat, rawData)
+	dataMat := [][]float64{msg.Values}
 
 	err = server.UDPServer.sendPkt(
-		utils.SYSTEM_ID["AGT"],
+		msg.Dst,
 		utils.PRIORITY_NORMAL,
 		uint32(utils.RESERVED),
 		utils.FLAG_SINGLE,
@@ -332,8 +297,8 @@ func (server *WebServer) CommandProcess(ctx *sgo.Context) error {
 		uint16(id),
 		uint32(utils.RESERVED),
 		uint32(time.Now().UnixMilli()/1e3),
-		dataMat[0])
-
+		dataMat[0],
+	)
 	if err != nil {
 		fmt.Println(err)
 		return err

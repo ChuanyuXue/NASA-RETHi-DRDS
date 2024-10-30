@@ -200,3 +200,12 @@ func DoubleContains(s []float64, i float64) bool {
 	}
 	return false
 }
+
+func IsValidSystemID(id uint8) bool {
+	for _, value := range SYSTEM_ID {
+		if value == id {
+			return true
+		}
+	}
+	return false
+}

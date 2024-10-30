@@ -1,0 +1,71 @@
+<!--
+Author: <Chuanyu> (skewcy@gmail.com)
+command_example.html (c) 2024
+Desc: description
+Created:  2024-10-30T03:51:14.408Z
+-->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Send Command</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('form').submit(function (event) {
+                event.preventDefault();
+                var formData = {
+                    dst: parseInt($('#dst').val()),
+                    values: [
+                        parseFloat($('#value1').val()),
+                        parseFloat($('#value2').val()),
+                        parseFloat($('#value3').val())
+                    ]
+                };
+                $.ajax({
+                    type: 'POST',
+                    url: 'http://localhost:9999/api/c2/10',
+                    data: JSON.stringify(formData),
+                    contentType: 'application/json',
+                    success: function (response) {
+                        alert('Command sent successfully!');
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Error sending command: ' + error);
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <h1>Send Command</h1>
+    <form>
+        <label for="dst">Destination:</label>
+        <select id="dst" name="dst">
+            <option value="0">GCC</option>
+            <option value="1">HMS</option>
+            <option value="2">STR</option>
+            <option value="11">SPL</option>
+            <option value="10">CORR</option>
+            <option value="5">ECLSS</option>
+            <option value="3">PWR</option>
+            <option value="6">AGT</option>
+            <option value="8">IE</option>
+            <option value="9">DTB</option>
+            <option value="7">EXT</option>
+        </select>
+        <br>
+        <label for="value1">Value 1:</label>
+        <input type="text" id="value1" name="value1"><br>
+        <label for="value2">Value 2:</label>
+        <input type="text" id="value2" name="value2"><br>
+        <label for="value3">Value 3:</label>
+        <input type="text" id="value3" name="value3"><br>
+        <input type="submit" value="Send Command">
+    </form>
+</body>
+
+</html>
