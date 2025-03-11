@@ -167,6 +167,11 @@ func DatabaseGenerator(src uint8, path string) error {
 		for i := 0; i != int(info.Size); i++ {
 			act = act + fmt.Sprintf("v%d float,", i)
 		}
+		// add primary key to table 1001 -- Mar 3rd
+		if tableName == "record1001" {
+			// fmt.Println("Here is record 1001 !!!!!!!!!!!!!!!")
+			act = act + "primary key (iter),"
+		}
 		// act = act + "primary key (iter), UNIQUE KEY (iter)"
 		act = act[:len(act)-1]
 		act = act + ")ENGINE=InnoDB" // ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci"

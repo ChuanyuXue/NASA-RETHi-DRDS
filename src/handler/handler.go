@@ -258,13 +258,49 @@ func (handler *Handler) WriteSynt(id uint16, data *Data) error {
 	}
 	columnValue := strings.Join(columnFillin, ",")
 
-	// Construct the query
-	query := fmt.Sprintf(
-		"INSERT INTO %s.%s ("+columnPattern+") VALUES ("+columnValue+");",
-		handler.DBName,
-		tableName,
-	)
+	// -- Mar 3rd
+	updateList := []string{"send_t=VALUES(send_t)", "recv_t=VALUES(recv_t)"}
+	for i := 0; i < int(handler.DataShapes[id]); i++ { // Convert uint8 to int
+		updateList = append(updateList, fmt.Sprintf("v%d=VALUES(v%d)", i, i))
+	}
+	updatePattern := strings.Join(updateList, ",")
 
+	var query string
+	if tableName == "record1001" {
+		//delete data -- Mar 11st
+		countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s.%s;", handler.DBName, tableName)
+		var rowCount int
+		err := handler.DBPointer.QueryRow(countQuery).Scan(&rowCount)
+		if err != nil {
+			fmt.Println("[!] Data Error: Counting rows failed:", err)
+			return err
+		}
+
+		if rowCount >= 15 {
+			deleteAllQuery := fmt.Sprintf("DELETE FROM %s.%s;", handler.DBName, tableName)
+			_, err := handler.DBPointer.Exec(deleteAllQuery)
+			if err != nil {
+				fmt.Println("[!] Data Error: Deletion failed:", err)
+				return err
+			}
+		}
+		//end
+		query = fmt.Sprintf(
+			"INSERT INTO %s.%s (%s) VALUES (%s) ON DUPLICATE KEY UPDATE %s;",
+			handler.DBName,
+			tableName,
+			columnPattern,
+			columnValue,   
+			updatePattern, 
+		)
+	} else {
+	// Construct the query
+		query = fmt.Sprintf(
+			"INSERT INTO %s.%s ("+columnPattern+") VALUES ("+columnValue+");",
+			handler.DBName,
+			tableName,
+		)
+	}
 	// Write the data into the database
 	_, err := handler.DBPointer.Exec(query)
 	if err != nil {
@@ -323,12 +359,51 @@ func (handler *Handler) WriteRange(id uint16, dataVec []*Data) error {
 	}
 	columnFillinStr := strings.Join(columnFillinVec, ",")
 
-	// Construct the query
-	query := fmt.Sprintf(
-		"INSERT INTO %s.%s ("+columnPattern+") VALUES "+columnFillinStr+";",
-		handler.DBName,
-		tableName,
-	)
+	// -- Mar 3rd
+	// -- Mar 3rd: Fix `ON DUPLICATE KEY UPDATE` Syntax
+	updateList := []string{"send_t=VALUES(send_t)", "recv_t=VALUES(recv_t)"}
+	for i := 0; i < int(handler.DataShapes[id]); i++ {
+		updateList = append(updateList, fmt.Sprintf("v%d=VALUES(v%d)", i, i))
+	}
+	updatePattern := strings.Join(updateList, ",")
+
+	var query string
+
+	if tableName == "record1001" {
+		// delete data Mar 11st
+		countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s.%s;", handler.DBName, tableName)
+    	var rowCount int
+    	err := handler.DBPointer.QueryRow(countQuery).Scan(&rowCount)
+    	if err != nil {
+        	fmt.Println("[!] Data Error: Counting rows failed:", err)
+        	return err
+    	}
+		if rowCount >= 15 {
+			deleteAllQuery := fmt.Sprintf("DELETE FROM %s.%s;", handler.DBName, tableName)
+			_, err := handler.DBPointer.Exec(deleteAllQuery)
+			if err != nil {
+				fmt.Println("[!] Data Error: Deletion failed:", err)
+				return err
+			}
+		}
+		// end
+
+		query = fmt.Sprintf(
+			"INSERT INTO %s.%s (%s) VALUES %s ON DUPLICATE KEY UPDATE %s;",
+			handler.DBName,
+			tableName,
+			columnPattern,
+			columnFillinStr,
+			updatePattern,
+		)
+	} else {
+		// Construct the query
+		query = fmt.Sprintf(
+			"INSERT INTO %s.%s ("+columnPattern+") VALUES "+columnFillinStr+";",
+			handler.DBName,
+			tableName,
+		)
+	}
 
 	// Write the data into the database
 	_, err := handler.DBPointer.Exec(query)
@@ -438,7 +513,8 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 
 	// Construct the query with condition of time range
 	query := fmt.Sprintf(
-		"SELECT recv_t, iter, %s FROM %s.%s WHERE (iter >= %s) AND (iter < %s);",
+		// "SELECT recv_t, iter, %s FROM %s.%s WHERE (iter >= %s) AND (iter < %s);",
+		"SELECT send_t, iter, %s FROM %s.%s WHERE (iter >= %s) AND (iter < %s);", // change!!! because we need the send_t (custom time)
 		columnPattern,
 		handler.DBName,
 		tableName,
@@ -460,13 +536,18 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 
 	for rows.Next() {
 		rows.Scan(scans...)
+		fmt.Println("[DEBUG] HANDLER - Full Row Data:")
+    	for i, v := range values {
+        	fmt.Printf("Column %d: %s\n", i, string(v))
+    	}
 		var rawData []float64
 		for i, v := range values {
 			data := string(v)
 			switch i {
 			case 0:
 				s, err := strconv.ParseUint(data, 10, 64)
-				timePhyVec = append(timePhyVec, s)
+				timePhyVec = append(timePhyVec, s * 1000)
+				fmt.Printf("[DEBUG] HANDLER - timePhyVec - s %d\n", s * 1000)
 				if err != nil {
 					fmt.Println("[!]Element0 Range:  Failed to parse scan result from SQL query.")
 				}
@@ -474,6 +555,7 @@ func (handler *Handler) ReadRange(id uint16, start uint32, end uint32) ([]uint32
 			case 1:
 				s, err := strconv.ParseUint(data, 10, 32)
 				timeSimuVec = append(timeSimuVec, uint32(s))
+				fmt.Printf("[DEBUG] HANDLER - timeSimuVec - s %d\n", s)
 				if err != nil {
 					fmt.Println("[!]Element1 Range: Failed to parse scan result from SQL query.")
 				}
@@ -589,6 +671,7 @@ func (handler *Handler) WriteToBuffer(id uint16, data *Data) error {
 	}
 	// Check if
 	handler.DataBuffer[id] <- data // Push the new data
+	fmt.Printf("[DEBUG] Writing to DB - Iter: %d, SendT: %d\n", data.Iter, data.SendT)
 	return nil
 }
 
